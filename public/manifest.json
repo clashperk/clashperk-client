@@ -1,0 +1,9 @@
+{
+  "name": "ClashPerk",
+  "short_name": "ClashPerk",
+  "description": "Feature-Rich and Powerful Clash of Clans Discord bot with everything you will ever need.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000"
+}
