@@ -5,10 +5,15 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { NextPage } from 'next';
 import toast from 'react-hot-toast';
 import { FaDiscord } from 'react-icons/fa';
 
-export default function LoginPage() {
+const ExpiredPage: NextPage = () => {
+  return <LoginPage />;
+};
+
+const LoginPage = () => {
   return (
     <Container
       maxWidth="xs"
@@ -44,4 +49,6 @@ export default function LoginPage() {
       </Typography>
     </Container>
   );
-}
+};
+
+export default ExpiredPage;

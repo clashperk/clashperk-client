@@ -37,7 +37,7 @@ const getServerSideProps = async () => {
     };
   } catch (e) {
     console.error(e);
-    return redirect('/');
+    return redirect('/expired');
   }
 };
 
