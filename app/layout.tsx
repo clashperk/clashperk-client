@@ -3,6 +3,8 @@ import theme from '@/util/theme';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 import { Kanit } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
@@ -108,6 +110,9 @@ export default async function RootLayout({
             <ContextWrapper user={user}>{children}</ContextWrapper>
           </ThemeProvider>
         </AppRouterCacheProvider>
+
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
