@@ -2,6 +2,7 @@ import { authCookieKey, authenticatedPathRegex } from '@/lib/constants';
 import theme from '@/util/theme';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
 import { Kanit } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
@@ -77,6 +78,9 @@ export default async function RootLayout({
           <link key={idx} rel={rel} href={url} />
         ))} */}
       </head>
+
+      <GoogleAnalytics gaId="G-HGSPH1S4Y1" />
+      <GoogleTagManager gtmId="GTM-NRBX87WR" />
 
       <body className={inter.className}>
         <Toaster
