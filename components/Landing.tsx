@@ -51,7 +51,7 @@ export const FEATURES = [
     icon: FiActivity,
     title: 'Clan Activity',
     description:
-      'Most Active/Inactive Members Last Seen, Activity Score, Advanced Historical data and more.'
+      'Most Active/Inactive Members, Last Seen, Activity Score, Advanced Historical data and more.'
   },
   {
     icon: FaFileExcel,
