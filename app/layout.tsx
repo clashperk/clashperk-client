@@ -74,9 +74,9 @@ export default async function RootLayout({
         <meta name="generator" content={metadata.generator} />
         <link rel="manifest" href={metadata.manifest} />
         <meta name="keywords" content={metadata.keywords.join(', ')} />
-        {/* {metadata.icons.map(({ rel, url }, idx) => (
+        {metadata.icons.map(({ rel, url }, idx) => (
           <link key={idx} rel={rel} href={url} />
-        ))} */}
+        ))}
       </head>
 
       <GoogleAnalytics gaId="G-HGSPH1S4Y1" />
