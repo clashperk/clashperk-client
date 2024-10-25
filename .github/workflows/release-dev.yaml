@@ -8,9 +8,10 @@ on:
   push:
     branches-ignore:
       - main
+  workflow_dispatch:
 
 jobs:
-  build:
+  preview-build:
     runs-on: ubuntu-latest
 
     steps:
