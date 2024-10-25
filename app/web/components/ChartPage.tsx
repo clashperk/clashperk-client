@@ -157,11 +157,6 @@ export const ChartPage = ({
             y1: {
               display: true,
               position: 'right',
-              ticks: {
-                callback: function (value) {
-                  return `${value} ${unit}`;
-                }
-              },
               afterDataLimits: function (axis) {
                 const y = axis.chart.scales.y;
                 y.determineDataLimits(); // update y.min/max
