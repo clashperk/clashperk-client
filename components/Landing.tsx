@@ -114,7 +114,7 @@ const Navbar = () => {
               target="_blank"
               variant="h6"
               fontWeight="600"
-              color="text.secondary"
+              color="textSecondary"
               sx={{
                 textDecoration: 'none',
                 display: { xs: 'none', md: 'flex' }
@@ -127,7 +127,7 @@ const Navbar = () => {
           <Typography
             variant="h6"
             fontWeight="600"
-            color="text.secondary"
+            color="textSecondary"
             component={Link}
             href="https://discord.gg/ppuppun"
             target="_blank"
@@ -176,7 +176,7 @@ const Intro = () => {
                 mt: 1,
                 mb: { xs: 2, sm: 4 },
                 fontWeight: '200',
-                color: 'text.secondary',
+                color: 'textSecondary',
                 fontSize: { xs: '1.25rem', md: '1.75rem' }
               }}
             >
@@ -234,7 +234,7 @@ const Features = () => {
                       height: { xs: 100, md: 120 },
                       width: { xs: 100, md: 120 },
                       fontWeight: 'bold',
-                      color: 'text.secondary'
+                      color: 'GrayText'
                     }}
                     component={icon}
                   />
@@ -249,7 +249,7 @@ const Features = () => {
                 </Typography>
                 <Typography
                   variant="body2"
-                  color="text.secondary"
+                  color="textSecondary"
                   sx={{ textAlign: 'center' }}
                 >
                   {description}
@@ -273,13 +273,13 @@ const Footer = () => {
           justifyContent={{ md: 'space-between', xs: 'center' }}
           sx={{ py: 2, px: { xs: 2, md: 20 } }}
         >
-          <Typography color="text.secondary">
+          <Typography color="textSecondary">
             {`Copyright © ClashPerk 2019-${new Date().getFullYear()}`}
           </Typography>
 
           <Stack direction="row" spacing={2}>
             <Typography
-              color="text.secondary"
+              color="textSecondary"
               component={Link}
               target="_blank"
               href={'https://github.com/clashperk'}
@@ -292,7 +292,7 @@ const Footer = () => {
             </Typography>
 
             <Typography
-              color="text.secondary"
+              color="textSecondary"
               component={Link}
               href={'https://discord.gg/ppuppun'}
               target="_blank"

@@ -71,7 +71,7 @@ const Terms = () => {
             </Typography>
 
             {doc.description && (
-              <Typography paragraph color="text.secondary">
+              <Typography paragraph color="textSecondary">
                 {doc.description}{' '}
                 {doc.contact_link && (
                   <span>
@@ -96,7 +96,7 @@ const Terms = () => {
                       <Typography variant="body1" fontWeight="bold">
                         {detail.type}
                       </Typography>
-                      <Typography mb={0.5} paragraph color="text.secondary">
+                      <Typography mb={0.5} paragraph color="textSecondary">
                         {detail.description}
                       </Typography>
                     </Fragment>
@@ -109,7 +109,7 @@ const Terms = () => {
               <ul style={{ paddingLeft: 30, color: '#ffffffb3' }}>
                 {doc.uses.map((use, idx) => (
                   <li key={idx}>
-                    <Typography m={0} paragraph color="text.secondary">
+                    <Typography m={0} paragraph color="textSecondary">
                       {use}
                     </Typography>
                   </li>

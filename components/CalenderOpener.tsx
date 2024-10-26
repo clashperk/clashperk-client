@@ -12,11 +12,9 @@ import { Dayjs } from 'dayjs';
 import { Dispatch, SetStateAction } from 'react';
 
 interface ButtonFieldProps
-  // @ts-expect-error
   extends UseDateFieldProps<Dayjs, false>,
     BaseSingleInputFieldProps<
       Dayjs | null,
-      // @ts-expect-error
       Dayjs,
       FieldSection,
       false,
@@ -50,7 +48,7 @@ export function CalenderOpener(props: ButtonFieldProps) {
         alignContent="center"
         alignItems="center"
       >
-        <EventIcon sx={{ width: 30, height: 30, color: 'text.secondary' }} />
+        <EventIcon sx={{ width: 30, height: 30, color: 'GrayText' }} />
         {value && (
           <Typography color="text.primary">
             {value.format('ddd, DD MMM, YYYY')}

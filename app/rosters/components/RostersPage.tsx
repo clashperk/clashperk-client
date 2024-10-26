@@ -31,6 +31,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { unique } from 'radash';
 import { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { ActionModal } from '../../../components/ActionModal';
 import {
   GuildRosterOutput,
   RosterCategoriesEntity,
@@ -40,7 +41,6 @@ import {
 } from '../hooks/types';
 import { useRosters } from '../hooks/useRosters';
 import { ActionBar } from './ActionBar';
-import { ActionModal } from '../../../components/ActionModal';
 
 const rolesMap: Record<string, string> = {
   leader: 'Lead',
@@ -583,7 +583,7 @@ const RostersPage = (props: {
                                 <Typography
                                   variant="body2"
                                   sx={{
-                                    color: 'text.secondary',
+                                    color: 'GrayText',
                                     fontSize: '10px'
                                   }}
                                 >
@@ -721,7 +721,7 @@ const RostersPage = (props: {
                         <Typography
                           variant="body1"
                           sx={{ pt: 2 }}
-                          color="text.secondary"
+                          color="textSecondary"
                         >
                           Moving to <strong>{getRosterName(newRoster)}</strong>
                         </Typography>
@@ -814,7 +814,7 @@ const RostersPage = (props: {
                         <Typography
                           variant="body1"
                           sx={{ pt: 2 }}
-                          color="text.secondary"
+                          color="textSecondary"
                         >
                           Moving to <strong>{newCategory.displayName}</strong>
                         </Typography>

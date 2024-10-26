@@ -24,7 +24,7 @@ const LoginPage = () => {
           CLASHPERK
         </Typography>
 
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           Feature-Rich and Powerful Clash of Clans Discord bot with everything
           you will ever need.
         </Typography>
@@ -44,7 +44,7 @@ const LoginPage = () => {
         </Button>
       </Stack>
 
-      <Typography variant="body2" align="center" color="text.secondary">
+      <Typography variant="body2" align="center" color="textSecondary">
         By signing up, you agree to our Terms of Service and Privacy Policy
       </Typography>
     </Container>
