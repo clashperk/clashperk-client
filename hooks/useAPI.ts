@@ -2,7 +2,7 @@ import { authCookieKey } from '@/lib/constants';
 import { getCookie, setCookie } from 'cookies-next';
 import { GuildClansAggregated } from './types';
 
-const useAPI = () => {
+export const useAPI = () => {
   const login = async (email: string, password: string) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
       method: 'POST',
@@ -101,5 +101,3 @@ const useAPI = () => {
 
   return { login, signup, testToken, uploadFile, getClans };
 };
-
-export default useAPI;

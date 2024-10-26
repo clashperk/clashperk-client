@@ -24,7 +24,7 @@ export const effects: Record<AnimationType, MotionProps> = {
   }
 };
 
-export default function MotionPresets({
+export function MotionPresets({
   children,
   motionType
 }: {

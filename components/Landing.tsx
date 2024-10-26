@@ -22,7 +22,7 @@ import {
 } from 'react-icons/fa';
 import { FiActivity } from 'react-icons/fi';
 
-export const FEATURES = [
+const FEATURES = [
   {
     icon: FaSearch,
     title: 'Clash Search',
@@ -72,7 +72,7 @@ export const FEATURES = [
   }
 ];
 
-export default function LandingPage() {
+export function LandingPage() {
   return (
     <>
       <Navbar />

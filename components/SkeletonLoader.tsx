@@ -1,7 +1,7 @@
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
-export default function SkeletonLoader() {
+export function SkeletonLoader() {
   return (
     <Stack spacing={1} my={6}>
       <Skeleton variant="text" sx={{ fontSize: '2rem', mb: 2 }} />

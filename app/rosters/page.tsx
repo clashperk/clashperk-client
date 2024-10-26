@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import RostersPage from './components/RostersPage';
+import { RostersPage } from './components/RostersPage';
 
 const getServerSideProps = async () => {
   const headersList = headers();

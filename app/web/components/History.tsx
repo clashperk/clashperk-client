@@ -53,7 +53,7 @@ interface Summary {
   destruction: number;
 }
 
-export default function History({
+export function History({
   wars,
   attacker,
   summary
@@ -404,31 +404,3 @@ export default function History({
     </Paper>
   );
 }
-
-export const fakeWar = Array.from({ length: 50 }).map((_, index) => {
-  const oldStars = Math.floor(Math.random() * 3);
-  const newStars = Math.floor(Math.random() * 3);
-  const percentage = Math.floor(Math.random() * 100);
-
-  return {
-    oldStars,
-    newStars,
-    percentage,
-    townHall: Math.floor(Math.random() * 5) + 10,
-    opponent: {
-      townHall: Math.floor(Math.random() * 5) + 10,
-      index: Math.floor(Math.random() * 50)
-    }
-  };
-});
-
-// export const fakeRounds = Array.from({ length: 10 }).map((_, index) => {
-//   // generate random name
-//   const name = Math.random().toString(36).substring(7);
-//   return {
-//     name: "Air Hounds vs War Snippers",
-//     date: "10/10/2022",
-//     index: Math.floor(Math.random() * 50),
-//     war: fakeWar,
-//   };
-// });

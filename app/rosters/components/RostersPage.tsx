@@ -49,7 +49,7 @@ const rolesMap: Record<string, string> = {
   member: 'Mem'
 };
 
-const RostersPage = (props: {
+export const RostersPage = (props: {
   guildId: string;
   userId: string;
   token: string;
@@ -964,5 +964,3 @@ function getRosterName(roster: RostersEntity) {
   }
   return roster.name;
 }
-
-export default RostersPage;

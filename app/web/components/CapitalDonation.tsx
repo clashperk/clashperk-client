@@ -18,7 +18,7 @@ interface Logs {
   createdAt: string;
 }
 
-export default function CapitalDonation({ logs }: { logs: Logs[] }) {
+export function CapitalDonation({ logs }: { logs: Logs[] }) {
   const clan = logs[0]?.clan;
   return (
     <Paper

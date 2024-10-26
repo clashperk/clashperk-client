@@ -1,7 +1,7 @@
 'use client';
 
-import AttackLog from '@/app/web/components/AttackLog';
-import Loader from '@/app/web/components/Loader';
+import { AttackLog } from '@/app/web/components/AttackLog';
+import { Loader } from '@/app/web/components/Loader';
 import Container from '@mui/material/Container';
 import { useParams } from 'next/navigation';
 import * as React from 'react';

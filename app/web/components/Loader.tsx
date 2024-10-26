@@ -3,7 +3,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import { Container, Stack } from '@mui/system';
 
-const Loader = ({
+export const Loader = ({
   loading,
   message
 }: {
@@ -57,4 +57,3 @@ const Loader = ({
     </Container>
   );
 };
-export default Loader;

@@ -1,7 +1,7 @@
 'use client';
 
-import History from '@/app/web/components/History';
-import Loader from '@/app/web/components/Loader';
+import { History } from '@/app/web/components/History';
+import { Loader } from '@/app/web/components/Loader';
 import Container from '@mui/material/Container';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';

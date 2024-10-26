@@ -53,7 +53,7 @@ interface ClanWar {
   };
 }
 
-export default function AttackLog({ data }: { data: ClanWar }) {
+export function AttackLog({ data }: { data: ClanWar }) {
   return (
     <Paper
       variant="outlined"

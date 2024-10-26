@@ -1,7 +1,7 @@
 'use client';
 
-import CapitalDonation from '@/app/web/components/CapitalDonation';
-import Loader from '@/app/web/components/Loader';
+import { CapitalDonation } from '@/app/web/components/CapitalDonation';
+import { Loader } from '@/app/web/components/Loader';
 import Container from '@mui/material/Container';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';

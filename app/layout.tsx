@@ -1,5 +1,5 @@
 import { authCookieKey, authenticatedPathRegex } from '@/lib/constants';
-import theme from '@/util/theme';
+import { theme } from '@/util/theme';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';

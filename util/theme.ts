@@ -9,7 +9,7 @@ const kanit = Kanit({
   display: 'swap'
 });
 
-const theme = createTheme({
+export const theme = createTheme({
   palette: {
     mode: 'dark'
   },
@@ -35,5 +35,3 @@ const theme = createTheme({
     }
   }
 });
-
-export default theme;
