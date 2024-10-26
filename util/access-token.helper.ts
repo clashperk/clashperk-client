@@ -25,7 +25,7 @@ export const getAccessToken = async () => {
     },
     process.env.JWT_SECRET_V2 as string,
     {
-      expiresIn: '100m'
+      expiresIn: '30m'
     }
   );
 
