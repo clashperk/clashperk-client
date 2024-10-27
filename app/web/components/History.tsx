@@ -70,8 +70,8 @@ export function History({
         padding: 1,
         minHeight: '100vh',
         flexShrink: 0,
-        background: '#2F3136',
-        borderRadius: '4px 4px 4px 4px'
+        background: '#2F3136'
+        // borderRadius: '4px 4px 4px 4px'
         // borderLeft: `4px solid #5865f2`,
       }}
     >
@@ -94,9 +94,7 @@ export function History({
         </Stack>
         <Avatar
           sx={{ width: 40, height: 40 }}
-          src={`https://coc.guide/static/imgs/other/town-hall-${attacker.townhallLevel}${
-            attacker.townhallLevel > 12 ? `-5` : ''
-          }.png`}
+          src={`https://cdn.coc.guide/static/imgs/other/town-hall-${attacker.townhallLevel}.png`}
           variant="square"
         />
       </Stack>
