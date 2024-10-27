@@ -56,14 +56,18 @@ export function PlayerPage({ token }: { token: string }) {
     }
   }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!wars.length)
-    return <Loader loading={loading} message={'No data available...'} />;
+  if (!wars.length) {
+    return (
+      <Container maxWidth="sm" style={{ padding: 0 }}>
+        <Loader loading={loading} message={'No data available...'} />
+      </Container>
+    );
+  }
 
   const attacker = wars?.[0]?.attacker;
-
   return (
     <>
-      <Container maxWidth="sm">
+      <Container maxWidth="sm" style={{ padding: 0 }}>
         <History wars={wars} summary={summary} attacker={attacker} />
       </Container>
     </>
