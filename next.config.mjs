@@ -25,11 +25,6 @@ const nextConfig = {
         permanent: true
       },
       {
-        source: '/clans/:path*',
-        destination: '/web/clans/:path*',
-        permanent: true
-      },
-      {
         source: '/charts/:path*',
         destination: '/web/charts/:path*',
         permanent: true
