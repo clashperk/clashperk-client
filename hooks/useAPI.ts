@@ -4,13 +4,16 @@ import { GuildClansAggregated } from './types';
 
 export const useAPI = () => {
   const login = async (email: string, password: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-      headers: {
-        'Content-Type': 'application/json'
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
-    });
+    );
     const data = await res.json();
 
     if (!res.ok) {
@@ -23,13 +26,16 @@ export const useAPI = () => {
   };
 
   const signup = async (email: string, password: string, fullName: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
-      method: 'POST',
-      body: JSON.stringify({ email, password, fullName }),
-      headers: {
-        'Content-Type': 'application/json'
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signup`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password, fullName }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
-    });
+    );
     const data = await res.json();
 
     if (!res.ok) {
@@ -43,13 +49,16 @@ export const useAPI = () => {
 
   const testToken = async () => {
     const accessToken = getCookie(authCookieKey);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signup`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
       }
-    });
+    );
 
     const data = await res.json();
     if (!res.ok) {
@@ -61,7 +70,7 @@ export const useAPI = () => {
 
   const uploadFile = async (formData: FormData) => {
     const accessToken = getCookie(authCookieKey);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -82,7 +91,7 @@ export const useAPI = () => {
   const getClans = async ({ guildId }: { guildId: string }) => {
     const accessToken = getCookie(authCookieKey);
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/guilds/${guildId}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/guilds/${guildId}`,
       {
         method: 'GET',
         headers: {

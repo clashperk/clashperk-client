@@ -45,13 +45,16 @@ const validateAuth = async () => {
   const isAuthenticatedPath = authenticatedPathRegex.test(pathname);
   if (!isAuthenticatedPath) return null;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/status`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/status`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      }
     }
-  });
+  );
 
   if (res.status === 401 || res.status === 403) {
     return redirect('/');

@@ -305,15 +305,15 @@ export const RostersPage = (props: {
                 },
                 {
                   name: 'Minimum TownHall',
-                  value: `${roster.minTownHall || 0}`
+                  value: `${roster.minTownHall || '-'}`
                 },
                 {
                   name: 'Maximum TownHall',
-                  value: `${roster.maxTownHall || 0}`
+                  value: `${roster.maxTownHall || '-'}`
                 },
                 {
                   name: 'Minimum Hero Level',
-                  value: `${roster.minHeroLevels || 0}`
+                  value: `${roster.minHeroLevels || '-'}`
                 }
               ].map((item, idx) => (
                 <Stack
@@ -368,14 +368,14 @@ export const RostersPage = (props: {
                 )}
               </Box>
 
-              <Stack spacing={1} direction="row-reverse">
+              {/* <Stack spacing={1} direction="row-reverse">
                 <Button variant="outlined" sx={{ height: 30 }}>
                   Edit
                 </Button>
                 <Button color="error" variant="outlined" sx={{ height: 30 }}>
                   Delete
                 </Button>
-              </Stack>
+              </Stack> */}
             </Stack>
 
             <Table aria-label="table" sx={{ mb: 3 }}>
