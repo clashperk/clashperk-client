@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "ClashPerk Docs": {
+      "type": "http",
+      "url": "https://docs.clashperk.com/~gitbook/mcp"
+    }
+  }
+}
