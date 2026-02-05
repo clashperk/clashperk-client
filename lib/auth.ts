@@ -6,8 +6,8 @@ import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { v4 as uuid } from "uuid";
 
-const EXPIRY_MINUTES = 60;
-const INTERVAL_SECONDS = 60;
+const EXPIRES_IN_SECONDS = 60 * 60;
+const REFRESH_INTERVAL_SECONDS = 60;
 
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
 const authHeaders = { "x-api-key": process.env.SERVICE_API_KEY };
@@ -23,13 +23,15 @@ const generateToken = async (payload: JWTPayload) => {
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
-    .setExpirationTime(new Date(Date.now() + EXPIRY_MINUTES * 1000))
+    .setExpirationTime(new Date(Date.now() + EXPIRES_IN_SECONDS * 1000))
     .sign(secret);
 
   return {
     token,
     expiresIn:
-      Math.floor(Date.now() / 1000) + INTERVAL_SECONDS * EXPIRY_MINUTES,
+      Math.floor(Date.now() / 1000) +
+      REFRESH_INTERVAL_SECONDS +
+      EXPIRES_IN_SECONDS,
   };
 };
 
@@ -125,7 +127,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (
         token &&
-        Date.now() / 1000 + INTERVAL_SECONDS > (token.expiresIn as number)
+        Math.floor(Date.now() / 1000) + REFRESH_INTERVAL_SECONDS >
+          (token.expiresIn as number)
       ) {
         const generated = await generateToken({
           userId: token.userId as string,
@@ -150,6 +153,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.roles = token.roles as string[];
         session.user.avatarUrl = token.picture as string;
         session.user.username = token.username as string;
+        session.user.guildId = token.guildId as string;
         session.accessToken = token.accessToken as string;
 
         delete session.user.image;

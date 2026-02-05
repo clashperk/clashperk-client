@@ -16,6 +16,7 @@ declare module "next-auth" {
       displayName: string;
       username: string;
       avatarUrl: string;
+			guildId: string;
       roles: string[];
     };
   }

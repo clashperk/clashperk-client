@@ -109,7 +109,7 @@ export interface HandoffUserDto {
 export interface HandoffTokenInputDto {
   userId: string;
   guildId: string;
-  applicationId: string;
+  applicationId: string | null;
 }
 
 export interface HandoffTokenDto {
@@ -468,6 +468,10 @@ export interface GetRostersDto {
   categories: RosterGroupsEntity[];
 }
 
+export interface MessageOkDto {
+  message: string;
+}
+
 export interface RemoveMembersBulkInput {
   /** @minItems 1 */
   playerTags: string[];
@@ -494,10 +498,13 @@ export interface TransferRosterMembersDto {
 
 export interface GuildClanDto {
   _id: string;
-  categoryId?: string | null;
+  categoryId: string;
   name: string;
   tag: string;
   order: number;
+  league: string;
+  level: number;
+  members: number;
 }
 
 export interface CategoryDto {
@@ -510,7 +517,6 @@ export interface CategoryDto {
 export interface GuildClansDto {
   guildId: string;
   name: string;
-  clans: GuildClanDto[];
   categories: CategoryDto[];
 }
 
@@ -727,7 +733,7 @@ export interface CreateRosterParams {
   guildId: string;
 }
 
-export type CreateRosterData = object;
+export type CreateRosterData = MessageOkDto;
 
 export type CreateRosterError = ErrorResponseDto;
 
@@ -745,7 +751,7 @@ export interface UpdateRosterParams {
   guildId: string;
 }
 
-export type UpdateRosterData = object;
+export type UpdateRosterData = MessageOkDto;
 
 export type UpdateRosterError = ErrorResponseDto;
 
@@ -754,7 +760,7 @@ export interface DeleteRosterParams {
   guildId: string;
 }
 
-export type DeleteRosterData = object;
+export type DeleteRosterData = MessageOkDto;
 
 export type DeleteRosterError = ErrorResponseDto;
 
@@ -763,7 +769,7 @@ export interface CloneRosterParams {
   guildId: string;
 }
 
-export type CloneRosterData = object;
+export type CloneRosterData = MessageOkDto;
 
 export type CloneRosterError = ErrorResponseDto;
 
@@ -772,7 +778,7 @@ export interface AddRosterMembersParams {
   guildId: string;
 }
 
-export type AddRosterMembersData = object;
+export type AddRosterMembersData = MessageOkDto;
 
 export type AddRosterMembersError = ErrorResponseDto;
 
@@ -781,7 +787,7 @@ export interface DeleteRosterMembersParams {
   guildId: string;
 }
 
-export type DeleteRosterMembersData = object;
+export type DeleteRosterMembersData = MessageOkDto;
 
 export type DeleteRosterMembersError = ErrorResponseDto;
 
@@ -790,7 +796,7 @@ export interface RefreshRosterMembersParams {
   guildId: string;
 }
 
-export type RefreshRosterMembersData = object;
+export type RefreshRosterMembersData = MessageOkDto;
 
 export type RefreshRosterMembersError = ErrorResponseDto;
 
@@ -807,7 +813,7 @@ export interface GetUserParams {
   userId: string;
 }
 
-export type GetUserData = object;
+export type GetUserData = MessageOkDto;
 
 export type GetUserError = ErrorResponseDto;
 

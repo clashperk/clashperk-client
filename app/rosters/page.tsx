@@ -91,7 +91,7 @@ function RosterSidebarContent({
         </Button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3">
         {rosters.map((r) => (
           <RosterTab
             key={r.id}
@@ -600,7 +600,7 @@ export default function RosterPage() {
                 </div>
 
                 <Card className="flex-1 overflow-hidden flex flex-col bg-muted/30 border-dashed border-2 shadow-none">
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar">
                     {availablePlayers.map((player) => (
                       <PlayerListItem
                         key={player.id}
@@ -760,7 +760,7 @@ export default function RosterPage() {
                       : "bg-card border-primary/20",
                   )}
                 >
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar">
                     <AnimatePresence initial={false} mode="popLayout">
                       {rosterPlayers.map((player, idx) => (
                         <motion.div
