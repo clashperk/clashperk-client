@@ -1,7 +1,7 @@
 import { api } from "@/hooks/api/axios";
 import { HandoffUserDto, JwtUserInput, UserRoles } from "@/hooks/api/generated";
 import { JWTPayload, SignJWT } from "jose";
-import NextAuth, { CredentialsSignin } from "next-auth";
+import NextAuth, { CredentialsSignin, User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { v4 as uuid } from "uuid";
@@ -80,7 +80,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           roles: user.roles,
           name: user.displayName,
           image: user.avatarUrl,
-          guildId: user.guildId,
+          guild: user.guild,
           username: user.username,
           applicationId: user.applicationId,
         };
@@ -108,7 +108,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.jti = uuid();
         token.roles = user.roles;
         token.username = user.username;
-        token.guildId = user.guildId;
+
+        token.guild = user.guild;
+        token.guildId = user.guild.id;
+
         token.applicationId = user.applicationId;
 
         const generated = await generateToken({
@@ -153,7 +156,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.roles = token.roles as string[];
         session.user.avatarUrl = token.picture as string;
         session.user.username = token.username as string;
-        session.user.guildId = token.guildId as string;
+        session.user.guild = token.guild as User["guild"];
         session.accessToken = token.accessToken as string;
 
         delete session.user.image;

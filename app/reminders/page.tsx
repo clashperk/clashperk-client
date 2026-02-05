@@ -1,15 +1,10 @@
 "use client";
 
+import { Modal } from "@/components/modal";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -544,230 +539,212 @@ export default function RemindersPage() {
         </main>
 
         {/* CREATE/EDIT DIALOG */}
-        <Dialog
+        {/* CREATE/EDIT DIALOG */}
+        <Modal
           open={isDialogOpen}
           onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) resetForm();
           }}
+          title={
+            mode === "create"
+              ? "New Reminder"
+              : mode === "edit"
+                ? "Edit Reminder"
+                : "Reminder Details"
+          }
+          description={
+            mode === "view"
+              ? "View details for this automated reminder."
+              : `Configure ${activeType === "war" ? "Clan War" : activeType === "raid" ? "Capital Raid" : "Clan Games"} reminder.`
+          }
+          footer={
+            mode === "view" ? (
+              <div className="flex w-full justify-between items-center sm:gap-0 gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() =>
+                    editingReminder && handleDelete(editingReminder.id)
+                  }
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Delete
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button onClick={() => setMode("edit")}>
+                    <Edit2 className="size-4 mr-2" />
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex w-full justify-end gap-2">
+                <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave}>Save Reminder</Button>
+              </div>
+            )
+          }
+          className="max-w-lg"
         >
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {mode === "create" && "New Reminder"}
-                {mode === "edit" && "Edit Reminder"}
-                {mode === "view" && "Reminder Details"}
-              </DialogTitle>
-              <DialogDescription>
-                {mode === "view"
-                  ? "View details for this automated reminder."
-                  : `Configure ${activeType === "war" ? "Clan War" : activeType === "raid" ? "Capital Raid" : "Clan Games"} reminder.`}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              {/* View Mode: Static Stats */}
-              {mode === "view" && editingReminder && (
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "size-2 rounded-full",
-                          editingReminder.isActive
-                            ? "bg-green-500"
-                            : "bg-red-500",
-                        )}
-                      />
-                      <span className="text-sm font-medium">
-                        {editingReminder.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
-                    <p className="text-xs text-muted-foreground">Last Run</p>
-                    <p className="text-sm font-medium">
-                      {editingReminder.lastRun
-                        ? editingReminder.lastRun.toLocaleDateString()
-                        : "Never"}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* If VIEW mode, we disable inputs or show read-only text */}
-              <fieldset
-                disabled={mode === "view"}
-                className={cn("space-y-4", mode === "view" && "opacity-100")}
-              >
-                {/* Type Selection Removed in Edit/Create mainly, or locked to activeType? 
-                  Rosters page doesn't let you change type. 
-                  Users might want to change type while creating? 
-                  "New Reminder" is generic. But context is specific. 
-                  Let's lock it to activeType for simplicity or allow changing via Select if desired. 
-                  The prompt implies "section for reminders type" which acts as a filter/context. 
-                  So new reminders should probably default to that type. 
-                  I'll keep the Select but default it. Or hide it if it's redundant.
-                  Let's keep it visible but maybe disabled if we want to enforce structure?
-                  Actually, let's allow changing it, but it might jump to another list.
-                  Better to just lock it or hide it for clarity if the user is deep in "Clan War" settings.
-                  But let's keep the Select for flexibility, just pre-filled.
-              */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select
-                      value={type}
-                      onValueChange={(v) => setType(v as ReminderType)}
-                      disabled={mode === "view"}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="war">Clan War</SelectItem>
-                        <SelectItem value="raid">Capital Raid</SelectItem>
-                        <SelectItem value="clanGames">Clan Games</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Duration</Label>
-                    <Input
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className={
-                        mode === "view"
-                          ? "border-transparent bg-transparent px-0 h-auto font-medium"
-                          : ""
-                      }
-                    />
-                    {mode !== "view" && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Time remaining (e.g. 1h, 30m)
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Target Channel</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-muted-foreground">
-                      #
-                    </span>
-                    <Input
-                      value={channelName}
-                      onChange={(e) => setChannelName(e.target.value)}
+          <div className="space-y-4 py-4">
+            {/* View Mode: Static Stats */}
+            {mode === "view" && editingReminder && (
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <div className="flex items-center gap-2">
+                    <div
                       className={cn(
-                        "pl-7",
-                        mode === "view" &&
-                          "border-transparent bg-transparent pl-0 h-auto font-medium",
+                        "size-2 rounded-full",
+                        editingReminder.isActive
+                          ? "bg-green-500"
+                          : "bg-red-500",
                       )}
                     />
+                    <span className="text-sm font-medium">
+                      {editingReminder.isActive ? "Active" : "Inactive"}
+                    </span>
                   </div>
                 </div>
+                <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                  <p className="text-xs text-muted-foreground">Last Run</p>
+                  <p className="text-sm font-medium">
+                    {editingReminder.lastRun
+                      ? editingReminder.lastRun.toLocaleDateString()
+                      : "Never"}
+                  </p>
+                </div>
+              </div>
+            )}
 
+            {/* If VIEW mode, we disable inputs or show read-only text */}
+            <fieldset
+              disabled={mode === "view"}
+              className={cn("space-y-4", mode === "view" && "opacity-100")}
+            >
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Clan Filters</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {clansStr
-                      .split(",")
-                      .map((tag) => tag.trim())
-                      .filter(Boolean)
-                      .map((tag, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    {mode !== "view" && (
-                      <Input
-                        value={clansStr}
-                        onChange={(e) => setClansStr(e.target.value)}
-                        placeholder="Air Hounds, Warriors"
-                        className="mt-2"
-                      />
-                    )}
-                  </div>
+                  <Label>Type</Label>
+                  <Select
+                    value={type}
+                    onValueChange={(v) => setType(v as ReminderType)}
+                    disabled={mode === "view"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="war">Clan War</SelectItem>
+                      <SelectItem value="raid">Capital Raid</SelectItem>
+                      <SelectItem value="clanGames">Clan Games</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Duration</Label>
+                  <Input
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className={
+                      mode === "view"
+                        ? "border-transparent bg-transparent px-0 h-auto font-medium"
+                        : ""
+                    }
+                  />
                   {mode !== "view" && (
                     <p className="text-[10px] text-muted-foreground">
-                      Leave empty for all clans.
+                      Time remaining (e.g. 1h, 30m)
                     </p>
                   )}
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Message</Label>
-                  <Textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+              <div className="space-y-2">
+                <Label>Target Channel</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-muted-foreground">
+                    #
+                  </span>
+                  <Input
+                    value={channelName}
+                    onChange={(e) => setChannelName(e.target.value)}
                     className={cn(
-                      mode === "view"
-                        ? "border-transparent bg-transparent px-0 resize-none font-medium h-auto min-h-0"
-                        : "h-24",
+                      "pl-7",
+                      mode === "view" &&
+                        "border-transparent bg-transparent pl-0 h-auto font-medium",
                     )}
                   />
                 </div>
+              </div>
 
-                {type === "war" && (
-                  <div className="flex items-center justify-between py-2">
-                    <Label className="text-sm">Exclude Participant List</Label>
-                    {mode === "view" ? (
-                      <span className="text-sm font-medium">
-                        {excludeParticipantList ? "Yes" : "No"}
-                      </span>
-                    ) : (
-                      <Switch
-                        checked={excludeParticipantList}
-                        onCheckedChange={setExcludeParticipantList}
-                      />
-                    )}
-                  </div>
-                )}
-              </fieldset>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
-              {mode === "view" ? (
-                <div className="flex w-full justify-between items-center">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() =>
-                      editingReminder && handleDelete(editingReminder.id)
-                    }
-                  >
-                    <Trash2 className="size-4 mr-2" />
-                    Delete
-                  </Button>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsDialogOpen(false)}
-                    >
-                      Close
-                    </Button>
-                    <Button onClick={() => setMode("edit")}>
-                      <Edit2 className="size-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
+              <div className="space-y-2">
+                <Label>Clan Filters</Label>
+                <div className="flex flex-wrap gap-2">
+                  {clansStr
+                    .split(",")
+                    .map((tag) => tag.trim())
+                    .filter(Boolean)
+                    .map((tag, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  {mode !== "view" && (
+                    <Input
+                      value={clansStr}
+                      onChange={(e) => setClansStr(e.target.value)}
+                      placeholder="Air Hounds, Warriors"
+                      className="mt-2"
+                    />
+                  )}
                 </div>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSave}>Save Reminder</Button>
-                </>
+                {mode !== "view" && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Leave empty for all clans.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Message</Label>
+                <Textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className={cn(
+                    mode === "view"
+                      ? "border-transparent bg-transparent px-0 resize-none font-medium h-auto min-h-0"
+                      : "h-24",
+                  )}
+                />
+              </div>
+
+              {type === "war" && (
+                <div className="flex items-center justify-between py-2">
+                  <Label className="text-sm">Exclude Participant List</Label>
+                  {mode === "view" ? (
+                    <span className="text-sm font-medium">
+                      {excludeParticipantList ? "Yes" : "No"}
+                    </span>
+                  ) : (
+                    <Switch
+                      checked={excludeParticipantList}
+                      onCheckedChange={setExcludeParticipantList}
+                    />
+                  )}
+                </div>
               )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </fieldset>
+          </div>
+        </Modal>
       </div>
     </Sheet>
   );

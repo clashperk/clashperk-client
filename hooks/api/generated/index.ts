@@ -95,13 +95,19 @@ export interface AuthUserDto {
   isBot: boolean;
 }
 
+export interface HandoffGuildDto {
+  id: string;
+  name: string;
+  iconUrl: string | null;
+}
+
 export interface HandoffUserDto {
   roles: UserRoles[];
   userId: string;
   displayName: string;
   username: string;
   isBot: boolean;
-  guildId: string;
+  guild: HandoffGuildDto;
   applicationId: string | null;
   avatarUrl: string | null;
 }

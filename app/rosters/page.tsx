@@ -16,19 +16,14 @@ import {
   Users,
   X,
 } from "lucide-react";
+
+import { Modal } from "@/components/modal";
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -399,74 +394,69 @@ export default function RosterPage() {
       </aside>
 
       {/* CREATE DIALOG (Global) */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Roster</DialogTitle>
-            <DialogDescription>
-              Configure constraints for your Clan War roster.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Roster Name</Label>
-              <Input
-                id="name"
-                value={newRosterName}
-                onChange={(e) => setNewRosterName(e.target.value)}
-                placeholder="e.g. CWL February Elite"
-              />
+      <Modal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        title="Create New Roster"
+        description="Configure constraints for your Clan War roster."
+        footer={<Button onClick={createRoster}>Create Roster</Button>}
+      >
+        <div className="py-2 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">Roster Name</Label>
+            <Input
+              id="name"
+              value={newRosterName}
+              onChange={(e) => setNewRosterName(e.target.value)}
+              placeholder="e.g. CWL February Elite"
+            />
+          </div>
+          <div className="space-y-4 pt-2">
+            <div className="flex justify-between items-center">
+              <Label>Town Hall Range</Label>
+              <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                {newRosterSettings.minTH} - {newRosterSettings.maxTH}
+              </span>
             </div>
-            <div className="space-y-4 pt-2">
-              <div className="flex justify-between items-center">
-                <Label>Town Hall Range</Label>
-                <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                  {newRosterSettings.minTH} - {newRosterSettings.maxTH}
-                </span>
-              </div>
-              <div className="px-2">
-                <Slider
-                  min={1}
-                  max={16}
-                  step={1}
-                  value={[newRosterSettings.minTH, newRosterSettings.maxTH]}
-                  onValueChange={([min, max]) =>
-                    setNewRosterSettings((prev) => ({
-                      ...prev,
-                      minTH: min,
-                      maxTH: max,
-                    }))
-                  }
-                  className="py-4"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Max Members</Label>
-                <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                  {newRosterSettings.maxMembers}
-                </span>
-              </div>
-              <Input
-                type="number"
-                min={5}
-                max={50}
-                value={newRosterSettings.maxMembers}
-                onChange={(e) =>
+            <div className="px-2">
+              <Slider
+                min={1}
+                max={16}
+                step={1}
+                value={[newRosterSettings.minTH, newRosterSettings.maxTH]}
+                onValueChange={([min, max]) =>
                   setNewRosterSettings((prev) => ({
                     ...prev,
-                    maxMembers: parseInt(e.target.value) || 30,
+                    minTH: min,
+                    maxTH: max,
                   }))
                 }
+                className="py-4"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={createRoster}>Create Roster</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Max Members</Label>
+              <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                {newRosterSettings.maxMembers}
+              </span>
+            </div>
+            <Input
+              type="number"
+              min={5}
+              max={50}
+              value={newRosterSettings.maxMembers}
+              onChange={(e) =>
+                setNewRosterSettings((prev) => ({
+                  ...prev,
+                  maxMembers: parseInt(e.target.value) || 30,
+                }))
+              }
+            />
+          </div>
+        </div>
+      </Modal>
 
       {/* MOBILE SHEET */}
       <Sheet>

@@ -1,15 +1,10 @@
 "use client";
 
+import { Modal } from "@/components/modal";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +48,7 @@ import * as React from "react";
 
 import { api } from "@/hooks/api/axios";
 import { CategoryDto, GuildClanDto } from "@/hooks/api/generated";
+import { useAuth } from "@/hooks/use-auth";
 
 // --- COMPONENTS ---
 
@@ -62,11 +58,13 @@ function SortableClanItem({
   categories,
   onMove,
   categoryName,
+  disabled,
 }: {
   clan: GuildClanDto;
   categories: CategoryDto[];
   onMove: (categoryId: string) => void;
   categoryName: string;
+  disabled?: boolean;
 }) {
   const {
     attributes,
@@ -75,7 +73,7 @@ function SortableClanItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: clan._id });
+  } = useSortable({ id: clan._id, disabled: disabled });
 
   const style = {
     // Restrict to Y axis to prevent horizontal scroll during drag
@@ -170,14 +168,16 @@ function SortableClanItem({
       </div>
 
       {/* DRAG HANDLE */}
-      <div
-        {...attributes}
-        {...listeners}
-        style={{ touchAction: "none" }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground cursor-grab active:cursor-grabbing rounded hover:bg-muted"
-      >
-        <GripVertical className="size-4" />
-      </div>
+      {!disabled && (
+        <div
+          {...attributes}
+          {...listeners}
+          style={{ touchAction: "none" }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground cursor-grab active:cursor-grabbing rounded hover:bg-muted"
+        >
+          <GripVertical className="size-4" />
+        </div>
+      )}
     </div>
   );
 }
@@ -262,6 +262,7 @@ function SortableCategoryItem({
   );
 }
 
+// 3. Category Sidebar Content
 function CategorySidebarContent({
   categories,
   activeCategoryId,
@@ -346,6 +347,7 @@ function CategorySidebarContent({
 }
 
 export default function ClansPage() {
+  const session = useAuth();
   const [categories, setCategories] = React.useState<CategoryDto[]>([]);
   const [activeCategoryId, setActiveCategoryId] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
@@ -357,7 +359,7 @@ export default function ClansPage() {
   const loadClans = async () => {
     try {
       const { data } = await api.guilds.getGuildClans({
-        guildId: "509784317598105619",
+        guildId: session.user.guild.id,
       });
       setCategories(data.categories);
     } catch (error) {
@@ -369,7 +371,7 @@ export default function ClansPage() {
     try {
       await api.guilds.reorderGuildClans(
         {
-          guildId: "509784317598105619",
+          guildId: session.user.guild.id,
         },
         {
           categories: updatedCategories.map((c, cIdx) => ({
@@ -390,7 +392,7 @@ export default function ClansPage() {
 
   React.useEffect(() => {
     loadClans();
-  }, []);
+  }, []); // eslint-disable-line
 
   const filteredClans = React.useMemo(() => {
     let allClans: GuildClanDto[] = [];
@@ -529,6 +531,15 @@ export default function ClansPage() {
     }),
   );
 
+  // Create a fast lookup for category names to avoid O(N*M) in the render loop
+  const categoryNameMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    categories.forEach((c) => {
+      map.set(c._id, c.displayName);
+    });
+    return map;
+  }, [categories]);
+
   return (
     <div className="h-[calc(100vh)] flex flex-col md:flex-row gap-6 p-4 md:px-6 md:pt-6 pb-10">
       {/* SIDEBAR */}
@@ -621,9 +632,9 @@ export default function ClansPage() {
                     categories={categories}
                     onMove={(catId) => handleMoveClan(clan._id, catId)}
                     categoryName={
-                      categories.find((c) => c._id === clan.categoryId)
-                        ?.displayName || "Unknown"
+                      categoryNameMap.get(clan.categoryId) || "Unknown"
                     }
+                    disabled={activeCategoryId === "all" || search.length > 0}
                   />
                 ))}
               </SortableContext>
@@ -639,30 +650,25 @@ export default function ClansPage() {
       </main>
 
       {/* CREATE CATEGORY DIALOG */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>New Clan Category</DialogTitle>
-            <DialogDescription>
-              Create a category to organize your clans
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cat-name">Category Name</Label>
-              <Input
-                id="cat-name"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="e.g. Feeder Clans"
-              />
-            </div>
+      <Modal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        title="New Clan Category"
+        description="Create a category to organize your clans"
+        footer={<Button onClick={createCategory}>Create Category</Button>}
+      >
+        <div className="py-2 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="cat-name">Category Name</Label>
+            <Input
+              id="cat-name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="e.g. Feeder Clans"
+            />
           </div>
-          <DialogFooter>
-            <Button onClick={createCategory}>Create Category</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
     </div>
   );
 }

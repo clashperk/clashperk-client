@@ -3,9 +3,13 @@ import "next-auth";
 declare module "next-auth" {
   interface User {
     id: string;
-		username: string;
-		guildId?: string;
-		applicationId: string | null;
+    username: string;
+    guild: {
+      id: string;
+      name: string;
+      iconUrl: string | null;
+    };
+    applicationId: string | null;
     roles: string[];
   }
 
@@ -16,7 +20,11 @@ declare module "next-auth" {
       displayName: string;
       username: string;
       avatarUrl: string;
-			guildId: string;
+      guild: {
+        id: string;
+        name: string;
+        iconUrl: string | null;
+      };
       roles: string[];
     };
   }
