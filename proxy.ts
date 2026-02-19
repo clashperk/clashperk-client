@@ -24,7 +24,7 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  if (!req.auth && !["/login", "/handoff"].includes(pathname)) {
+  if (!req.auth && !["/login", "/handoff", "/"].includes(pathname)) {
     const url = new URL("/login", req.url);
     url.searchParams.set("redirect", pathname);
 

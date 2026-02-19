@@ -9,6 +9,12 @@ import { v4 as uuid } from "uuid";
 const EXPIRES_IN_SECONDS = 60 * 60;
 const REFRESH_INTERVAL_SECONDS = 60;
 
+const defaultGuild = {
+  id: "---",
+  name: "CLASHPERK",
+  iconUrl: "/icons/icon-192x192.png",
+};
+
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
 const authHeaders = { "x-api-key": process.env.SERVICE_API_KEY };
 
@@ -109,8 +115,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.roles = user.roles;
         token.username = user.username;
 
-        token.guild = user.guild;
-        token.guildId = user.guild.id;
+        token.guild = user.guild || defaultGuild;
+        token.guildId = user.guild?.id || defaultGuild.id;
 
         token.applicationId = user.applicationId;
 

@@ -6,8 +6,6 @@ import {
   ClipboardList,
   Crown,
   FileSpreadsheet,
-  Github,
-  MessageCircle,
   Rss,
   Search,
   ShieldCheck,
@@ -16,6 +14,7 @@ import {
 import { Kanit } from "next/font/google"; // Import Kanit font
 import Link from "next/link";
 import { useRef } from "react";
+import { SiDiscord, SiGithub, SiPatreon, SiPaypal } from "react-icons/si";
 
 // Setup Kanit font options
 const kanit = Kanit({
@@ -364,16 +363,34 @@ export default function Home() {
 
             <div className="flex items-center gap-8">
               <Link
-                href="#"
-                className="text-gray-500 hover:text-white transition-colors"
+                href="https://www.patreon.com/clashperk"
+                target="_blank"
+                className="text-gray-500 hover:text-[#f96854] transition-colors"
+                title="Support on Patreon"
               >
-                <Github className="w-6 h-6" />
+                <SiPatreon className="w-6 h-6" />
               </Link>
               <Link
-                href="#"
+                href="https://www.paypal.com/ncp/links/3MHCY7FZYEZ6L"
+                target="_blank"
+                className="text-gray-500 hover:text-[#00457C] transition-colors"
+                title="Donate via PayPal"
+              >
+                <SiPaypal className="w-6 h-6" />
+              </Link>
+              <Link
+                href="https://github.com/clashperk"
+                target="_blank"
                 className="text-gray-500 hover:text-white transition-colors"
               >
-                <MessageCircle className="w-6 h-6" />
+                <SiGithub className="w-6 h-6" />
+              </Link>
+              <Link
+                href="https://discord.gg/ppuppun"
+                target="_blank"
+                className="text-gray-500 hover:text-white transition-colors"
+              >
+                <SiDiscord className="w-6 h-6" />
               </Link>
             </div>
           </div>
