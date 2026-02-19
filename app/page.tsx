@@ -371,7 +371,7 @@ export default function Home() {
                 <SiPatreon className="w-6 h-6" />
               </Link>
               <Link
-                href="https://www.paypal.com/ncp/links/3MHCY7FZYEZ6L"
+                href="https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L"
                 target="_blank"
                 className="text-gray-500 hover:text-[#00457C] transition-colors"
                 title="Donate via PayPal"
