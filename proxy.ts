@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "./lib/auth";
+import { unauthenticatedRoutes } from "./lib/routelist";
 
 function redirectTo(searchParams: URLSearchParams, pathname: string) {
   searchParams.delete("handoff_token");
@@ -24,7 +25,7 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  if (!req.auth && !["/login", "/handoff", "/"].includes(pathname)) {
+  if (!req.auth && !unauthenticatedRoutes.includes(pathname)) {
     const url = new URL("/login", req.url);
     url.searchParams.set("redirect", pathname);
 
