@@ -25,7 +25,7 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  if (!req.auth && !isUnauthenticatedRoute(pathname)) {
+  if (!req.auth?.user && !isUnauthenticatedRoute(pathname)) {
     const url = new URL("/login", req.url);
     url.searchParams.set("redirect", pathname);
 
