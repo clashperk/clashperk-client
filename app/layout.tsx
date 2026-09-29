@@ -9,7 +9,7 @@ import { MobileHeader } from "@/components/mobile-nav";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { httpClient } from "@/hooks/api/axios";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +32,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const session = await getSession();
   httpClient.setSecurityData({ accessToken: session?.accessToken });
 
   return (
