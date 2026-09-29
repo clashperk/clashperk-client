@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist_Mono, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
 import { AppShell } from "@/components/app-shell";
@@ -11,8 +11,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { httpClient } from "@/hooks/api/axios";
 import { getSession } from "@/lib/auth";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunitoSans = Nunito_Sans({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -38,7 +43,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased overscroll-none`}
+        className={`${nunitoSans.variable} ${fraunces.variable} ${geistMono.variable} antialiased overscroll-none`}
       >
         <ThemeProvider
           defaultTheme="dark"
