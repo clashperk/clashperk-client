@@ -57,8 +57,7 @@ export function Modal({
             )}
           </DialogHeader>
           {children}
-          {/* Dialog doesn't have a specific footer component in standard shadcn but usually it's just div at bottom */}
-          {/* If the user passes a footer, render it. */}
+          {footer && <div className="flex justify-end gap-2">{footer}</div>}
         </DialogContent>
       </Dialog>
     );

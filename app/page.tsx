@@ -111,7 +111,7 @@ export default function Home() {
 
             <div className="pt-8 flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="#"
+                href="/invite"
                 className="relative inline-flex h-14 items-center justify-center overflow-hidden rounded-lg bg-blue-600 px-8 font-bold text-white shadow-lg transition-all hover:bg-blue-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] animate-[shimmer_2s_infinite]" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { unauthenticatedRoutes } from "@/lib/routelist";
+import { isUnauthenticatedRoute } from "@/lib/routelist";
 import { usePathname } from "next/navigation";
 
 interface AppShellProps {
@@ -12,7 +12,7 @@ interface AppShellProps {
 
 export function AppShell({ children, sidebar, header }: AppShellProps) {
   const pathname = usePathname();
-  const hideSidebar = unauthenticatedRoutes.includes(pathname);
+  const hideSidebar = isUnauthenticatedRoute(pathname);
 
   if (hideSidebar) {
     return <main className="w-full h-full">{children}</main>;

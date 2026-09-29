@@ -178,6 +178,45 @@ export interface LastSeenDto {
   items: LastSeenMemberDto[];
 }
 
+export interface CapitalContributionClanDto {
+  name: string;
+  tag: string;
+}
+
+export interface CapitalContributionItemDto {
+  name: string;
+  tag: string;
+  season: string;
+  initial: number;
+  current: number;
+  clan: CapitalContributionClanDto;
+  /** @format date-time */
+  createdAt: string;
+}
+
+export interface CapitalContributionDto {
+  items: CapitalContributionItemDto[];
+}
+
+export interface ClanLinkedMemberDto {
+  name: string;
+  tag: string;
+  role: string;
+  townHallLevel: number;
+  userId?: string | null;
+  username?: string | null;
+  displayName?: string | null;
+  verified: boolean;
+  deletable: boolean;
+}
+
+export interface ClanLinksDto {
+  name: string;
+  tag: string;
+  members: number;
+  memberList: ClanLinkedMemberDto[];
+}
+
 export interface GlobalClanEntity {
   tag: string;
   name: string;
@@ -486,8 +525,10 @@ export interface RemoveMembersBulkInput {
 export interface TransferRosterMembersInput {
   /** @minItems 1 */
   playerTags: string[];
-  newRosterId: string;
-  newGroupId: string;
+  /** Required unless newGroupId is set. */
+  newRosterId?: string;
+  /** Required unless newRosterId is set. */
+  newGroupId?: string;
 }
 
 export interface TransferRosterMembersDto {
@@ -625,6 +666,24 @@ export interface GetLastSeenParams {
 export type GetLastSeenData = LastSeenDto;
 
 export type GetLastSeenError = ErrorResponseDto;
+
+export interface GetCapitalContributionParams {
+  /** @example "2026-09-25" */
+  season?: string;
+  clanTag: string;
+}
+
+export type GetCapitalContributionData = CapitalContributionDto;
+
+export type GetCapitalContributionError = ErrorResponseDto;
+
+export interface GetClanLinksParams {
+  clanTag: string;
+}
+
+export type GetClanLinksData = ClanLinksDto;
+
+export type GetClanLinksError = ErrorResponseDto;
 
 export interface GetClanHistoryParams {
   playerTag: string;
@@ -1957,6 +2016,54 @@ export class Api<SecurityDataType extends unknown> {
     ) =>
       this.http.request<GetLastSeenData, GetLastSeenError>({
         path: `/clans/${clanTag}/lastseen`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Clans
+     * @name GetCapitalContribution
+     * @request GET:/clans/{clanTag}/capital-contribution
+     * @secure
+     * @response `200` `GetCapitalContributionData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getCapitalContribution: (
+      { clanTag, ...query }: GetCapitalContributionParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<
+        GetCapitalContributionData,
+        GetCapitalContributionError
+      >({
+        path: `/clans/${clanTag}/capital-contribution`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Clans
+     * @name GetClanLinks
+     * @request GET:/clans/{clanTag}/links
+     * @secure
+     * @response `200` `GetClanLinksData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getClanLinks: (
+      { clanTag, ...query }: GetClanLinksParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<GetClanLinksData, GetClanLinksError>({
+        path: `/clans/${clanTag}/links`,
         method: "GET",
         secure: true,
         format: "json",
