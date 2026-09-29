@@ -50,9 +50,9 @@ const getUserRoles = async (userId: string) => {
 
     return data.roles.includes(UserRoles.ADMIN)
       ? [UserRoles.ADMIN]
-      : [UserRoles.ADMIN];
+      : [UserRoles.USER];
   } catch {
-    return [UserRoles.ADMIN];
+    return [UserRoles.USER];
   }
 };
 

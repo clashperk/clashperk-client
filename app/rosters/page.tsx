@@ -1,931 +1,672 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { Modal } from "@/components/modal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { api } from "@/hooks/api/axios";
+import {
+  RosterGroupsEntity,
+  RosterMemberOfRostersEntity,
+  RostersEntity,
+  TransferRosterMembersDto,
+} from "@/hooks/api/generated";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 import {
   ArrowRightCircle,
-  CheckSquare,
   ChevronRight,
+  FolderInput,
+  Loader2,
   Lock,
   Menu,
-  MoreVertical,
-  Plus,
   Search,
   Shield,
-  Swords,
   Trash2,
   Users,
   X,
 } from "lucide-react";
-
-import { Modal } from "@/components/modal";
+import { useSearchParams } from "next/navigation";
 import * as React from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+const DEFAULT_MAX_MEMBERS = 50;
+const NO_GROUP = "none";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
-import { PLAYERS, type Player } from "./components/dummy";
+type TransferResult = TransferRosterMembersDto["result"];
 
-interface Roster {
-  id: string;
-  name: string;
-  playerIds: string[];
-  isLocked: boolean;
-  settings: {
-    minTH: number;
-    maxTH: number;
-    maxMembers: number;
-  };
+export default function RostersPage() {
+  return (
+    <React.Suspense>
+      <RosterManager />
+    </React.Suspense>
+  );
 }
 
-// --- MOCK DATA ---
+function RosterManager() {
+  const session = useAuth();
+  const guildId = session.user.guild.id;
+  const searchParams = useSearchParams();
 
-// --- HELPER COMPONENTS (DND wrappers) ---
+  const [rosters, setRosters] = React.useState<RostersEntity[]>([]);
+  const [groups, setGroups] = React.useState<RosterGroupsEntity[]>([]);
+  const [activeRosterId, setActiveRosterId] = React.useState<string>("");
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState("");
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
-function RosterSidebarContent({
+  const [dialog, setDialog] = React.useState<"move" | "group" | "remove" | null>(null);
+  const [results, setResults] = React.useState<TransferResult>([]);
+
+  const loadRosters = React.useCallback(async () => {
+    try {
+      const { data } = await api.rosters.getRosters({ guildId });
+      setRosters(data.rosters);
+      setGroups(data.categories);
+      setActiveRosterId((current) => {
+        if (current && data.rosters.some((r) => r._id === current)) return current;
+        const requested = searchParams.get("roster");
+        return data.rosters.find((r) => r._id === requested)?._id ?? data.rosters[0]?._id ?? "";
+      });
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [guildId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    loadRosters();
+  }, [loadRosters]);
+
+  const selectRoster = (rosterId: string) => {
+    setActiveRosterId(rosterId);
+    setSelected(new Set());
+    setResults([]);
+  };
+
+  const activeRoster = rosters.find((r) => r._id === activeRosterId);
+  const groupNames = React.useMemo(
+    () => new Map(groups.map((g) => [g._id, g.displayName])),
+    [groups],
+  );
+
+  const memberGroups = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const members = (activeRoster?.members ?? []).filter(
+      (m) =>
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.tag.toLowerCase().includes(q) ||
+        m.username?.toLowerCase().includes(q),
+    );
+
+    const grouped = new Map<string, RosterMemberOfRostersEntity[]>();
+    for (const member of members) {
+      const key = member.categoryId && groupNames.has(member.categoryId) ? member.categoryId : NO_GROUP;
+      grouped.set(key, [...(grouped.get(key) ?? []), member]);
+    }
+
+    return [...grouped.entries()]
+      .map(([id, list]) => ({
+        id,
+        name: id === NO_GROUP ? "No Group" : groupNames.get(id)!,
+        members: list.sort((a, b) => b.townHallLevel - a.townHallLevel),
+      }))
+      .sort((a, b) => (a.id === NO_GROUP ? 1 : b.id === NO_GROUP ? -1 : a.name.localeCompare(b.name)));
+  }, [activeRoster, groupNames, search]);
+
+  const visibleTags = memberGroups.flatMap((g) => g.members.map((m) => m.tag));
+  const allSelected = visibleTags.length > 0 && visibleTags.every((tag) => selected.has(tag));
+
+  const toggle = (tags: string[], checked: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      tags.forEach((tag) => (checked ? next.add(tag) : next.delete(tag)));
+      return next;
+    });
+  };
+
+  const onActionDone = async (result: TransferResult = []) => {
+    setDialog(null);
+    setSelected(new Set());
+    setResults(result.filter((r) => !r.success));
+    await loadRosters();
+  };
+
+  const sidebar = (
+    <RosterSidebar
+      rosters={rosters}
+      activeRosterId={activeRosterId}
+      onSelect={selectRoster}
+    />
+  );
+
+  return (
+    <div className="h-[calc(100vh)] flex flex-col md:flex-row gap-6 p-4 md:px-6 md:pt-6 pb-10">
+      <aside className="hidden md:flex w-72 shrink-0 flex-col gap-4">{sidebar}</aside>
+
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden absolute top-4 right-4 z-50">
+            <Menu className="size-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="p-0 w-80">
+          <div className="h-full p-4 pt-12 flex flex-col gap-4">{sidebar}</div>
+        </SheetContent>
+      </Sheet>
+
+      <main className="flex-1 flex flex-col min-h-0 gap-4">
+        {error && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center text-muted-foreground">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
+        ) : !activeRoster ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+            <Shield className="size-16 mb-4 opacity-10" />
+            <h3 className="text-lg font-medium">
+              {rosters.length ? "Select a Roster" : "No rosters in this server"}
+            </h3>
+            {!rosters.length && (
+              <p className="text-sm">Create one with the /roster create command.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <RosterHeader roster={activeRoster} />
+
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2 shadow-sm">
+              <label className="flex items-center gap-2 px-2 text-sm">
+                <Checkbox
+                  checked={allSelected}
+                  disabled={!visibleTags.length}
+                  onCheckedChange={(checked) => toggle(visibleTags, checked === true)}
+                />
+                {selected.size ? `${selected.size} selected` : "Select all"}
+              </label>
+
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!selected.size || rosters.length < 2}
+                  onClick={() => setDialog("move")}
+                >
+                  <ArrowRightCircle className="mr-1.5 size-4" /> Change Roster
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!selected.size || !groups.length}
+                  onClick={() => setDialog("group")}
+                >
+                  <FolderInput className="mr-1.5 size-4" /> Change Group
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="hover:bg-destructive/10 hover:text-destructive"
+                  disabled={!selected.size}
+                  onClick={() => setDialog("remove")}
+                >
+                  <Trash2 className="mr-1.5 size-4" /> Remove
+                </Button>
+              </div>
+
+              <div className="relative w-full md:w-56">
+                <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search members..."
+                  className="h-8 pl-8"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {results.length > 0 && (
+              <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm">
+                <div className="mb-1 flex items-center justify-between font-medium text-orange-400">
+                  Some players could not be moved
+                  <Button size="icon" variant="ghost" className="size-6" onClick={() => setResults([])}>
+                    <X className="size-3.5" />
+                  </Button>
+                </div>
+                <ul className="space-y-0.5 text-muted-foreground">
+                  {results.map((r, i) => (
+                    <li key={i}>
+                      <span className="font-medium text-foreground">
+                        {r.player.name} ({r.player.tag})
+                      </span>
+                      : {r.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
+              {memberGroups.map((group) => {
+                const tags = group.members.map((m) => m.tag);
+                return (
+                  <section key={group.id} className="rounded-lg border bg-card">
+                    <header className="flex items-center gap-2 border-b px-3 py-2">
+                      <Checkbox
+                        checked={tags.every((tag) => selected.has(tag))}
+                        onCheckedChange={(checked) => toggle(tags, checked === true)}
+                      />
+                      <span className="text-sm font-semibold">{group.name}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {group.members.length}
+                      </Badge>
+                    </header>
+                    <div className="divide-y">
+                      {group.members.map((member) => (
+                        <MemberRow
+                          key={member.tag}
+                          member={member}
+                          selected={selected.has(member.tag)}
+                          onToggle={(checked) => toggle([member.tag], checked)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+              {memberGroups.length === 0 && (
+                <div className="flex h-48 flex-col items-center justify-center text-muted-foreground opacity-60">
+                  <Users className="size-10 mb-2 opacity-20" />
+                  <p className="text-sm">{search ? "No members found." : "This roster is empty."}</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </main>
+
+      {activeRoster && (
+        <>
+          <MoveMembersModal
+            open={dialog === "move"}
+            guildId={guildId}
+            roster={activeRoster}
+            rosters={rosters}
+            groups={groups}
+            playerTags={[...selected]}
+            onClose={() => setDialog(null)}
+            onDone={onActionDone}
+          />
+          <ChangeGroupModal
+            open={dialog === "group"}
+            guildId={guildId}
+            roster={activeRoster}
+            groups={groups}
+            playerTags={[...selected]}
+            onClose={() => setDialog(null)}
+            onDone={onActionDone}
+          />
+          <RemoveMembersModal
+            open={dialog === "remove"}
+            guildId={guildId}
+            roster={activeRoster}
+            playerTags={[...selected]}
+            onClose={() => setDialog(null)}
+            onDone={onActionDone}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function RosterSidebar({
   rosters,
   activeRosterId,
-  onSelectRoster,
-  onOpenCreate,
+  onSelect,
 }: {
-  rosters: Roster[];
+  rosters: RostersEntity[];
   activeRosterId: string;
-  onSelectRoster: (id: string) => void;
-  onOpenCreate: () => void;
+  onSelect: (id: string) => void;
 }) {
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
+      <div className="flex items-center p-4 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
         <div>
           <h2 className="text-lg font-bold leading-none">Your Rosters</h2>
           <p className="text-[10px] text-muted-foreground mt-1 font-medium">
-            {rosters.length} Total &middot;{" "}
-            {rosters.filter((r) => r.isLocked).length} Locked
+            {rosters.length} Total &middot; {rosters.filter((r) => r.closed).length} Closed
           </p>
         </div>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
-          onClick={onOpenCreate}
-        >
-          <Plus className="size-4" />
-        </Button>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3">
-        {rosters.map((r) => (
-          <RosterTab
-            key={r.id}
-            isActive={activeRosterId === r.id}
-            onSelect={() => onSelectRoster(r.id)}
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn(
-                    "font-semibold truncate",
-                    activeRosterId === r.id
-                      ? "text-primary"
-                      : "text-foreground",
-                  )}
-                >
-                  {r.name}
+        {rosters.map((roster) => {
+          const isActive = roster._id === activeRosterId;
+          return (
+            <button
+              key={roster._id}
+              onClick={() => onSelect(roster._id)}
+              className={cn(
+                "w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between overflow-hidden",
+                isActive
+                  ? "bg-primary/10 border-primary/50 ring-1 ring-primary/20"
+                  : "bg-card border-border hover:border-primary/20",
+              )}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={cn("font-semibold truncate", isActive && "text-primary")}>
+                    {roster.name}
+                  </span>
+                  {roster.closed && <Lock className="size-3 text-muted-foreground shrink-0" />}
                 </div>
-                {r.isLocked && (
-                  <Lock className="size-3 text-muted-foreground" />
-                )}
+                <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
+                    {roster.members.length}/{roster.maxMembers ?? DEFAULT_MAX_MEMBERS}
+                  </Badge>
+                  <span className="truncate">{roster.clan.name}</span>
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] px-1 py-0 h-4"
-                >
-                  {r.playerIds.length}/{r.settings.maxMembers}
-                </Badge>
-                <span>
-                  TH {r.settings.minTH}-{r.settings.maxTH}
-                </span>
-              </div>
-            </div>
-            {activeRosterId === r.id && (
-              <ChevronRight className="size-4 text-primary opacity-50 shrink-0" />
-            )}
-          </RosterTab>
-        ))}
+              {isActive && <ChevronRight className="size-4 text-primary opacity-50 shrink-0" />}
+            </button>
+          );
+        })}
       </div>
     </>
   );
 }
 
-function RosterTab({
-  isActive,
-  onSelect,
-  children,
-}: {
-  isActive: boolean;
-  onSelect: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className={cn(
-        "w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between group relative overflow-hidden",
-        isActive
-          ? "bg-primary/10 border-primary/50 ring-1 ring-primary/20"
-          : "bg-card border-border hover:border-primary/20",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-// --- MAIN PAGE ---
-
-export default function RosterPage() {
-  const [rosters, setRosters] = React.useState<Roster[]>([
-    {
-      id: "default-1",
-      name: "CWL - Champions",
-      playerIds: ["1", "2", "3", "4", "5"],
-      isLocked: false,
-      settings: { minTH: 1, maxTH: 16, maxMembers: 15 },
-    },
-    {
-      id: "default-2",
-      name: "Regular War 50v50",
-      playerIds: [],
-      isLocked: false,
-      settings: { minTH: 1, maxTH: 16, maxMembers: 50 },
-    },
-  ]);
-  const [activeRosterId, setActiveRosterId] =
-    React.useState<string>("default-1");
-  const [search, setSearch] = React.useState("");
-  const [activeMobileTab, setActiveMobileTab] = React.useState<
-    "pool" | "lineup"
-  >("pool");
-
-  // Bulk Selection State
-  const [selectedPlayerIds, setSelectedPlayerIds] = React.useState<string[]>(
-    [],
-  );
-  const [isMultiSelectMode, setIsMultiSelectMode] = React.useState(false);
-
-  // Dialog State
-  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
-  const [newRosterName, setNewRosterName] = React.useState("");
-  const [newRosterSettings, setNewRosterSettings] = React.useState({
-    minTH: 10,
-    maxTH: 16,
-    maxMembers: 30,
-  });
-
-  const activeRoster = React.useMemo(
-    () => rosters.find((r) => r.id === activeRosterId),
-    [rosters, activeRosterId],
-  );
-
-  // Lists
-  const availablePlayers = React.useMemo(() => {
-    if (!activeRoster) return [];
-    return (
-      PLAYERS
-        // Filter by Roster Settings
-        .filter(
-          (p) =>
-            p.townHall >= activeRoster.settings.minTH &&
-            p.townHall <= activeRoster.settings.maxTH,
-        )
-        // Filter out already in active roster
-        .filter((p) => !activeRoster.playerIds.includes(p.id))
-        // Filter by Search
-        .filter(
-          (p) =>
-            p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.tag.toLowerCase().includes(search.toLowerCase()),
-        )
-        .sort((a: Player, b: Player) => b.townHall - a.townHall)
-    );
-  }, [activeRoster, search]);
-
-  const rosterPlayers = React.useMemo(() => {
-    if (!activeRoster) return [];
-    return activeRoster.playerIds
-      .map((id) => PLAYERS.find((p) => p.id === id))
-      .filter((p): p is Player => !!p)
-      .sort((a: Player, b: Player) => b.townHall - a.townHall);
-  }, [activeRoster]);
-
-  // --- ACTIONS ---
-
-  const createRoster = () => {
-    if (!newRosterName.trim()) return;
-    const newRoster: Roster = {
-      id: Date.now().toString(),
-      name: newRosterName,
-      playerIds: [],
-      isLocked: false,
-      settings: newRosterSettings,
-    };
-    setRosters([...rosters, newRoster]);
-    setActiveRosterId(newRoster.id);
-    setNewRosterName("");
-    setIsCreateOpen(false);
-  };
-
-  const deleteRoster = (id: string) => {
-    const newRosters = rosters.filter((r) => r.id !== id);
-    setRosters(newRosters);
-    if (activeRosterId === id && newRosters.length > 0) {
-      setActiveRosterId(newRosters[0].id);
-    }
-  };
-
-  const toggleLock = (id: string) => {
-    setRosters((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isLocked: !r.isLocked } : r)),
-    );
-  };
-
-  const addPlayerToRoster = (playerId: string, rosterId: string) => {
-    const targetRoster = rosters.find((r) => r.id === rosterId);
-    if (!targetRoster || targetRoster.isLocked) return;
-    if (targetRoster.playerIds.includes(playerId)) return;
-    if (targetRoster.playerIds.length >= targetRoster.settings.maxMembers) {
-      return;
-    }
-
-    setRosters((prev) =>
-      prev.map((r) => {
-        if (r.id === rosterId) {
-          return { ...r, playerIds: [...r.playerIds, playerId] };
-        }
-        return r;
-      }),
-    );
-  };
-
-  const removePlayerFromRoster = (playerId: string, rosterId: string) => {
-    const targetRoster = rosters.find((r) => r.id === rosterId);
-    if (!targetRoster || targetRoster.isLocked) return;
-
-    setRosters((prev) =>
-      prev.map((r) => {
-        if (r.id === rosterId) {
-          return {
-            ...r,
-            playerIds: r.playerIds.filter((id) => id !== playerId),
-          };
-        }
-        return r;
-      }),
-    );
-    // Remove from selection if it was selected
-    setSelectedPlayerIds((prev) => prev.filter((id) => id !== playerId));
-  };
-
-  const toggleSelection = (playerId: string) => {
-    setSelectedPlayerIds((prev) =>
-      prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId)
-        : [...prev, playerId],
-    );
-  };
-
-  const moveSelectedToRoster = (targetRosterId: string) => {
-    // ... same code ...
-    if (selectedPlayerIds.length === 0) return;
-
-    const targetRoster = rosters.find((r) => r.id === targetRosterId);
-    if (
-      !targetRoster ||
-      targetRoster.isLocked ||
-      targetRoster.id === activeRoster?.id
-    )
-      return;
-
-    // Filter eligible players (not already in target)
-    const eligibleIds = selectedPlayerIds.filter(
-      (id) => !targetRoster.playerIds.includes(id),
-    );
-
-    // Check limits (simplified)
-    if (
-      targetRoster.playerIds.length + eligibleIds.length >
-      targetRoster.settings.maxMembers
-    ) {
-      return;
-    }
-
-    setRosters((prev) =>
-      prev.map((r) => {
-        if (r.id === targetRosterId) {
-          return { ...r, playerIds: [...r.playerIds, ...eligibleIds] };
-        }
-        // Also remove from the active roster if it's the source
-        if (r.id === activeRosterId) {
-          return {
-            ...r,
-            playerIds: r.playerIds.filter(
-              (id) => !selectedPlayerIds.includes(id),
-            ),
-          };
-        }
-        return r;
-      }),
-    );
-
-    setSelectedPlayerIds([]);
-    setIsMultiSelectMode(false);
-  };
-
-  const removeSelectedFromRoster = () => {
-    if (
-      selectedPlayerIds.length === 0 ||
-      !activeRoster ||
-      activeRoster.isLocked
-    )
-      return;
-
-    setRosters((prev) =>
-      prev.map((r) => {
-        if (r.id === activeRosterId) {
-          return {
-            ...r,
-            playerIds: r.playerIds.filter(
-              (id) => !selectedPlayerIds.includes(id),
-            ),
-          };
-        }
-        return r;
-      }),
-    );
-    setSelectedPlayerIds([]);
-    setIsMultiSelectMode(false);
-  };
+function RosterHeader({ roster }: { roster: RostersEntity }) {
+  const stats = [
+    ["Members", `${roster.members.length}/${roster.maxMembers ?? DEFAULT_MAX_MEMBERS}`],
+    roster.minTownHall || roster.maxTownHall
+      ? ["Town Hall", `${roster.minTownHall ?? 1} - ${roster.maxTownHall ?? "max"}`]
+      : null,
+    roster.minHeroLevels ? ["Min. Hero Levels", `${roster.minHeroLevels}`] : null,
+  ].filter((stat): stat is string[] => !!stat);
 
   return (
-    <div className="h-[calc(100vh)] flex flex-col md:flex-row gap-6 p-4 md:px-6 md:pt-6 pb-10">
-      {/* LEFT SIDEBAR: ROSTER LIST */}
-      {/* LEFT SIDEBAR: DESKTOP ONLY */}
-      <aside className="hidden md:flex w-72 shrink-0 flex-col gap-4">
-        <RosterSidebarContent
-          rosters={rosters}
-          activeRosterId={activeRosterId}
-          onSelectRoster={setActiveRosterId}
-          onOpenCreate={() => setIsCreateOpen(true)}
-        />
-      </aside>
-
-      {/* CREATE DIALOG (Global) */}
-      <Modal
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        title="Create New Roster"
-        description="Configure constraints for your Clan War roster."
-        footer={<Button onClick={createRoster}>Create Roster</Button>}
-      >
-        <div className="py-2 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Roster Name</Label>
-            <Input
-              id="name"
-              value={newRosterName}
-              onChange={(e) => setNewRosterName(e.target.value)}
-              placeholder="e.g. CWL February Elite"
-            />
+    <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4 shadow-sm">
+      <div className="p-2 bg-primary/10 rounded-lg text-primary">
+        {roster.closed ? <Lock className="size-5" /> : <Shield className="size-5" />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h1 className="text-lg font-bold leading-tight flex items-center gap-2">
+          {roster.name}
+          {roster.closed && (
+            <Badge variant="destructive" className="text-[10px] h-5">
+              Closed
+            </Badge>
+          )}
+        </h1>
+        <p className="text-xs text-muted-foreground font-medium">
+          {roster.clan.name} ({roster.clan.tag})
+        </p>
+      </div>
+      <div className="flex gap-6">
+        {stats.map(([label, value]) => (
+          <div key={label} className="text-right">
+            <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+            <div className="font-semibold">{value}</div>
           </div>
-          <div className="space-y-4 pt-2">
-            <div className="flex justify-between items-center">
-              <Label>Town Hall Range</Label>
-              <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                {newRosterSettings.minTH} - {newRosterSettings.maxTH}
-              </span>
-            </div>
-            <div className="px-2">
-              <Slider
-                min={1}
-                max={16}
-                step={1}
-                value={[newRosterSettings.minTH, newRosterSettings.maxTH]}
-                onValueChange={([min, max]) =>
-                  setNewRosterSettings((prev) => ({
-                    ...prev,
-                    minTH: min,
-                    maxTH: max,
-                  }))
-                }
-                className="py-4"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Max Members</Label>
-              <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
-                {newRosterSettings.maxMembers}
-              </span>
-            </div>
-            <Input
-              type="number"
-              min={5}
-              max={50}
-              value={newRosterSettings.maxMembers}
-              onChange={(e) =>
-                setNewRosterSettings((prev) => ({
-                  ...prev,
-                  maxMembers: parseInt(e.target.value) || 30,
-                }))
-              }
-            />
-          </div>
-        </div>
-      </Modal>
-
-      {/* MOBILE SHEET */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden absolute top-4 right-4 z-50"
-          >
-            <Menu className="size-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="p-0 w-80">
-          <div className="h-full p-4 pt-12 flex flex-col gap-4">
-            <RosterSidebarContent
-              rosters={rosters}
-              activeRosterId={activeRosterId}
-              onSelectRoster={setActiveRosterId}
-              onOpenCreate={() => setIsCreateOpen(true)}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* RIGHT CONTENT: EDITOR */}
-      <main className="flex-1 flex flex-col min-h-0 bg-background/50 rounded-t-xl">
-        {activeRoster ? (
-          <>
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mb-4 p-2 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
-              <div className="flex items-center gap-3 px-2">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  {activeRoster.isLocked ? (
-                    <Lock className="size-5" />
-                  ) : (
-                    <Shield className="size-5" />
-                  )}
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold leading-tight flex items-center gap-2">
-                    {activeRoster.name}
-                  </h1>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    Avg TH:{" "}
-                    {(
-                      rosterPlayers.reduce((acc, p) => acc + p.townHall, 0) /
-                      (rosterPlayers.length || 1)
-                    ).toFixed(1)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleLock(activeRoster.id)}
-                  className={cn(
-                    activeRoster.isLocked
-                      ? "text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {activeRoster.isLocked ? "Unlock" : "Lock"}
-                </Button>
-                <div className="h-6 w-px bg-border" />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => deleteRoster(activeRoster.id)}
-                      className="text-destructive"
-                    >
-                      Delete Roster
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* MOBILE TABS */}
-            <div className="flex items-center p-1 bg-muted/50 rounded-lg mb-4 lg:hidden shrink-0">
-              <Button
-                variant={activeMobileTab === "pool" ? "secondary" : "ghost"}
-                size="sm"
-                className="flex-1 text-xs h-7 shadow-none"
-                onClick={() => setActiveMobileTab("pool")}
-              >
-                Pool ({availablePlayers.length})
-              </Button>
-              <Button
-                variant={activeMobileTab === "lineup" ? "secondary" : "ghost"}
-                size="sm"
-                className="flex-1 text-xs h-7 shadow-none"
-                onClick={() => setActiveMobileTab("lineup")}
-              >
-                Lineup ({rosterPlayers.length})
-              </Button>
-            </div>
-
-            {/* Dual Pane Editor */}
-            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
-              {/* COLUMN 1: AVAILABLE POOL */}
-              <div
-                className={cn(
-                  "flex-col gap-3 min-h-0 transition-all rounded-t-xl rounded-b-none p-2",
-                  activeMobileTab === "pool" ? "flex flex-1" : "hidden lg:flex",
-                )}
-              >
-                <div className="flex items-center justify-between px-1">
-                  <div className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-                    <Users className="size-4" />
-                    Pool
-                    <Badge variant="outline" className="text-[10px]">
-                      {availablePlayers.length}
-                    </Badge>
-                  </div>
-                  <div className="relative w-40">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
-                    <Input
-                      placeholder="Filter..."
-                      className="pl-7 h-7 text-xs bg-background/50"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <Card className="flex-1 overflow-hidden flex flex-col bg-muted/30 border-dashed border-2 shadow-none">
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar">
-                    {availablePlayers.map((player) => (
-                      <PlayerListItem
-                        key={player.id}
-                        player={player}
-                        actionIcon={<Plus className="size-4" />}
-                        onAction={() =>
-                          addPlayerToRoster(player.id, activeRoster.id)
-                        }
-                        actionVariant="default"
-                        // No select mode for pool for now
-                      />
-                    ))}
-                    {availablePlayers.length === 0 && (
-                      <EmptyState
-                        icon={Users}
-                        title="No Players Available"
-                        description={
-                          search
-                            ? "Adjust your search filters."
-                            : "All eligible players are in the roster."
-                        }
-                      />
-                    )}
-                  </div>
-                </Card>
-              </div>
-
-              {/* COLUMN 2: SELECTED ROSTER */}
-              <div
-                className={cn(
-                  "flex-col gap-3 min-h-0 transition-all rounded-t-xl rounded-b-none p-2",
-                  activeMobileTab === "lineup"
-                    ? "flex flex-1"
-                    : "hidden lg:flex",
-                )}
-              >
-                {/* LINEUP HEADER with SELECTION CONTROLS */}
-                <div className="flex items-center justify-between px-1 min-h-[32px]">
-                  <div className="text-sm font-semibold flex items-center gap-2 text-primary">
-                    <Swords className="size-4" />
-                    Lineup
-                    <Badge className="text-[10px] h-5 bg-primary/20 text-primary hover:bg-primary/30 border-0">
-                      {rosterPlayers.length} /{" "}
-                      {activeRoster.settings.maxMembers}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    {/* Locked Badge */}
-                    {activeRoster.isLocked && (
-                      <Badge
-                        variant="destructive"
-                        className="text-[10px] h-5 mr-1"
-                      >
-                        <Lock className="size-3 mr-1" /> Locked
-                      </Badge>
-                    )}
-
-                    {/* SELECTION ACTIONS */}
-                    {isMultiSelectMode ? (
-                      <div className="flex items-center gap-1 bg-background/50 p-0.5 rounded-lg border shadow-sm">
-                        <span className="text-[10px] font-medium px-2 text-muted-foreground">
-                          {selectedPlayerIds.length}
-                        </span>
-
-                        {/* Move Dropdown */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 hover:bg-primary/10 hover:text-primary"
-                              disabled={selectedPlayerIds.length === 0}
-                            >
-                              <ArrowRightCircle className="size-3.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>
-                              Move Selected To...
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {rosters
-                              .filter((r) => r.id !== activeRoster?.id)
-                              .map((r) => (
-                                <DropdownMenuItem
-                                  key={r.id}
-                                  onClick={() => moveSelectedToRoster(r.id)}
-                                  disabled={r.isLocked}
-                                >
-                                  <span className="truncate flex-1">
-                                    {r.name}
-                                  </span>
-                                  {r.isLocked && (
-                                    <Lock className="size-3 ml-2 text-muted-foreground" />
-                                  )}
-                                </DropdownMenuItem>
-                              ))}
-                            {rosters.filter((r) => r.id !== activeRoster?.id)
-                              .length === 0 && (
-                              <div className="p-2 text-xs text-muted-foreground text-center">
-                                No other rosters.
-                              </div>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={removeSelectedFromRoster}
-                          disabled={
-                            selectedPlayerIds.length === 0 ||
-                            activeRoster.isLocked
-                          }
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-
-                        <div className="w-px h-3 bg-border mx-0.5" />
-
-                        {/* Close Selection */}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => {
-                            setIsMultiSelectMode(false);
-                            setSelectedPlayerIds([]);
-                          }}
-                        >
-                          <X className="size-3.5" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => setIsMultiSelectMode(true)}
-                        // Hidden if roster is empty?
-                        disabled={rosterPlayers.length === 0}
-                      >
-                        <CheckSquare className="size-3.5 mr-1.5" />
-                        Select
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <Card
-                  className={cn(
-                    "flex-1 overflow-hidden flex flex-col shadow-sm transition-all",
-                    activeRoster.isLocked
-                      ? "bg-background/80 opacity-90 border-orange-500/20"
-                      : "bg-card border-primary/20",
-                  )}
-                >
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar">
-                    <AnimatePresence initial={false} mode="popLayout">
-                      {rosterPlayers.map((player, idx) => (
-                        <motion.div
-                          key={player.id}
-                          layout
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <PlayerListItem
-                            player={player}
-                            pdIndex={idx + 1}
-                            actionIcon={<Trash2 className="size-4" />}
-                            onAction={() =>
-                              removePlayerFromRoster(player.id, activeRoster.id)
-                            }
-                            actionVariant="destructive"
-                            highlight
-                            selectionMode={isMultiSelectMode}
-                            isSelected={selectedPlayerIds.includes(player.id)}
-                            onToggleSelection={() => toggleSelection(player.id)}
-                          />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                    {rosterPlayers.length === 0 && (
-                      <EmptyState
-                        icon={Swords}
-                        title="Roster Empty"
-                        description={
-                          activeRoster.isLocked
-                            ? "Unlock to add."
-                            : "Add players from the pool."
-                        }
-                      />
-                    )}
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-            <Shield className="size-16 mb-4 opacity-10" />
-            <h3 className="text-lg font-medium">Select a Roster</h3>
-          </div>
-        )}
-      </main>
+        ))}
+      </div>
     </div>
   );
 }
 
-function EmptyState({
-  icon: Icon,
-  title,
-  description,
+function MemberRow({
+  member,
+  selected,
+  onToggle,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
+  member: RosterMemberOfRostersEntity;
+  selected: boolean;
+  onToggle: (checked: boolean) => void;
 }) {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 text-center opacity-60">
-      <Icon className="size-10 mb-3 opacity-20" />
-      <p className="font-medium text-sm">{title}</p>
-      <p className="text-xs mt-1">{description}</p>
-    </div>
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-accent/50",
+        selected && "bg-primary/5",
+      )}
+    >
+      <Checkbox checked={selected} onCheckedChange={(checked) => onToggle(checked === true)} />
+      <span className="w-7 text-right font-semibold text-orange-400">{member.townHallLevel}</span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-medium">{member.name}</div>
+        <div className="font-mono text-[11px] text-muted-foreground">{member.tag}</div>
+      </div>
+      <div className="hidden min-w-0 text-right md:block">
+        <div className="truncate text-xs">{member.clan?.name ?? "No Clan"}</div>
+        <div className="text-[11px] text-muted-foreground">{member.role ?? ""}</div>
+      </div>
+      <div className="w-32 truncate text-right text-xs text-muted-foreground">
+        {member.username ?? "Unlinked"}
+      </div>
+    </label>
   );
 }
 
-function PlayerListItem({
-  player,
-  actionIcon,
-  onAction,
-  actionVariant = "ghost",
-  highlight = false,
-  pdIndex,
-  selectionMode = false,
-  isSelected = false,
-  onToggleSelection,
+function GroupSelect({
+  groups,
+  value,
+  onChange,
+  allowNone,
 }: {
-  player: Player;
-  actionIcon: React.ReactNode;
-  onAction: () => void;
-  actionVariant?: "ghost" | "default" | "destructive";
-  highlight?: boolean;
-  pdIndex?: number;
-  selectionMode?: boolean;
-  isSelected?: boolean;
-  onToggleSelection?: () => void;
+  groups: RosterGroupsEntity[];
+  value: string;
+  onChange: (value: string) => void;
+  allowNone?: boolean;
 }) {
   return (
-    <div
-      onClick={
-        selectionMode && onToggleSelection ? onToggleSelection : undefined
-      }
-      className={cn(
-        "flex items-center gap-3 p-2 rounded-lg border text-sm transition-all select-none touch-manipulation",
-        highlight
-          ? "bg-card border-primary/10"
-          : "bg-card border-border hover:border-sidebar-accent hover:bg-sidebar-accent",
-        isSelected &&
-          highlight &&
-          "bg-primary/5 border-primary/30 ring-1 ring-primary/20",
-        selectionMode && "cursor-pointer",
-      )}
-    >
-      {selectionMode && highlight && (
-        <div
-          className={cn(
-            "size-4 rounded border flex items-center justify-center transition-colors",
-            isSelected
-              ? "bg-primary border-primary text-primary-foreground"
-              : "border-muted-foreground",
-          )}
-        >
-          {isSelected && <div className="size-2 bg-current rounded-sm" />}
-        </div>
-      )}
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select a group" />
+      </SelectTrigger>
+      <SelectContent>
+        {allowNone && <SelectItem value={NO_GROUP}>Keep no group</SelectItem>}
+        {groups.map((group) => (
+          <SelectItem key={group._id} value={group._id}>
+            {group.displayName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
-      {!selectionMode && pdIndex && (
-        <span className="font-mono text-muted-foreground w-5 text-right font-medium text-xs">
-          {pdIndex}
-        </span>
-      )}
+interface ActionModalProps {
+  open: boolean;
+  guildId: string;
+  roster: RostersEntity;
+  playerTags: string[];
+  onClose: () => void;
+  onDone: (result?: TransferResult) => Promise<void>;
+}
 
-      {/* TH Icon */}
-      <div
-        className={cn(
-          "flex items-center justify-center size-8 rounded font-bold text-white text-xs shrink-0 shadow-sm",
-          player.townHall >= 16
-            ? "bg-amber-600 border-amber-500"
-            : player.townHall === 15
-              ? "bg-purple-600 border-purple-500"
-              : player.townHall === 14
-                ? "bg-yellow-700 border-yellow-600"
-                : "bg-slate-500",
-        )}
-      >
-        {player.townHall}
-      </div>
+function useAction() {
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold truncate">{player.name}</span>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground border px-1 rounded">
-            {player.role}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-muted-foreground text-xs mt-0.5">
-          <span>{player.league}</span>
-          <span className="flex items-center gap-1">
-            <Swords className="size-3" /> {player.warStars}
-          </span>
-        </div>
-      </div>
+  const run = async (action: () => Promise<void>) => {
+    setSaving(true);
+    setError(null);
+    try {
+      await action();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-      {!selectionMode && (
-        <Button
-          size="icon"
-          variant={actionVariant === "destructive" ? "ghost" : "secondary"}
-          className={cn(
-            "size-8 shrink-0",
-            actionVariant === "destructive" &&
-              "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-          )}
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent drag start if clicking button
-            onAction();
-          }}
-        >
-          {actionIcon}
+  return { saving, error, run, reset: () => setError(null) };
+}
+
+function MoveMembersModal({
+  rosters,
+  groups,
+  ...props
+}: ActionModalProps & { rosters: RostersEntity[]; groups: RosterGroupsEntity[] }) {
+  const { open, guildId, roster, playerTags, onClose, onDone } = props;
+  const [targetId, setTargetId] = React.useState("");
+  const [groupId, setGroupId] = React.useState(NO_GROUP);
+  const { saving, error, run, reset } = useAction();
+
+  React.useEffect(() => {
+    if (open) {
+      setTargetId("");
+      setGroupId(NO_GROUP);
+      reset();
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submit = () =>
+    run(async () => {
+      const { data } = await api.rosters.transferRosterMembers(
+        { guildId, rosterId: roster._id },
+        {
+          playerTags,
+          newRosterId: targetId,
+          newGroupId: groupId === NO_GROUP ? undefined : groupId,
+        },
+      );
+      await onDone(data.result);
+    });
+
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(value) => !value && onClose()}
+      title={`Move ${playerTags.length} player(s)`}
+      description="Players are signed up to the new roster, subject to its requirements, and removed from this one."
+      footer={
+        <Button onClick={submit} disabled={!targetId || saving}>
+          {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+          Move Players
         </Button>
-      )}
-    </div>
+      }
+    >
+      <div className="space-y-4 py-2">
+        <div className="space-y-2">
+          <Label>Roster</Label>
+          <Select value={targetId} onValueChange={setTargetId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a roster" />
+            </SelectTrigger>
+            <SelectContent>
+              {rosters
+                .filter((r) => r._id !== roster._id)
+                .map((r) => (
+                  <SelectItem key={r._id} value={r._id}>
+                    {r.name} · {r.clan.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {groups.length > 0 && (
+          <div className="space-y-2">
+            <Label>Group (optional)</Label>
+            <GroupSelect groups={groups} value={groupId} onChange={setGroupId} allowNone />
+          </div>
+        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </div>
+    </Modal>
+  );
+}
+
+function ChangeGroupModal({
+  groups,
+  ...props
+}: ActionModalProps & { groups: RosterGroupsEntity[] }) {
+  const { open, guildId, roster, playerTags, onClose, onDone } = props;
+  const [groupId, setGroupId] = React.useState("");
+  const { saving, error, run, reset } = useAction();
+
+  React.useEffect(() => {
+    if (open) {
+      setGroupId("");
+      reset();
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submit = () =>
+    run(async () => {
+      await api.rosters.transferRosterMembers(
+        { guildId, rosterId: roster._id },
+        { playerTags, newGroupId: groupId },
+      );
+      await onDone();
+    });
+
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(value) => !value && onClose()}
+      title={`Change group of ${playerTags.length} player(s)`}
+      footer={
+        <Button onClick={submit} disabled={!groupId || saving}>
+          {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+          Change Group
+        </Button>
+      }
+    >
+      <div className="space-y-2 py-2">
+        <GroupSelect groups={groups} value={groupId} onChange={setGroupId} />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </div>
+    </Modal>
+  );
+}
+
+function RemoveMembersModal(props: ActionModalProps) {
+  const { open, guildId, roster, playerTags, onClose, onDone } = props;
+  const { saving, error, run, reset } = useAction();
+
+  React.useEffect(() => {
+    if (open) reset();
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submit = () =>
+    run(async () => {
+      await api.rosters.deleteRosterMembers({ guildId, rosterId: roster._id }, { playerTags });
+      await onDone();
+    });
+
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(value) => !value && onClose()}
+      title={`Remove ${playerTags.length} player(s)?`}
+      description={`They will be removed from ${roster.name}.`}
+      footer={
+        <Button variant="destructive" onClick={submit} disabled={saving}>
+          {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+          Remove
+        </Button>
+      }
+    >
+      {error && <p className="py-2 text-sm text-destructive">{error}</p>}
+    </Modal>
   );
 }

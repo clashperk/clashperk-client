@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Home, Settings, Swords, User, Users } from "lucide-react";
+import { Bell, Home, Link2, Settings, Swords, User, Users } from "lucide-react";
 
 import {
   Sidebar,
@@ -39,6 +39,12 @@ const items = [
     url: "/rosters",
     disabled: false,
     icon: <Users />,
+  },
+  {
+    title: "Links",
+    url: "/links",
+    disabled: false,
+    icon: <Link2 />,
   },
   {
     title: "Reminders",
