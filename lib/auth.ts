@@ -185,3 +185,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verifyRequest: "/login",
   },
 });
+
+/** On a server misconfiguration `auth()` resolves to Auth.js' error body (no `user`); treat that as signed out. */
+export const getSession = async () => {
+  const session = await auth();
+  return session?.user ? session : null;
+};
