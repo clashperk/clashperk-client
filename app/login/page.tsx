@@ -11,11 +11,19 @@ import {
 } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Command, LayoutDashboard, LogOut } from "lucide-react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { getProviders, signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const Login = () => {
   const { data: session, status } = useSession();
+  const [discordEnabled, setDiscordEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getProviders()
+      .then((providers) => setDiscordEnabled(!!providers?.discord))
+      .catch(() => setDiscordEnabled(false));
+  }, []);
 
   const handleLogin = () => {
     signIn("discord", { redirectTo: "/dashboard" });
@@ -25,7 +33,7 @@ const Login = () => {
     signOut();
   };
 
-  if (status === "loading") {
+  if (status === "loading" || discordEnabled === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/40">
         <div className="animate-pulse flex flex-col items-center gap-4">
@@ -49,7 +57,9 @@ const Login = () => {
           <CardDescription className="text-balance">
             {session
               ? `You are currently signed in as @${session.user?.username || session.user?.displayName}`
-              : "Login with your Discord account to continue."}
+              : discordEnabled
+                ? "Login with your Discord account to continue."
+                : "Open the dashboard from ClashPerk in your Discord server to sign in."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -82,6 +92,13 @@ const Login = () => {
                   )}
               </div>
             </div>
+          ) : !discordEnabled ? (
+            <p className="text-sm text-muted-foreground text-center text-balance">
+              Use a dashboard button from a command such as{" "}
+              <code className="font-mono text-foreground">/category list</code>{" "}
+              or <code className="font-mono text-foreground">/roster manage</code>.
+              It signs you in to that server automatically.
+            </p>
           ) : (
             <div className="grid gap-2 pt-2">
               <Button
