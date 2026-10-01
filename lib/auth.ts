@@ -16,15 +16,6 @@ const defaultGuild = {
 };
 
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
-
-/**
- * Discord OAuth is off in production, where users sign in through bot handoff links.
- * Set AUTH_DISCORD_ENABLED=true/false to override.
- */
-const isDiscordLoginEnabled =
-  process.env.AUTH_DISCORD_ENABLED !== undefined
-    ? process.env.AUTH_DISCORD_ENABLED === "true"
-    : process.env.VERCEL_ENV !== "production";
 const authHeaders = { "x-api-key": process.env.SERVICE_API_KEY };
 
 class LoginError extends CredentialsSignin {
@@ -79,15 +70,11 @@ const decodeHandoffToken = async (token: string): Promise<HandoffUserDto> => {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    ...(isDiscordLoginEnabled
-      ? [
-          Discord({
-            authorization: {
-              params: { scope: "identify guilds", prompt: "none" },
-            },
-          }),
-        ]
-      : []),
+    Discord({
+      authorization: {
+        params: { scope: "identify guilds", prompt: "none" },
+      },
+    }),
     Credentials({
       credentials: {
         token: { label: "Token", required: true, type: "text" },
