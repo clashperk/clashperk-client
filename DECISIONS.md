@@ -53,3 +53,6 @@ Every branch push deployed twice (the preview workflow and Vercel's Git integrat
 
 ## 2026-10-11 — main is the working branch
 `main` replaces `dev` as the branch work starts from and PRs target. `release-prod.yaml` deploys every push to `main` with the Vercel CLI; no other branch deploys.
+
+## 2026-10-10 — No-server redirect lives in the proxy
+Server-only pages (`/dashboard`, `/clans`, `/rosters`, `/links`, `/reminders`) send sessions without a selected server to `/servers` from `proxy.ts`. Calling `redirect()` from the `(app)` layout did the same on a full page load, but during client navigation (landing page "Log In" → `/dashboard`) the router refetched `/servers` in an endless loop and rendered a blank page.

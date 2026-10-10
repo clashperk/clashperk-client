@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "./lib/auth";
-import { isUnauthenticatedRoute } from "./lib/routelist";
+import { NO_GUILD_ID } from "./lib/guild";
+import { isServerRoute, isUnauthenticatedRoute } from "./lib/routelist";
 
 function redirectTo(searchParams: URLSearchParams, pathname: string) {
   searchParams.delete("handoff_token");
@@ -9,11 +10,7 @@ function redirectTo(searchParams: URLSearchParams, pathname: string) {
 }
 
 export default auth((req) => {
-  const { pathname, hostname, searchParams } = req.nextUrl;
-
-  const headers = new Headers(req.headers);
-  headers.set("x-hostname", hostname);
-  headers.set("x-pathname", pathname);
+  const { pathname, searchParams } = req.nextUrl;
 
   const handoffToken = searchParams.get("handoff_token");
   if (handoffToken && pathname !== "/handoff") {
@@ -32,7 +29,12 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next({ request: { headers } });
+  // Keep this in the proxy: redirect() from the (app) layout during client navigation loops the router.
+  if (req.auth?.user?.guild.id === NO_GUILD_ID && isServerRoute(pathname)) {
+    return NextResponse.redirect(new URL("/servers", req.url));
+  }
+
+  return NextResponse.next();
 });
 
 export const config = {
