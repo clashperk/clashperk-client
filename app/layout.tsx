@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { SessionProvider } from "next-auth/react";
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
-import { AppShell } from "@/components/app-shell";
-import { LoginProvider } from "@/components/login-provider";
-import { MobileHeader } from "@/components/mobile-nav";
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { httpClient } from "@/hooks/api/axios";
-import { getSession } from "@/lib/auth";
 
 const googleSans = localFont({
   src: "../public/fonts/GoogleSansFlex-300-800.woff2",
@@ -30,14 +23,11 @@ export const metadata: Metadata = {
     "The all-in-one Clash of Clans bot for Discord. War and CWL logs, legend tracking, reminders, rosters and clan stats, all inside your server.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-  httpClient.setSecurityData({ accessToken: session?.accessToken });
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -49,12 +39,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider session={session}>
-            <AppShell sidebar={<AppSidebar />} header={<MobileHeader />}>
-              {children}
-            </AppShell>
-            <LoginProvider accessToken={session?.accessToken} />
-          </SessionProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>
