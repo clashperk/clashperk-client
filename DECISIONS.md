@@ -47,3 +47,6 @@ The `(app)` layout reads request headers, so every page there is dynamic and `us
 
 ## 2026-10-11 — Sign-in redirects are same-site paths only
 `/login` and `/handoff` read `?redirect=` through `safeRedirect` (`lib/redirect.ts`): only paths starting with a single `/` are kept, `/login` itself falls back to `/dashboard`, so the parameter cannot send people to another site or loop. The Discord sign-in button keeps Discord's blue instead of the brand orange because people recognise it as the Discord button.
+
+## 2026-10-11 — No preview deployments
+Every branch push deployed twice (the preview workflow and Vercel's Git integration) and used up the free plan's 100 deployments a day. Production deploys only from `main` through `release-prod.yaml` with the Vercel CLI, so `vercel.json` turns off Git-triggered deployments and the preview workflow is gone.
