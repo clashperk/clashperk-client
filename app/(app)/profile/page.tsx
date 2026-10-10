@@ -159,7 +159,8 @@ export default function ProfilePage() {
           <h3 className="font-medium tracking-tight">Linked accounts</h3>
           {!loading && players.length > 0 && (
             <span className="text-sm text-muted-foreground">
-              {players.length} linked · {verifiedCount} verified
+              {players.length} linked
+              {verifiedCount > 0 && ` · ${verifiedCount} verified`}
             </span>
           )}
         </div>
@@ -184,7 +185,7 @@ export default function ProfilePage() {
             <div className="space-y-1">
               <p className="font-medium">No accounts linked yet</p>
               <p className="text-sm text-muted-foreground">
-                Link your player tag to show up in clan stats and rosters.
+                Link your player tag so ClashPerk knows which Discord account is yours.
               </p>
             </div>
             <Button size="sm" onClick={() => setIsLinkOpen(true)}>
@@ -208,8 +209,9 @@ export default function ProfilePage() {
         )}
 
         <p className="text-xs text-muted-foreground">
-          Verified accounts can only be unlinked by you. Verify with the
-          in-game API token to prove you own an account.
+          Only you can unlink a verified account. Unverified ones can also be
+          unlinked by whoever linked them, or by a verified Leader or
+          Co-Leader of their clan.
         </p>
       </section>
 
@@ -375,7 +377,7 @@ function VerifyModal({
       open={player !== null}
       onOpenChange={(next) => !next && close()}
       title={`Verify ${player?.name ?? "account"}`}
-      description="Enter the account's API token to prove you own it."
+      description="Enter this account's in-game API token to prove it's yours. Verified accounts can only be unlinked by you."
     >
       <form onSubmit={submit} className="grid gap-4 py-2">
         <div className="grid gap-2">
@@ -439,7 +441,7 @@ function UnlinkModal({
       open={player !== null}
       onOpenChange={(next) => !next && close()}
       title={`Unlink ${player?.name ?? "account"}?`}
-      description={`${player?.tag ?? ""} will be removed from your profile. You can link it again later.`}
+      description={`${player?.tag ?? ""} will be removed from your profile. You can link it again later, unless someone else links it first.`}
       footer={
         <>
           <Button variant="outline" onClick={close}>
