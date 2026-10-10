@@ -1,15 +1,16 @@
 import { getCookie } from "cookies-next";
 import { Api, HttpClient } from "./generated";
 
-export const httpClient = new HttpClient<{ accessToken?: string | null }>({
+// Module-level and shared across server requests: the token must come from the
+// request's own cookie, never from state stored on this client.
+export const httpClient = new HttpClient({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
   // withCredentials: true,
-  securityWorker: async (securityData) => {
-    const cookieAccessToken = await getCookie("x-access-token");
-    const accessToken = cookieAccessToken || securityData?.accessToken;
+  securityWorker: async () => {
+    const accessToken = await getCookie("x-access-token");
     if (!accessToken) return {};
 
     return { headers: { Authorization: `Bearer ${accessToken}` } };
