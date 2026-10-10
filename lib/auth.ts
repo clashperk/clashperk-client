@@ -2,9 +2,11 @@ import { api } from "@/hooks/api/axios";
 import { HandoffUserDto, JwtUserInput, UserRoles } from "@/hooks/api/generated";
 import { JWTPayload, SignJWT } from "jose";
 import NextAuth, { CredentialsSignin, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { v4 as uuid } from "uuid";
+import { listManageableServers } from "./discord-servers";
 import { NO_GUILD_ID } from "./guild";
 
 const EXPIRES_IN_SECONDS = 60 * 60;
@@ -40,6 +42,38 @@ const generateToken = async (payload: JWTPayload) => {
       REFRESH_INTERVAL_SECONDS +
       EXPIRES_IN_SECONDS,
   };
+};
+
+const issueApiToken = async (token: JWT) => {
+  const generated = await generateToken({
+    userId: token.userId as string,
+    jti: token.jti as string,
+    roles: token.roles as string[],
+    guildIds: token.guildId ? [token.guildId as string] : [],
+    username: token.username as string,
+    version: "1",
+    applicationId: token.applicationId as string,
+  } satisfies JwtUserInput);
+
+  token.accessToken = generated.token;
+  token.expiresIn = generated.expiresIn;
+};
+
+/** Switches the session to `guildId` only if Discord says the user manages it and ClashPerk is in it. */
+const selectGuild = async (token: JWT, guildId: string) => {
+  if (!token.discordAccessToken) return;
+
+  const servers = await listManageableServers(
+    token.discordAccessToken as string,
+  ).catch(() => []);
+  const server = servers.find((s) => s.id === guildId && s.hasBot);
+  if (!server) return;
+
+  token.guild = { id: server.id, name: server.name, iconUrl: server.iconUrl };
+  token.guildId = server.id;
+  // Handoff sessions may carry a custom bot; a server picked here uses the main bot.
+  token.applicationId = null;
+  await issueApiToken(token);
 };
 
 const getUserRoles = async (userId: string) => {
@@ -109,7 +143,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     authorized: ({ auth }) => !!auth,
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account, trigger, session }) => {
+      if (trigger === "update" && typeof session?.guildId === "string") {
+        await selectGuild(token, session.guildId);
+        return token;
+      }
+
       if (user && account) {
         const userId = account.providerAccountId;
 
@@ -123,19 +162,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.guildId = user.guild?.id || defaultGuild.id;
 
         token.applicationId = user.applicationId;
+        token.discordAccessToken =
+          account.provider === "discord" ? account.access_token : undefined;
 
-        const generated = await generateToken({
-          userId: token.userId as string,
-          jti: token.jti as string,
-          roles: token.roles as string[],
-          guildIds: token.guildId ? [token.guildId as string] : [],
-          username: token.username as string,
-          version: "1",
-          applicationId: token.applicationId as string,
-        } satisfies JwtUserInput);
-
-        token.accessToken = generated.token;
-        token.expiresIn = generated.expiresIn;
+        await issueApiToken(token);
       }
 
       if (
@@ -143,18 +173,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Math.floor(Date.now() / 1000) + REFRESH_INTERVAL_SECONDS >
           (token.expiresIn as number)
       ) {
-        const generated = await generateToken({
-          userId: token.userId as string,
-          jti: token.jti as string,
-          roles: token.roles as string[],
-          guildIds: token.guildId ? [token.guildId as string] : [],
-          username: token.username as string,
-          version: "1",
-          applicationId: token.applicationId as string,
-        } satisfies JwtUserInput);
-
-        token.accessToken = generated.token;
-        token.expiresIn = generated.expiresIn;
+        await issueApiToken(token);
       }
 
       return token;
