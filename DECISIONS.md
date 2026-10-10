@@ -29,3 +29,6 @@ The subtitle counts clans from `GET /guilds/:id/clans`. It does not show players
 
 ## 2026-10-11 — Server picker verifies on the server, not the browser
 Discord sign-in keeps the user's OAuth access token inside the encrypted session cookie (never in the session JSON sent to the browser). Switching servers goes through next-auth's session `update({ guildId })`; the `jwt` callback re-fetches `/users/@me/guilds`, requires owner, Manage Server or Administrator, and checks ClashPerk is in the server via the backend's API-key `POST /auth/bot-guilds` before issuing an API token for it. A forged `guildId` is ignored. Sessions from a bot handoff link have no Discord token, so the picker asks them to sign in with Discord.
+
+## 2026-10-11 — Rosters filter row uses container queries
+The member column's width depends on the app sidebar and the roster list as much as the window, so the filter row breaks on the column's own width (`@container` on the roster `main`). Roster create, edit, delete, clone, add-members and refresh stay out of the UI: those backend endpoints are still stubs. CSV export runs in the browser on the members currently shown.
