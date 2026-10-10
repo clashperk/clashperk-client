@@ -15,13 +15,17 @@ import {
   ClanGamesReminderDto,
   ClanWarReminderDto,
   GuildRemindersDto,
+  ReminderScheduleDto,
 } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
   BellOff,
+  CalendarClock,
+  ChevronDown,
   Clock,
   Hash,
+  History,
   Info,
   RotateCw,
   Search,
@@ -259,7 +263,191 @@ function ReminderCard({
           )}
         </span>
       </div>
+
+      <ReminderRuns schedules={reminder.schedules} />
     </Card>
+  );
+}
+
+const OUTCOMES: Record<string, { label: string; tone: Tone }> = {
+  reminder_sent_successfully: { label: "Sent", tone: "ok" },
+  no_recipient: { label: "Skipped · nobody to ping", tone: "muted" },
+  reminder_disabled: { label: "Skipped · reminder disabled", tone: "muted" },
+  reminder_not_found: { label: "Skipped · reminder deleted", tone: "muted" },
+  invalid_war_type: { label: "Skipped · war type not included", tone: "muted" },
+  not_in_war: { label: "Skipped · clan not in war", tone: "muted" },
+  war_ended: { label: "Skipped · war already ended", tone: "muted" },
+  war_id_unmatched: { label: "Skipped · different war", tone: "muted" },
+  too_late: { label: "Skipped · too late", tone: "muted" },
+  channel_not_found: { label: "Failed · channel not found", tone: "error" },
+  channel_missing_permissions: {
+    label: "Failed · missing channel permissions",
+    tone: "error",
+  },
+  guild_not_found: { label: "Failed · bot not in server", tone: "error" },
+};
+
+type Tone = "ok" | "muted" | "error" | "pending";
+
+const TONE_DOT: Record<Tone, string> = {
+  ok: "bg-emerald-500",
+  muted: "bg-muted-foreground/40",
+  error: "bg-destructive",
+  pending: "bg-brand",
+};
+
+const WAR_TYPE_SHORT: Record<string, string> = {
+  normal: "Regular",
+  friendly: "Friendly",
+  cwl: "CWL",
+};
+
+const relativeFormat = new Intl.RelativeTimeFormat(undefined, {
+  numeric: "auto",
+});
+
+function formatRelative(target: number, now: number) {
+  const minutes = Math.round((target - now) / 60_000);
+  if (Math.abs(minutes) < 60) return relativeFormat.format(minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 48) return relativeFormat.format(hours, "hour");
+  return relativeFormat.format(Math.round(hours / 24), "day");
+}
+
+const formatWhen = (date: Date) =>
+  date.toLocaleString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+function outcomeOf(schedule: ReminderScheduleDto, now: number) {
+  if (!schedule.triggered) {
+    const due = new Date(schedule.timestamp).getTime() <= now;
+    return {
+      label: due ? "Sending now" : "Scheduled",
+      tone: "pending" as Tone,
+    };
+  }
+  return (
+    OUTCOMES[schedule.reason ?? ""] ?? {
+      label: "Handled",
+      tone: "muted" as Tone,
+    }
+  );
+}
+
+function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
+  const [open, setOpen] = useState(false);
+  const now = Date.now();
+
+  const upcoming = schedules.filter((s) => !s.triggered);
+  const past = schedules.filter((s) => s.triggered);
+  const next = upcoming[0];
+  const last = past[past.length - 1];
+
+  if (schedules.length === 0) {
+    return (
+      <p className="border-t pt-3 text-xs text-muted-foreground">
+        No runs in the last 3 days and none scheduled.
+      </p>
+    );
+  }
+
+  // Upcoming soonest first, then history newest first.
+  const rows = [...upcoming, ...[...past].reverse()];
+
+  return (
+    <div className="border-t pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 rounded-lg text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {next ? (
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarClock className="size-4 text-brand" />
+            <span className="text-muted-foreground">Next</span>
+            <span className="font-medium">
+              {formatRelative(new Date(next.timestamp).getTime(), now)}
+            </span>
+            <span className="text-muted-foreground">· {next.clan.name}</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <CalendarClock className="size-4" />
+            Nothing scheduled
+          </span>
+        )}
+        {last && (
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <History className="size-4" />
+            Last {outcomeOf(last, now).label.split(" · ")[0].toLowerCase()}{" "}
+            {formatRelative(new Date(last.timestamp).getTime(), now)}
+          </span>
+        )}
+        <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+          {open ? "Hide" : "Show"} {schedules.length} run
+          {schedules.length === 1 ? "" : "s"}
+          <ChevronDown
+            className={cn("size-4 transition-transform", open && "rotate-180")}
+          />
+        </span>
+      </button>
+
+      {open && (
+        <ul className="mt-3 divide-y rounded-xl border">
+          {rows.map((schedule) => {
+            const outcome = outcomeOf(schedule, now);
+            const when = new Date(schedule.timestamp);
+            return (
+              <li
+                key={schedule.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
+              >
+                <span
+                  className={cn(
+                    "size-2 shrink-0 rounded-full",
+                    TONE_DOT[outcome.tone],
+                  )}
+                  aria-hidden
+                />
+                <span className="min-w-0 flex-1 truncate font-medium">
+                  {schedule.clan.name}
+                  {schedule.warType && (
+                    <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
+                      {WAR_TYPE_SHORT[schedule.warType]}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "text-xs",
+                    outcome.tone === "ok" &&
+                      "text-emerald-600 dark:text-emerald-400",
+                    outcome.tone === "error" && "text-destructive",
+                    outcome.tone === "pending" && "text-brand",
+                    outcome.tone === "muted" && "text-muted-foreground",
+                  )}
+                >
+                  {outcome.label}
+                </span>
+                <time
+                  dateTime={schedule.timestamp}
+                  title={when.toLocaleString()}
+                  className="w-full text-xs tabular-nums text-muted-foreground sm:w-auto sm:min-w-44 sm:text-right"
+                >
+                  {formatWhen(when)} · {formatRelative(when.getTime(), now)}
+                </time>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -354,7 +542,8 @@ export default function RemindersPage() {
         <Info className="mt-0.5 size-4 shrink-0" />
         <p>
           This page is read-only for now. Create, edit or delete reminders from
-          Discord, then refresh here to see the changes.
+          Discord, then refresh here to see the changes. Run history covers the
+          last 3 days.
         </p>
       </div>
 

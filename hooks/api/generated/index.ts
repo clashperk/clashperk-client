@@ -633,6 +633,20 @@ export interface ReminderClanDto {
   name: string;
 }
 
+export interface ReminderScheduleDto {
+  warType: "normal" | "friendly" | "cwl" | null;
+  id: string;
+  clan: ReminderClanDto;
+  /**
+   * When the bot pings (or pinged) for this clan.
+   * @format date-time
+   */
+  timestamp: string;
+  triggered: boolean;
+  /** Bot outcome once handled, e.g. `reminder_sent_successfully` or a skip reason. */
+  reason: string | null;
+}
+
 export interface ClanWarReminderDto {
   disabled: boolean;
   townHalls: number[];
@@ -653,6 +667,8 @@ export interface ClanWarReminderDto {
   roles: string[];
   linkedOnly: boolean;
   clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
   /** @format date-time */
   createdAt: string;
 }
@@ -673,6 +689,8 @@ export interface CapitalRaidReminderDto {
   roles: string[];
   linkedOnly: boolean;
   clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
   /** @format date-time */
   createdAt: string;
 }
@@ -692,6 +710,8 @@ export interface ClanGamesReminderDto {
   roles: string[];
   linkedOnly: boolean;
   clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
   /** @format date-time */
   createdAt: string;
 }
