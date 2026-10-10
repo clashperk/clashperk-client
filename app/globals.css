@@ -72,8 +72,8 @@
   --card-foreground: hsl(0 0% 3.9%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(0 0% 3.9%);
-  --primary: hsl(0 0% 15%);
-  --primary-foreground: hsl(0 0% 98%);
+  --primary: #c44800;
+  --primary-foreground: #ffffff;
   --secondary: hsl(0 0% 96.1%);
   --secondary-foreground: hsl(0 0% 9%);
   --muted: hsl(0 0% 96.1%);
@@ -83,7 +83,7 @@
   --destructive: hsl(0 84% 60%);
   --border: hsl(0 0% 89.8%);
   --input: hsl(0 0% 89.8%);
-  --ring: #d14c00;
+  --ring: hsl(0 0% 70%);
   --brand: #d14c00;
   --brand-foreground: hsl(0 0% 100%);
   --brand-soft: hsl(28 100% 94%);
@@ -96,12 +96,12 @@
   --chart-5: hsl(252 56% 57%);
   --sidebar: hsl(0 0% 100%);
   --sidebar-foreground: hsl(210 13% 13%);
-  --sidebar-primary: hsl(0 0% 9%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-primary: #c44800;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: hsl(0 7% 95%);
   --sidebar-accent-foreground: hsl(0 0% 9%);
   --sidebar-border: hsl(230 11% 89%);
-  --sidebar-ring: #d14c00;
+  --sidebar-ring: hsl(0 0% 70%);
 }
 
 .dark {
@@ -111,8 +111,8 @@
   --card-foreground: hsl(0 0% 87.84%);
   --popover: hsl(0 0% 9.41%);
   --popover-foreground: hsl(0 0% 87.84%);
-  --primary: hsl(0 0% 95%);
-  --primary-foreground: hsl(0 0% 0%);
+  --primary: #ee7d2b;
+  --primary-foreground: #1a0f08;
   --secondary: hsl(0 0% 13%);
   --secondary-foreground: hsl(0 0% 87.84%);
   --muted: hsl(0 0% 13%);
@@ -122,7 +122,7 @@
   --destructive: hsl(0 84% 60%);
   --border: hsl(0 0% 15%);
   --input: hsl(0 0% 18%);
-  --ring: #ee7d2b;
+  --ring: hsl(0 0% 45%);
   --brand: #ee7d2b;
   --brand-foreground: hsl(0 0% 100%);
   --brand-soft: hsl(22 60% 13%);
@@ -135,12 +135,12 @@
   --chart-5: hsl(252 56% 65%);
   --sidebar: hsl(60 5% 8%);
   --sidebar-foreground: hsl(220 9% 94%);
-  --sidebar-primary: hsl(0 0% 95%);
-  --sidebar-primary-foreground: hsl(0 0% 0%);
+  --sidebar-primary: #ee7d2b;
+  --sidebar-primary-foreground: #1a0f08;
   --sidebar-accent: hsl(60 5% 16%);
   --sidebar-accent-foreground: hsl(0 0% 87.84%);
   --sidebar-border: hsl(0 0% 15%);
-  --sidebar-ring: #ee7d2b;
+  --sidebar-ring: hsl(0 0% 45%);
 }
 
 .landing {

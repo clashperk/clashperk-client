@@ -26,6 +26,7 @@ export enum UserRoles {
   FETCH_LEGENDS = "fetch:legends",
   FETCH_LINKS = "fetch:links",
   MANAGE_LINKS = "manage:links",
+  FETCH_ROSTERS = "fetch:rosters",
   MANAGE_ROSTERS = "manage:rosters",
   MANAGE_REMINDERS = "manage:reminders",
 }
@@ -74,7 +75,7 @@ export interface LoginOkDto {
 }
 
 export interface GenerateTokenInputDto {
-  /** @default ["user","admin","viewer","fetch:wars","fetch:clans","fetch:players","fetch:legends","fetch:links","manage:links","manage:rosters","manage:reminders"] */
+  /** @default ["user","admin","viewer","fetch:wars","fetch:clans","fetch:players","fetch:legends","fetch:links","manage:links","fetch:rosters","manage:rosters","manage:reminders"] */
   roles: UserRoles[];
   userId: string;
 }
@@ -199,13 +200,13 @@ export interface CapitalContributionDto {
 }
 
 export interface ClanLinkedMemberDto {
+  userId?: string | null;
+  username?: string | null;
+  displayName?: string | null;
   name: string;
   tag: string;
   role: string;
   townHallLevel: number;
-  userId?: string | null;
-  username?: string | null;
-  displayName?: string | null;
   verified: boolean;
   deletable: boolean;
 }
@@ -215,6 +216,67 @@ export interface ClanLinksDto {
   tag: string;
   members: number;
   memberList: ClanLinkedMemberDto[];
+}
+
+export interface BattleLogDto {
+  name: string;
+  tag: string;
+  opponentTag: string;
+  battleType: string;
+  isAttack: boolean;
+  stars: number;
+  destruction: number;
+  trophies: number;
+  /** @default 0 */
+  startTrophies: number;
+  /** @default 0 */
+  endTrophies: number;
+  trophyChange: number;
+  battleDate: string;
+  battleSeason: string;
+  battleWeek: string;
+  leagueId: number;
+  /** @format date-time */
+  ingestedAt: string;
+}
+
+export interface BattleLogItemsDto {
+  items: BattleLogDto[];
+}
+
+export interface BattleLogDailyDto {
+  name: string;
+  tag: string;
+  battleDate: string;
+  trophies: number;
+  offenseTrophies: number;
+  defenseTrophies: number;
+  gain: number;
+  attackCount: number;
+  defenseCount: number;
+}
+
+export interface BattleLogAggregateItemsDto {
+  items: BattleLogDailyDto[];
+}
+
+export interface BattleLogLeaderboardInputDto {
+  /**
+   * @pattern /^\d{4}-\d{2}$/
+   * @example "2026-05"
+   */
+  seasonId: string;
+  playerTags: string[];
+}
+
+export interface BattleLogLeaderboardItemDto {
+  tag: string;
+  name: string;
+  trophies: number;
+}
+
+export interface BattleLogLeaderboardDto {
+  items: BattleLogLeaderboardItemDto[];
 }
 
 export interface GlobalClanEntity {
@@ -321,30 +383,6 @@ export interface LegendRankingThresholdsDto {
   history: LegendRankingThresholdsSnapShotDto[];
 }
 
-export interface LeaderboardByTagsInputDto {
-  /**
-   * @maxItems 100
-   * @minItems 0
-   * @example ["#2PP"]
-   */
-  playerTags: string[];
-  /** @example 1 */
-  minRank: number;
-  /** @example 100 */
-  maxRank: number;
-}
-
-export interface LeaderboardByTagsDto {
-  tag: string;
-  name: string;
-  rank: number;
-  trophies: number;
-}
-
-export interface LeaderboardByTagsItemsDto {
-  items: LeaderboardByTagsDto[];
-}
-
 export interface GetLegendAttacksInputDto {
   /**
    * @maxItems 100
@@ -372,6 +410,13 @@ export interface LegendAttacksDto {
 
 export interface LegendAttacksItemsDto {
   items: LegendAttacksDto[];
+}
+
+export interface LegendRankDto {
+  tag: string;
+  name: string;
+  rank: number;
+  trophies: number;
 }
 
 export interface ClanWarLeagueRound {
@@ -477,7 +522,7 @@ export interface RostersEntity {
     tag: string;
     name: string;
     badgeUrl: string;
-  } | null;
+  };
   members: RosterMemberOfRostersEntity[];
   layout?: string;
   sheetId?: string;
@@ -523,12 +568,12 @@ export interface RemoveMembersBulkInput {
 }
 
 export interface TransferRosterMembersInput {
-  /** @minItems 1 */
-  playerTags: string[];
   /** Required unless newGroupId is set. */
   newRosterId?: string;
   /** Required unless newRosterId is set. */
   newGroupId?: string;
+  /** @minItems 1 */
+  playerTags: string[];
 }
 
 export interface TransferRosterMembersDto {
@@ -581,6 +626,100 @@ export interface ReorderCategoriesInput {
 export interface ReorderClanCategoriesInput {
   /** @minItems 1 */
   categories: ReorderCategoriesInput[];
+}
+
+export interface ReminderClanDto {
+  tag: string;
+  name: string;
+}
+
+export interface ReminderScheduleDto {
+  warType: "normal" | "friendly" | "cwl" | null;
+  id: string;
+  clan: ReminderClanDto;
+  /**
+   * When the bot pings (or pinged) for this clan.
+   * @format date-time
+   */
+  timestamp: string;
+  triggered: boolean;
+  /** Bot outcome once handled, e.g. `reminder_sent_successfully` or a skip reason. */
+  reason: string | null;
+}
+
+export interface ClanWarReminderDto {
+  disabled: boolean;
+  townHalls: number[];
+  remaining: number[];
+  warTypes: string[];
+  smartSkip: boolean;
+  silent: boolean;
+  randomLimit: number | null;
+  id: string;
+  /** Short ID the bot shows in Discord: the last 5 hex characters, uppercased. */
+  shortId: string;
+  channelId: string;
+  channelName: string | null;
+  threadId: string | null;
+  message: string;
+  /** Time before the event ends, in milliseconds. */
+  duration: number;
+  roles: string[];
+  linkedOnly: boolean;
+  clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
+  /** @format date-time */
+  createdAt: string;
+}
+
+export interface CapitalRaidReminderDto {
+  allMembers: boolean;
+  minThreshold: number;
+  remaining: number[];
+  id: string;
+  /** Short ID the bot shows in Discord: the last 5 hex characters, uppercased. */
+  shortId: string;
+  channelId: string;
+  channelName: string | null;
+  threadId: string | null;
+  message: string;
+  /** Time before the event ends, in milliseconds. */
+  duration: number;
+  roles: string[];
+  linkedOnly: boolean;
+  clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
+  /** @format date-time */
+  createdAt: string;
+}
+
+export interface ClanGamesReminderDto {
+  allMembers: boolean;
+  minPoints: number;
+  id: string;
+  /** Short ID the bot shows in Discord: the last 5 hex characters, uppercased. */
+  shortId: string;
+  channelId: string;
+  channelName: string | null;
+  threadId: string | null;
+  message: string;
+  /** Time before the event ends, in milliseconds. */
+  duration: number;
+  roles: string[];
+  linkedOnly: boolean;
+  clans: ReminderClanDto[];
+  /** Runs from the last 3 days and upcoming ones, oldest first. The bot drops older runs. */
+  schedules: ReminderScheduleDto[];
+  /** @format date-time */
+  createdAt: string;
+}
+
+export interface GuildRemindersDto {
+  clanWars: ClanWarReminderDto[];
+  capitalRaids: CapitalRaidReminderDto[];
+  clanGames: ClanGamesReminderDto[];
 }
 
 export interface ListMemberDto {
@@ -668,7 +807,10 @@ export type GetLastSeenData = LastSeenDto;
 export type GetLastSeenError = ErrorResponseDto;
 
 export interface GetCapitalContributionParams {
-  /** @example "2026-09-25" */
+  /**
+   * @pattern /^\d{4}-\d{2}-\d{2}$/
+   * @example "2026-09-25"
+   */
   season?: string;
   clanTag: string;
 }
@@ -684,6 +826,26 @@ export interface GetClanLinksParams {
 export type GetClanLinksData = ClanLinksDto;
 
 export type GetClanLinksError = ErrorResponseDto;
+
+export interface GetBattleLogParams {
+  playerTag: string;
+}
+
+export type GetBattleLogData = BattleLogItemsDto;
+
+export type GetBattleLogError = ErrorResponseDto;
+
+export interface GetBattleLogAggregateParams {
+  playerTag: string;
+}
+
+export type GetBattleLogAggregateData = BattleLogAggregateItemsDto;
+
+export type GetBattleLogAggregateError = ErrorResponseDto;
+
+export type GetBattleLogLeaderboardData = BattleLogLeaderboardDto;
+
+export type GetBattleLogLeaderboardError = ErrorResponseDto;
 
 export interface GetClanHistoryParams {
   playerTag: string;
@@ -745,10 +907,6 @@ export type GetLegendRankingThresholdsData = LegendRankingThresholdsDto;
 
 export type GetLegendRankingThresholdsError = ErrorResponseDto;
 
-export type GetLeaderboardData = LeaderboardByTagsItemsDto;
-
-export type GetLeaderboardError = ErrorResponseDto;
-
 export type GetLegendAttacksData = LegendAttacksItemsDto;
 
 export type GetLegendAttacksError = ErrorResponseDto;
@@ -760,6 +918,14 @@ export interface GetLegendAttacksByPlayerTagParams {
 export type GetLegendAttacksByPlayerTagData = LegendAttacksDto;
 
 export type GetLegendAttacksByPlayerTagError = ErrorResponseDto;
+
+export interface EstimateRankParams {
+  playerTag: string;
+}
+
+export type EstimateRankData = LegendRankDto;
+
+export type EstimateRankError = ErrorResponseDto;
 
 export interface GetClanWarLeagueGroupsParams {
   clanTag: string;
@@ -897,6 +1063,14 @@ export interface ReorderGuildClansParams {
 export type ReorderGuildClansData = GuildClansDto;
 
 export type ReorderGuildClansError = ErrorResponseDto;
+
+export interface GetGuildRemindersParams {
+  guildId: string;
+}
+
+export type GetGuildRemindersData = GuildRemindersDto;
+
+export type GetGuildRemindersError = ErrorResponseDto;
 
 export interface ListMembersParams {
   query: string;
@@ -1078,9 +1252,108 @@ export namespace Clans {
     export type RequestHeaders = {};
     export type ResponseBody = GetLastSeenData;
   }
+
+  /**
+   * No description
+   * @tags Clans
+   * @name GetCapitalContribution
+   * @request GET:/clans/{clanTag}/capital-contribution
+   * @secure
+   * @response `200` `GetCapitalContributionData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetCapitalContribution {
+    export type RequestParams = {
+      clanTag: string;
+    };
+    export type RequestQuery = {
+      /**
+       * @pattern /^\d{4}-\d{2}-\d{2}$/
+       * @example "2026-09-25"
+       */
+      season?: string;
+    };
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetCapitalContributionData;
+  }
+
+  /**
+   * No description
+   * @tags Clans
+   * @name GetClanLinks
+   * @request GET:/clans/{clanTag}/links
+   * @secure
+   * @response `200` `GetClanLinksData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetClanLinks {
+    export type RequestParams = {
+      clanTag: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetClanLinksData;
+  }
 }
 
 export namespace Players {
+  /**
+   * No description
+   * @tags Players
+   * @name GetBattleLog
+   * @request GET:/players/{playerTag}/battle-log
+   * @secure
+   * @response `200` `GetBattleLogData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetBattleLog {
+    export type RequestParams = {
+      playerTag: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetBattleLogData;
+  }
+
+  /**
+   * No description
+   * @tags Players
+   * @name GetBattleLogAggregate
+   * @request GET:/players/{playerTag}/battle-log/aggregate
+   * @secure
+   * @response `200` `GetBattleLogAggregateData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetBattleLogAggregate {
+    export type RequestParams = {
+      playerTag: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetBattleLogAggregateData;
+  }
+
+  /**
+   * No description
+   * @tags Players
+   * @name GetBattleLogLeaderboard
+   * @request POST:/players/battle-log/leaderboard
+   * @secure
+   * @response `201` `GetBattleLogLeaderboardData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetBattleLogLeaderboard {
+    export type RequestParams = {};
+    export type RequestQuery = {};
+    export type RequestBody = BattleLogLeaderboardInputDto;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetBattleLogLeaderboardData;
+  }
+
   /**
    * No description
    * @tags Players
@@ -1216,23 +1489,6 @@ export namespace Legends {
   /**
    * No description
    * @tags Legends
-   * @name GetLeaderboard
-   * @request POST:/legends/leaderboard/query
-   * @secure
-   * @response `201` `GetLeaderboardData`
-   * @response `500` `ErrorResponseDto`
-   */
-  export namespace GetLeaderboard {
-    export type RequestParams = {};
-    export type RequestQuery = {};
-    export type RequestBody = LeaderboardByTagsInputDto;
-    export type RequestHeaders = {};
-    export type ResponseBody = GetLeaderboardData;
-  }
-
-  /**
-   * No description
-   * @tags Legends
    * @name GetLegendAttacks
    * @request POST:/legends/attacks/query
    * @secure
@@ -1264,6 +1520,25 @@ export namespace Legends {
     export type RequestBody = never;
     export type RequestHeaders = {};
     export type ResponseBody = GetLegendAttacksByPlayerTagData;
+  }
+
+  /**
+   * No description
+   * @tags Legends
+   * @name EstimateRank
+   * @request GET:/legends/{playerTag}/estimate-rank
+   * @secure
+   * @response `200` `EstimateRankData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace EstimateRank {
+    export type RequestParams = {
+      playerTag: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = EstimateRankData;
   }
 }
 
@@ -1590,6 +1865,25 @@ export namespace Guilds {
   /**
    * No description
    * @tags Guilds
+   * @name GetGuildReminders
+   * @request GET:/guilds/{guildId}/reminders
+   * @secure
+   * @response `200` `GetGuildRemindersData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetGuildReminders {
+    export type RequestParams = {
+      guildId: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetGuildRemindersData;
+  }
+
+  /**
+   * No description
+   * @tags Guilds
    * @name ListMembers
    * @request GET:/guilds/{guildId}/members/list
    * @secure
@@ -1804,7 +2098,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title ClashPerk Discord Bot API
- * @version v2.0.1
+ * @version v2.0.30
  * @baseUrl /v1
  * @contact
  *
@@ -2075,6 +2369,77 @@ export class Api<SecurityDataType extends unknown> {
      * No description
      *
      * @tags Players
+     * @name GetBattleLog
+     * @request GET:/players/{playerTag}/battle-log
+     * @secure
+     * @response `200` `GetBattleLogData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getBattleLog: (
+      { playerTag, ...query }: GetBattleLogParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<GetBattleLogData, GetBattleLogError>({
+        path: `/players/${playerTag}/battle-log`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Players
+     * @name GetBattleLogAggregate
+     * @request GET:/players/{playerTag}/battle-log/aggregate
+     * @secure
+     * @response `200` `GetBattleLogAggregateData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getBattleLogAggregate: (
+      { playerTag, ...query }: GetBattleLogAggregateParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<GetBattleLogAggregateData, GetBattleLogAggregateError>({
+        path: `/players/${playerTag}/battle-log/aggregate`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Players
+     * @name GetBattleLogLeaderboard
+     * @request POST:/players/battle-log/leaderboard
+     * @secure
+     * @response `201` `GetBattleLogLeaderboardData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getBattleLogLeaderboard: (
+      data: BattleLogLeaderboardInputDto,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<
+        GetBattleLogLeaderboardData,
+        GetBattleLogLeaderboardError
+      >({
+        path: `/players/battle-log/leaderboard`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Players
      * @name GetClanHistory
      * @request GET:/players/{playerTag}/history
      * @secure
@@ -2217,30 +2582,6 @@ export class Api<SecurityDataType extends unknown> {
      * No description
      *
      * @tags Legends
-     * @name GetLeaderboard
-     * @request POST:/legends/leaderboard/query
-     * @secure
-     * @response `201` `GetLeaderboardData`
-     * @response `500` `ErrorResponseDto`
-     */
-    getLeaderboard: (
-      data: LeaderboardByTagsInputDto,
-      params: RequestParams = {},
-    ) =>
-      this.http.request<GetLeaderboardData, GetLeaderboardError>({
-        path: `/legends/leaderboard/query`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Legends
      * @name GetLegendAttacks
      * @request POST:/legends/attacks/query
      * @secure
@@ -2280,6 +2621,28 @@ export class Api<SecurityDataType extends unknown> {
         GetLegendAttacksByPlayerTagError
       >({
         path: `/legends/${playerTag}/attacks`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Legends
+     * @name EstimateRank
+     * @request GET:/legends/{playerTag}/estimate-rank
+     * @secure
+     * @response `200` `EstimateRankData`
+     * @response `500` `ErrorResponseDto`
+     */
+    estimateRank: (
+      { playerTag, ...query }: EstimateRankParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<EstimateRankData, EstimateRankError>({
+        path: `/legends/${playerTag}/estimate-rank`,
         method: "GET",
         secure: true,
         format: "json",
@@ -2653,6 +3016,28 @@ export class Api<SecurityDataType extends unknown> {
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Guilds
+     * @name GetGuildReminders
+     * @request GET:/guilds/{guildId}/reminders
+     * @secure
+     * @response `200` `GetGuildRemindersData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getGuildReminders: (
+      { guildId, ...query }: GetGuildRemindersParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<GetGuildRemindersData, GetGuildRemindersError>({
+        path: `/guilds/${guildId}/reminders`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),

@@ -1,155 +1,146 @@
 "use client";
 
-import { ModeToggle } from "@/components/theme-toggle";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { ServerSummary } from "@/components/sidebar/server-summary";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { UserAvatar } from "@/components/user-avatar";
+import { useAuth } from "@/hooks/use-auth";
+import { useMounted } from "@/hooks/use-mounted";
+import { cn } from "@/lib/utils";
+import { Laptop, LogOut, Moon, Sun } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useTheme } from "next-themes";
 
-export default function SettingsPage() {
-  const [autoWar, setAutoWar] = useState(false);
-  const [autoRecruit, setAutoRecruit] = useState(true);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+const THEMES = [
+  { value: "system", label: "System", hint: "Match your device", Icon: Laptop },
+  { value: "light", label: "Light", hint: "Always light", Icon: Sun },
+  { value: "dark", label: "Dark", hint: "Always dark", Icon: Moon },
+] as const;
+
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-4 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-8">
+      <div className="space-y-1">
+        <h3 className="font-medium tracking-tight">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ThemePicker() {
+  const { theme, setTheme } = useTheme();
+  const mounted = useMounted();
 
   return (
-    <div className="flex flex-1 flex-col h-full w-full">
-      <div className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-10 space-y-10">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-            <p className="text-muted-foreground">
-              Manage your bot configuration and preferences.
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-10">
-          {/* General Settings */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <h3 className="text-xl font-semibold">General Configuration</h3>
+    <div
+      role="radiogroup"
+      aria-label="Theme"
+      className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+    >
+      {THEMES.map(({ value, label, hint, Icon }) => {
+        const active = mounted && theme === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => setTheme(value)}
+            className={cn(
+              "flex cursor-pointer items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active &&
+                "border-foreground/40 bg-foreground/[0.06] hover:bg-foreground/[0.06]",
+            )}
+          >
+            <div
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground",
+                active && "bg-foreground text-background",
+              )}
+            >
+              <Icon className="size-4" />
             </div>
-
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label htmlFor="language" className="text-base font-medium">
-                    Language
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Preferred language for bot responses.
-                  </p>
-                </div>
-                <Select defaultValue="en">
-                  <SelectTrigger className="w-full max-w-[200px]">
-                    <SelectValue placeholder="Select a language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">
-                    Maintenance Mode
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Disable public commands.
-                  </p>
-                </div>
-                <div className="flex justify-start">
-                  <Switch
-                    checked={maintenanceMode}
-                    onCheckedChange={setMaintenanceMode}
-                  />
-                </div>
-              </div>
+            <div className="leading-tight">
+              <p className="text-sm font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground">{hint}</p>
             </div>
-          </section>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-          {/* Automation & Features */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <h3 className="text-xl font-semibold">Automation</h3>
-            </div>
+export default function SettingsPage() {
+  const { user } = useAuth();
 
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">
-                    Auto-Start War
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Start Friendly Wars automatically.
-                  </p>
-                </div>
-                <div className="flex justify-start">
-                  <Switch checked={autoWar} onCheckedChange={setAutoWar} />
-                </div>
+  return (
+    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
+          Settings
+        </h2>
+        <p className="text-sm text-muted-foreground md:text-base">
+          Your account and how the dashboard looks.
+        </p>
+      </div>
+
+      <div className="max-w-4xl space-y-8">
+        <Section title="Account" description="Signed in with Discord.">
+          <Card className="gap-0 py-0">
+            <div className="flex items-center gap-3 p-4">
+              <UserAvatar
+                className="size-11 rounded-full"
+                src={user.avatarUrl}
+                alt={user.displayName.charAt(0)}
+              />
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate font-medium tracking-tight">
+                  {user.displayName}
+                </p>
+                <p className="truncate text-sm text-muted-foreground">
+                  @{user.username}
+                </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">Auto-Recruit</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Post recruitment messages periodically.
-                  </p>
-                </div>
-                <div className="flex justify-start">
-                  <Switch
-                    checked={autoRecruit}
-                    onCheckedChange={setAutoRecruit}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">
-                    Donation Tracking
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Log donations in the database.
-                  </p>
-                </div>
-                <div className="flex justify-start">
-                  <Switch defaultChecked />
-                </div>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => signOut()}>
+                <LogOut />
+                Log out
+              </Button>
             </div>
-          </section>
-
-          {/* Appearance */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <h3 className="text-xl font-semibold">Appearance</h3>
-            </div>
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-8 items-center">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">Theme</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Select your interface theme.
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <ModeToggle />
-                </div>
+            <div className="flex items-center gap-3 border-t p-4">
+              <UserAvatar
+                className="size-11 rounded-xl"
+                src={user.guild.iconUrl || ""}
+                alt={user.guild.name.charAt(0)}
+              />
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate font-medium tracking-tight">
+                  {user.guild.name}
+                </p>
+                <ServerSummary guildId={user.guild.id} />
               </div>
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Current server
+              </span>
             </div>
-          </section>
-        </div>
+          </Card>
+        </Section>
+
+        <div className="h-px bg-border" />
+
+        <Section title="Appearance" description="Saved in this browser.">
+          <ThemePicker />
+        </Section>
       </div>
     </div>
   );

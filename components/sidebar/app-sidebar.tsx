@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
 import { UserAvatar } from "../user-avatar";
+import { ServerSummary } from "./server-summary";
 import { NavUser } from "./user-nav";
 
 const items = [
@@ -76,21 +77,20 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
-        <div className="flex items-center gap-3 px-1 py-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <UserAvatar
-              src={session.user.guild.iconUrl || ""}
-              alt={session.user.guild.name.charAt(0)}
-              className="size-8 rounded-lg"
-            />
-          </div>
-          <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-bold tracking-tight text-foreground uppercase">
+        <div
+          title={`Server ID: ${session.user.guild.id}`}
+          className="flex items-center gap-3 rounded-xl bg-sidebar-accent p-2 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+        >
+          <UserAvatar
+            src={session.user.guild.iconUrl || ""}
+            alt={session.user.guild.name.charAt(0)}
+            className="size-8 shrink-0 rounded-[10px]"
+          />
+          <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-medium tracking-tight text-foreground">
               {session.user.guild.name}
             </span>
-            <span className="truncate text-xs text-muted-foreground">
-              {session.user.guild.id}
-            </span>
+            <ServerSummary guildId={session.user.guild.id} />
           </div>
         </div>
       </SidebarHeader>
@@ -98,7 +98,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* CLAN MANAGEMENT */}
         <SidebarGroup>
-          <SidebarGroupLabel>CLAN</SidebarGroupLabel>
+          <SidebarGroupLabel>Clan</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -129,7 +129,7 @@ export function AppSidebar() {
 
         {/* USER MANAGEMENT */}
         <SidebarGroup>
-          <SidebarGroupLabel>USER</SidebarGroupLabel>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {userItems.map((item) => (

@@ -1,10 +1,7 @@
 "use client";
 
-import { Modal } from "@/components/modal";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { api } from "@/hooks/api/axios";
+import { CategoryDto, GuildClanDto } from "@/hooks/api/generated";
+import { useAuth } from "@/hooks/use-auth";
+import { categoryTheme } from "@/lib/clan-categories";
 import { cn } from "@/lib/utils";
 import {
   DndContext,
@@ -35,640 +34,544 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowRight,
+  Check,
   ChevronDown,
-  ChevronRight,
   GripVertical,
-  Menu,
-  Plus,
+  Layers,
+  Loader2,
+  RotateCw,
   Search,
-  Shield,
-  Users,
+  X,
 } from "lucide-react";
-import * as React from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { api } from "@/hooks/api/axios";
-import { CategoryDto, GuildClanDto } from "@/hooks/api/generated";
-import { useAuth } from "@/hooks/use-auth";
+// The backend always returns this category first and can't reorder it.
+const UNCATEGORIZED_ID = "uncategorized";
+const ALL = "all";
 
-// --- COMPONENTS ---
+type Status = "loading" | "ready" | "error";
 
-// 1. Re-useable Draggable Item for CLANS
-function SortableClanItem({
-  clan,
-  categories,
-  onMove,
-  categoryName,
-  disabled,
-}: {
-  clan: GuildClanDto;
-  categories: CategoryDto[];
-  onMove: (categoryId: string) => void;
-  categoryName: string;
-  disabled?: boolean;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: clan._id, disabled: disabled });
-
-  const style = {
-    // Restrict to Y axis to prevent horizontal scroll during drag
-    transform: CSS.Translate.toString(
-      transform ? { ...transform, x: 0 } : null,
-    ),
-    transition,
-    zIndex: isDragging ? 1 : 0,
-    position: "relative" as const,
+function useSortableStyle(id: string, disabled: boolean) {
+  const sortable = useSortable({ id, disabled });
+  const { transform, transition, isDragging } = sortable;
+  return {
+    ...sortable,
+    style: {
+      transform: CSS.Translate.toString(
+        transform ? { ...transform, x: 0 } : null,
+      ),
+      transition,
+      zIndex: isDragging ? 10 : undefined,
+      position: "relative" as const,
+    },
   };
+}
 
+function DragHandle(props: React.HTMLAttributes<HTMLButtonElement>) {
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer group pr-12 relative",
-        isDragging && "opacity-50",
-      )}
+    <button
+      type="button"
+      aria-label="Drag to reorder"
+      style={{ touchAction: "none" }}
+      className="flex size-7 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:bg-accent hover:text-foreground active:cursor-grabbing"
+      {...props}
     >
-      <div className="flex items-center gap-4">
-        {/* Clan Name & Tag & Lvl */}
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm">{clan.name}</h3>
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] font-mono text-muted-foreground">
-              {clan.tag}
-            </span>
-            <span className="text-[10px] bg-secondary px-1.5 py-0 rounded-sm text-secondary-foreground font-medium">
-              Lvl {clan.level}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats & League & Category Dropdown */}
-      <div className="flex items-center gap-2 md:gap-6">
-        <span
-          className={cn(
-            "hidden md:inline-flex text-[10px] px-2 py-0.5 rounded font-medium whitespace-nowrap bg-secondary text-secondary-foreground",
-          )}
-        >
-          {clan.league}
-        </span>
-
-        {/* Hidden on mobile */}
-        <div className="hidden md:flex items-center gap-3 md:gap-4 text-xs text-muted-foreground">
-          <span
-            className="flex items-center gap-1.5 w-14 md:w-16"
-            title="Members"
-          >
-            <Users className="size-3.5" /> {clan.members}/50
-          </span>
-        </div>
-
-        {/* CATEGORY CHANGE DROPDOWN */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Badge
-              variant="outline"
-              className="w-28 justify-between h-6 px-2 text-[10px] cursor-pointer hover:bg-primary/5 hover:text-primary transition-colors border-dashed"
-            >
-              <span className="truncate">{categoryName}</span>
-              <ChevronDown className="size-2.5 opacity-50 shrink-0" />
-            </Badge>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Move to Category</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {categories.map((category) => (
-              <DropdownMenuItem
-                key={category._id}
-                onClick={() => onMove(category._id)}
-                disabled={clan.categoryId === category._id}
-                className={cn(
-                  clan.categoryId === category._id &&
-                    "bg-accent text-accent-foreground",
-                )}
-              >
-                {category.displayName}
-                {clan.categoryId === category._id && (
-                  <span className="ml-2 text-[10px] text-muted-foreground">
-                    (current)
-                  </span>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* DRAG HANDLE */}
-      {!disabled && (
-        <div
-          {...attributes}
-          {...listeners}
-          style={{ touchAction: "none" }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground cursor-grab active:cursor-grabbing rounded hover:bg-muted"
-        >
-          <GripVertical className="size-4" />
-        </div>
-      )}
-    </div>
+      <GripVertical className="size-4" />
+    </button>
   );
 }
 
-// 2. Sortable Item for CATEGORIES
-function SortableCategoryItem({
+function CategoryItem({
   category,
-  isActive,
+  active,
   onSelect,
-  clanCount,
+  sortable,
 }: {
   category: CategoryDto;
-  isActive: boolean;
+  active: boolean;
   onSelect: () => void;
-  clanCount: number;
+  sortable: boolean;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: category._id,
-    disabled: category._id === "uncategorized",
-  });
-
-  const style = {
-    // Restrict to Y axis from preventing horizontal scroll during drag
-    transform: CSS.Translate.toString(
-      transform ? { ...transform, x: 0 } : null,
-    ),
-    transition,
-    zIndex: isDragging ? 1 : 0,
-    position: "relative" as const,
-  };
+  const { attributes, listeners, setNodeRef, style, isDragging } =
+    useSortableStyle(category._id, !sortable);
+  const theme = categoryTheme(category.displayName);
 
   return (
-    <div ref={setNodeRef} style={style} className="group relative">
-      <button
-        onClick={onSelect}
+    <li ref={setNodeRef} style={style} className="group">
+      <div
         className={cn(
-          "w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between overflow-hidden pr-8",
-          isActive
-            ? "bg-primary/10 border-primary/50 ring-1 ring-primary/20"
-            : "bg-card border-border hover:border-primary/20",
-          isDragging && "opacity-50",
-          "cursor-pointer",
+          "flex items-center gap-1 rounded-xl pr-1 transition-colors",
+          active ? "bg-foreground/[0.07]" : "hover:bg-accent/60",
+          isDragging && "bg-card shadow-lg ring-1 ring-border",
         )}
       >
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-current={active}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl p-2 text-left"
+        >
           <div
             className={cn(
-              "font-semibold truncate text-sm",
-              isActive ? "text-primary" : "text-foreground",
+              "flex size-8 shrink-0 items-center justify-center rounded-lg",
+              theme.tile,
+            )}
+          >
+            <theme.Icon className="size-4" />
+          </div>
+          <span
+            className={cn(
+              "flex-1 truncate text-sm",
+              active ? "font-medium" : "text-foreground/80",
             )}
           >
             {category.displayName}
+          </span>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {category.clans.length}
+          </span>
+        </button>
+        {sortable ? (
+          <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+            <DragHandle {...attributes} {...listeners} />
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
-            {clanCount} clans
-          </div>
-        </div>
-        {isActive && (
-          <ChevronRight className="size-4 text-primary opacity-50 shrink-0 absolute right-10" />
+        ) : (
+          <span className="size-7 shrink-0" />
         )}
-      </button>
-
-      {/* DRAG HANDLE */}
-      {category._id !== "uncategorized" && (
-        <div
-          {...attributes}
-          {...listeners}
-          style={{ touchAction: "none" }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground cursor-grab active:cursor-grabbing rounded hover:bg-muted"
-        >
-          <GripVertical className="size-4" />
-        </div>
-      )}
-    </div>
+      </div>
+    </li>
   );
 }
 
-// 3. Category Sidebar Content
-function CategorySidebarContent({
+function ClanRow({
+  clan,
   categories,
-  activeCategoryId,
-  onSelectCategory,
-  onOpenCreate,
-  onDragEnd,
+  sortable,
+  onMove,
 }: {
+  clan: GuildClanDto;
   categories: CategoryDto[];
-  activeCategoryId: string;
-  onSelectCategory: (id: string) => void;
-  onOpenCreate: () => void;
-  onDragEnd: (event: DragEndEvent) => void;
+  sortable: boolean;
+  onMove: (categoryId: string) => void;
 }) {
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const { attributes, listeners, setNodeRef, style, isDragging } =
+    useSortableStyle(clan._id, !sortable);
+  const current = categories.find((c) => c._id === clan.categoryId);
+  const theme = categoryTheme(current?.displayName ?? "");
 
   return (
-    <>
-      <div className="flex items-center justify-between p-4 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
-        <div>
-          <h2 className="text-lg font-bold leading-none">Clan Types</h2>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
-            Filter your clan list
+    <li ref={setNodeRef} style={style}>
+      <div
+        className={cn(
+          "group flex items-center gap-3 rounded-2xl border bg-card p-2.5 pr-3 shadow-[0_1px_2px_rgba(13,15,13,.04)] transition-shadow",
+          isDragging && "shadow-xl ring-1 ring-border",
+        )}
+      >
+        {sortable && <DragHandle {...attributes} {...listeners} />}
+        <div
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+            theme.tile,
+            !sortable && "ml-0.5",
+          )}
+        >
+          <theme.Icon className="size-[18px]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium tracking-tight">{clan.name}</p>
+          <p className="truncate font-mono text-xs text-muted-foreground">
+            {clan.tag}
           </p>
         </div>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
-          onClick={onOpenCreate}
-        >
-          <Plus className="size-4" />
-        </Button>
-      </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3">
-        {/* Fixed "All Clans" Tab - Not Sortable */}
-        <button
-          onClick={() => onSelectCategory("all")}
-          className={cn(
-            "w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between group relative overflow-hidden",
-            activeCategoryId === "all"
-              ? "bg-primary/10 border-primary/50 ring-1 ring-primary/20"
-              : "bg-card border-border hover:border-primary/20",
-            "cursor-pointer",
-          )}
-        >
-          <span className="font-semibold text-sm">All Clans</span>
-          {activeCategoryId === "all" && (
-            <ChevronRight className="size-4 text-primary opacity-50 shrink-0" />
-          )}
-        </button>
-
-        {/* Sortable List */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
-        >
-          <SortableContext
-            items={categories.map((c) => c._id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {categories.map((c) => (
-              <SortableCategoryItem
-                key={c._id}
-                category={c}
-                clanCount={c.clans.length}
-                isActive={activeCategoryId === c._id}
-                onSelect={() => onSelectCategory(c._id)}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex h-8 max-w-40 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <span
+                className={cn("size-1.5 shrink-0 rounded-full", theme.dot)}
               />
-            ))}
-          </SortableContext>
-        </DndContext>
+              <span className="truncate">
+                {current?.displayName ?? "Uncategorized"}
+              </span>
+              <ChevronDown className="size-3 shrink-0 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52 rounded-xl">
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Move to category
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {categories.map((category) => {
+              const isCurrent = category._id === clan.categoryId;
+              const { Icon } = categoryTheme(category.displayName);
+              return (
+                <DropdownMenuItem
+                  key={category._id}
+                  disabled={isCurrent}
+                  onClick={() => onMove(category._id)}
+                >
+                  <Icon />
+                  <span className="flex-1 truncate">
+                    {category.displayName}
+                  </span>
+                  {isCurrent && <Check className="size-3.5" />}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Link
+          href={`/links?tag=${encodeURIComponent(clan.tag)}`}
+          title="Member links"
+          aria-label={`Member links for ${clan.name}`}
+          className="hidden size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex"
+        >
+          <ArrowRight className="size-4" />
+        </Link>
       </div>
-    </>
+    </li>
   );
 }
 
 export default function ClansPage() {
-  const session = useAuth();
-  const [categories, setCategories] = React.useState<CategoryDto[]>([]);
-  const [activeCategoryId, setActiveCategoryId] = React.useState<string>("all");
-  const [search, setSearch] = React.useState("");
+  const { user } = useAuth();
+  const guildId = user.guild.id;
 
-  // Dialog State
-  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
-  const [newCategoryName, setNewCategoryName] = React.useState("");
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [status, setStatus] = useState<Status>("loading");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string>(ALL);
+  const [search, setSearch] = useState("");
 
-  const loadClans = async () => {
-    try {
-      const { data } = await api.guilds.getGuildClans({
-        guildId: session.user.guild.id,
-      });
-      setCategories(data.categories);
-    } catch (error) {
-      console.error("Failed to load clans", error);
-    }
-  };
-
-  const reorderClans = async (updatedCategories: CategoryDto[]) => {
-    try {
-      await api.guilds.reorderGuildClans(
-        {
-          guildId: session.user.guild.id,
-        },
-        {
-          categories: updatedCategories.map((c, cIdx) => ({
-            _id: c._id,
-            order: cIdx,
-            clans: c.clans.map((clan, clanIdx) => ({
-              _id: clan._id,
-              order: clanIdx,
-            })),
-          })),
-        },
-      );
-      loadClans();
-    } catch (error) {
-      console.error("Failed to reorder clans", error);
-    }
-  };
-
-  React.useEffect(() => {
-    loadClans();
-  }, []); // eslint-disable-line
-
-  const filteredClans = React.useMemo(() => {
-    let allClans: GuildClanDto[] = [];
-
-    if (activeCategoryId === "all") {
-      allClans = categories.flatMap((c) => c.clans);
-    } else {
-      const category = categories.find((c) => c._id === activeCategoryId);
-      if (category) {
-        allClans = category.clans;
-      }
-    }
-
-    if (search) {
-      const q = search.toLowerCase();
-      return allClans.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) || c.tag.toLowerCase().includes(q),
-      );
-    }
-
-    return allClans;
-  }, [categories, activeCategoryId, search]);
-
-  const createCategory = () => {
-    if (!newCategoryName.trim()) return;
-
-    const newCat: CategoryDto = {
-      _id: `cat-${Date.now()}`,
-      displayName: newCategoryName,
-      order: categories.length,
-      clans: [],
-    };
-
-    const newCategories = [...categories, newCat];
-    setCategories(newCategories);
-    // OPTIONAL: Call API to persist new category immediately or wait for reorder?
-    // Usually creating a category should persist.
-    // Assuming strictly frontend logic for now as per previous implementation pattern,
-    // but typically you'd hit an API to create.
-    setNewCategoryName("");
-    setIsCreateOpen(false);
-    setActiveCategoryId(newCat._id);
-  };
-
-  const handleMoveClan = (clanId: string, targetCategoryId: string) => {
-    setCategories((prev) => {
-      const newCategories = prev.map((c) => ({ ...c, clans: [...c.clans] }));
-
-      // Find source
-      let clanToMove: GuildClanDto | undefined;
-      let sourceCategoryIndex = -1;
-
-      for (let i = 0; i < newCategories.length; i++) {
-        const idx = newCategories[i].clans.findIndex((c) => c._id === clanId);
-        if (idx !== -1) {
-          clanToMove = newCategories[i].clans[idx];
-          sourceCategoryIndex = i;
-          break;
-        }
-      }
-
-      if (!clanToMove || sourceCategoryIndex === -1) return prev;
-
-      // Remove from source
-      newCategories[sourceCategoryIndex].clans.splice(
-        newCategories[sourceCategoryIndex].clans.indexOf(clanToMove),
-        1,
-      );
-
-      // Add to target
-      const targetCategory = newCategories.find(
-        (c) => c._id === targetCategoryId,
-      );
-      if (targetCategory) {
-        targetCategory.clans.push({
-          ...clanToMove,
-          categoryId: targetCategoryId,
-        });
-      }
-
-      reorderClans(newCategories); // Sync with API
-      return newCategories;
-    });
-  };
-
-  // --- DND HANDLERS ---
-  const handleCategoryDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setCategories((items) => {
-        const oldIndex = items.findIndex((item) => item._id === active.id);
-        const newIndex = items.findIndex((item) => item._id === over.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        reorderClans(newItems);
-        return newItems;
-      });
-    }
-  };
-
-  const handleClanDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    // Only allow sorting if we are in a specific category view (not "all" and not searching)
-    // Because "All" view implies cross-category representation which complicates "order".
-    if (activeCategoryId === "all" || search) return;
-
-    if (over && active.id !== over.id) {
-      setCategories((prev) => {
-        const categoryIndex = prev.findIndex((c) => c._id === activeCategoryId);
-        if (categoryIndex === -1) return prev;
-
-        const newCategories = [...prev];
-        const category = { ...newCategories[categoryIndex] };
-        category.clans = [...category.clans];
-
-        const oldIndex = category.clans.findIndex((c) => c._id === active.id);
-        const newIndex = category.clans.findIndex((c) => c._id === over.id);
-
-        if (oldIndex !== -1 && newIndex !== -1) {
-          category.clans = arrayMove(category.clans, oldIndex, newIndex);
-          newCategories[categoryIndex] = category;
-          reorderClans(newCategories);
-          return newCategories;
-        }
-        return prev;
-      });
-    }
-  };
-
-  // Sensors for Main Area (Clan List)
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
 
-  // Create a fast lookup for category names to avoid O(N*M) in the render loop
-  const categoryNameMap = React.useMemo(() => {
-    const map = new Map<string, string>();
-    categories.forEach((c) => {
-      map.set(c._id, c.displayName);
-    });
-    return map;
-  }, [categories]);
+  const load = useCallback(async () => {
+    setStatus("loading");
+    setLoadError(null);
+    try {
+      const { data } = await api.guilds.getGuildClans({ guildId });
+      setCategories(data.categories);
+      setStatus("ready");
+    } catch (err) {
+      setLoadError((err as Error).message);
+      setStatus("error");
+    }
+  }, [guildId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const save = async (next: CategoryDto[]) => {
+    const previous = categories;
+    setCategories(next);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const { data } = await api.guilds.reorderGuildClans(
+        { guildId },
+        {
+          categories: next.map((category, order) => ({
+            _id: category._id,
+            order,
+            clans: category.clans.map((clan, clanOrder) => ({
+              _id: clan._id,
+              order: clanOrder,
+            })),
+          })),
+        },
+      );
+      setCategories(data.categories);
+    } catch (err) {
+      setCategories(previous);
+      setSaveError(`Couldn't save the new order: ${(err as Error).message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const moveClan = (clan: GuildClanDto, targetId: string) => {
+    save(
+      categories.map((category) => {
+        if (category._id === targetId) {
+          return {
+            ...category,
+            clans: [...category.clans, { ...clan, categoryId: targetId }],
+          };
+        }
+        return {
+          ...category,
+          clans: category.clans.filter((c) => c._id !== clan._id),
+        };
+      }),
+    );
+  };
+
+  const onCategoryDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = categories.findIndex((c) => c._id === active.id);
+    const to = categories.findIndex((c) => c._id === over.id);
+    if (categories[to]?._id === UNCATEGORIZED_ID) return;
+    save(arrayMove(categories, from, to));
+  };
+
+  const onClanDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    save(
+      categories.map((category) => {
+        if (category._id !== activeId) return category;
+        const from = category.clans.findIndex((c) => c._id === active.id);
+        const to = category.clans.findIndex((c) => c._id === over.id);
+        return { ...category, clans: arrayMove(category.clans, from, to) };
+      }),
+    );
+  };
+
+  const total = categories.reduce((n, c) => n + c.clans.length, 0);
+  const activeCategory = categories.find((c) => c._id === activeId);
+  const query = search.trim().toLowerCase();
+
+  const clans = useMemo(() => {
+    const list = activeCategory
+      ? activeCategory.clans
+      : categories.flatMap((c) => c.clans);
+    if (!query) return list;
+    return list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.tag.toLowerCase().includes(query),
+    );
+  }, [activeCategory, categories, query]);
+
+  const canSortClans = !!activeCategory && !query && !saving;
 
   return (
-    <div className="h-[calc(100vh)] flex flex-col md:flex-row gap-6 p-4 md:px-6 md:pt-6 pb-10">
-      {/* SIDEBAR */}
-      <aside className="hidden md:flex w-72 shrink-0 flex-col gap-4">
-        <CategorySidebarContent
-          categories={categories}
-          activeCategoryId={activeCategoryId}
-          onSelectCategory={setActiveCategoryId}
-          onOpenCreate={() => setIsCreateOpen(true)}
-          onDragEnd={handleCategoryDragEnd}
-        />
-      </aside>
+    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
+            Clans
+          </h2>
+          <p className="text-sm text-muted-foreground md:text-base">
+            {status === "ready"
+              ? `${total} clans in ${categories.length} categories. The bot lists them in this order.`
+              : "Organize your server's clans into categories."}
+          </p>
+        </div>
+        <div className="relative md:w-72">
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search name or tag"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
-      {/* MOBILE SHEET */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden absolute top-4 right-4 z-50"
+      {saveError && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive"
+        >
+          <span className="flex-1">{saveError}</span>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => setSaveError(null)}
+            className="cursor-pointer rounded-md p-1 hover:bg-destructive/10"
           >
-            <Menu className="size-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="p-0 w-80">
-          <div className="h-full p-4 pt-12 flex flex-col gap-4">
-            <CategorySidebarContent
-              categories={categories}
-              activeCategoryId={activeCategoryId}
-              onSelectCategory={(id) => {
-                setActiveCategoryId(id);
-              }}
-              onOpenCreate={() => setIsCreateOpen(true)}
-              onDragEnd={handleCategoryDragEnd}
-            />
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
+      {status === "loading" ? (
+        <div className="grid gap-6 md:grid-cols-[16rem_minmax(0,1fr)]">
+          <div className="hidden space-y-2 md:block">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
+            ))}
           </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-h-0 bg-background/50 rounded-t-xl gap-4">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between p-2 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
-          <div className="flex items-center gap-3 px-2 w-full">
-            <div className="hidden md:block">
-              <h1 className="text-lg font-bold leading-tight">
-                {activeCategoryId === "all"
-                  ? "All Clans"
-                  : categories.find((c) => c._id === activeCategoryId)
-                      ?.displayName}
-              </h1>
-              <p className="text-xs text-muted-foreground font-medium">
-                {filteredClans.length} Clans found
-              </p>
-            </div>
-
-            <div className="relative flex-1 md:max-w-xs md:ml-auto">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search clans..."
-                className="pl-8 h-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+          <div className="space-y-2.5">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div
+                key={i}
+                className="h-[3.75rem] animate-pulse rounded-2xl bg-muted"
               />
-            </div>
-
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> New Clan
-            </Button>
+            ))}
           </div>
         </div>
+      ) : status === "error" ? (
+        <Card className="items-center gap-3 py-10 text-center shadow-none">
+          <p className="text-sm text-destructive">{loadError}</p>
+          <Button variant="outline" size="sm" onClick={load}>
+            <RotateCw />
+            Try again
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start">
+          <aside className="min-w-0 md:sticky md:top-6">
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:hidden">
+              {[
+                { _id: ALL, displayName: "All clans", clans: [] },
+                ...categories,
+              ].map((category) => {
+                const active = activeId === category._id;
+                const count =
+                  category._id === ALL ? total : category.clans.length;
+                return (
+                  <button
+                    key={category._id}
+                    type="button"
+                    onClick={() => setActiveId(category._id)}
+                    aria-pressed={active}
+                    className={cn(
+                      "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors",
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "bg-card",
+                    )}
+                  >
+                    {category.displayName}
+                    <span
+                      className={
+                        active ? "text-background/60" : "text-muted-foreground"
+                      }
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* CLAN LIST (Sortable) */}
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="flex flex-col gap-2 pb-4">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleClanDragEnd}
-            >
-              <SortableContext
-                items={filteredClans.map((c) => c._id)}
-                strategy={verticalListSortingStrategy}
-                disabled={activeCategoryId === "all" || search.length > 0}
+            <nav className="hidden md:block" aria-label="Categories">
+              <button
+                type="button"
+                onClick={() => setActiveId(ALL)}
+                aria-current={activeId === ALL}
+                className={cn(
+                  "mb-1 flex w-full cursor-pointer items-center gap-3 rounded-xl p-2 pr-9 text-left transition-colors",
+                  activeId === ALL
+                    ? "bg-foreground/[0.07]"
+                    : "hover:bg-accent/60",
+                )}
               >
-                {filteredClans.map((clan) => (
-                  <SortableClanItem
-                    key={clan._id}
-                    clan={clan}
-                    categories={categories}
-                    onMove={(catId) => handleMoveClan(clan._id, catId)}
-                    categoryName={
-                      categoryNameMap.get(clan.categoryId) || "Unknown"
-                    }
-                    disabled={activeCategoryId === "all" || search.length > 0}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          </div>
-          {filteredClans.length === 0 && (
-            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-60 h-64">
-              <Shield className="size-10 mb-2 opacity-20" />
-              <p>No clans found in this category.</p>
-            </div>
-          )}
-        </div>
-      </main>
+                <div className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
+                  <Layers className="size-4" />
+                </div>
+                <span
+                  className={cn(
+                    "flex-1 text-sm",
+                    activeId === ALL ? "font-medium" : "text-foreground/80",
+                  )}
+                >
+                  All clans
+                </span>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {total}
+                </span>
+              </button>
 
-      {/* CREATE CATEGORY DIALOG */}
-      <Modal
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        title="New Clan Category"
-        description="Create a category to organize your clans"
-        footer={<Button onClick={createCategory}>Create Category</Button>}
-      >
-        <div className="py-2 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cat-name">Category Name</Label>
-            <Input
-              id="cat-name"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="e.g. Feeder Clans"
-            />
-          </div>
+              <p className="px-2 pt-3 pb-1.5 text-xs text-muted-foreground">
+                Categories
+              </p>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onCategoryDragEnd}
+              >
+                <SortableContext
+                  items={categories.map((c) => c._id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="space-y-0.5">
+                    {categories.map((category) => (
+                      <CategoryItem
+                        key={category._id}
+                        category={category}
+                        active={activeId === category._id}
+                        onSelect={() => setActiveId(category._id)}
+                        sortable={category._id !== UNCATEGORIZED_ID && !saving}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            </nav>
+          </aside>
+
+          <section className="min-w-0 space-y-3">
+            <div className="flex h-5 items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {query
+                  ? `${clans.length} matching`
+                  : activeCategory
+                    ? "Drag clans to reorder them"
+                    : "Pick a category to reorder its clans"}
+              </span>
+              {saving && (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="size-3 animate-spin" />
+                  Saving
+                </span>
+              )}
+            </div>
+
+            {clans.length === 0 ? (
+              <Card className="items-center gap-1 border-dashed py-12 text-center shadow-none">
+                <p className="font-medium">
+                  {query ? "No clans match your search" : "No clans here yet"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {query
+                    ? "Try a different name or tag."
+                    : "Move a clan into this category from its category menu."}
+                </p>
+              </Card>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onClanDragEnd}
+              >
+                <SortableContext
+                  items={clans.map((c) => c._id)}
+                  strategy={verticalListSortingStrategy}
+                  disabled={!canSortClans}
+                >
+                  <ul className="space-y-2">
+                    {clans.map((clan) => (
+                      <ClanRow
+                        key={clan._id}
+                        clan={clan}
+                        categories={categories}
+                        sortable={canSortClans}
+                        onMove={(targetId) => moveClan(clan, targetId)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </section>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
