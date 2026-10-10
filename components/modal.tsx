@@ -31,6 +31,20 @@ interface ModalProps {
   children?: React.ReactNode;
   footer?: React.ReactNode;
   className?: string; // Content class name
+  /** Wraps the body and footer in a form, so a `type="submit"` footer button submits it. */
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
+}
+
+function FormWrap({
+  onSubmit,
+  children,
+}: Pick<ModalProps, "onSubmit" | "children">) {
+  if (!onSubmit) return <>{children}</>;
+  return (
+    <form onSubmit={onSubmit} className="contents">
+      {children}
+    </form>
+  );
 }
 
 export function Modal({
@@ -42,6 +56,7 @@ export function Modal({
   children,
   footer,
   className,
+  onSubmit,
 }: ModalProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -56,8 +71,10 @@ export function Modal({
               <DialogDescription>{description}</DialogDescription>
             )}
           </DialogHeader>
-          {children}
-          {footer && <div className="flex justify-end gap-2">{footer}</div>}
+          <FormWrap onSubmit={onSubmit}>
+            {children}
+            {footer && <div className="flex justify-end gap-2">{footer}</div>}
+          </FormWrap>
         </DialogContent>
       </Dialog>
     );
@@ -71,15 +88,19 @@ export function Modal({
           {title && <DrawerTitle>{title}</DrawerTitle>}
           {description && <DrawerDescription>{description}</DrawerDescription>}
         </DrawerHeader>
-        <div className={className ? `px-4 ${className}` : "px-4"}>
-          {children}
-        </div>
-        <DrawerFooter className="pt-2">
-          {footer}
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
+        <FormWrap onSubmit={onSubmit}>
+          <div className={className ? `px-4 ${className}` : "px-4"}>
+            {children}
+          </div>
+          <DrawerFooter className="pt-2">
+            {footer}
+            <DrawerClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </FormWrap>
       </DrawerContent>
     </Drawer>
   );
