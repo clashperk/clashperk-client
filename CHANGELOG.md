@@ -6,6 +6,7 @@
 - Sidebar server and user blocks sit on a soft tint.
 - Sidebar user row expands in place into a menu: profile, settings, System/Light/Dark theme switcher, resource links (guide, FAQ, support Discord, invite, Patreon, Ko-fi) and log out.
 - Settings theme tabs no longer cause a hydration error on load.
+- Profile page lists your real linked accounts and can link, verify (in-game API token) and unlink them; reordering and per-player game stats are gone.
 - Sidebar shows the server's clan and player counts under its name instead of the raw server ID.
 - Dashboard subscription and server cards stack until large screens, so the upgrade button no longer overflows.
 - Local development: optional `/api-proxy` rewrite (set `API_PROXY_TARGET`) so the dashboard can call the production API from localhost.
