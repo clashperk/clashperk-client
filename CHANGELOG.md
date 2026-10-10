@@ -4,6 +4,7 @@
 - Logging in from the landing page without a server selected opens the server picker instead of a blank page.
 - Footer copyright shows only the current year.
 - Footer Patreon and Ko-fi tiles use the official full-color logos.
+- Site font is now Poppins, matching the docs.
 
 ## 2026-10-11
 - Dashboard: Clans and Rosters sit in matching cards with same-height headers, so both columns line up; category filters and clan rows live inside the Clans card, and rosters are rows in one card. Phone width no longer scrolls sideways by a few pixels.

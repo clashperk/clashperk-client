@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Google_Sans_Flex } from "next/font/google";
+import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
-const googleSans = Google_Sans_Flex({
-  variable: "--font-google-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  weight: "variable",
+  weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${googleSans.variable} ${geistMono.variable} antialiased overscroll-none`}
+        className={`${poppins.variable} ${geistMono.variable} antialiased overscroll-none`}
       >
         <ThemeProvider
           defaultTheme="system"
