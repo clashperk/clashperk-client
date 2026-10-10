@@ -1,377 +1,450 @@
 "use client";
 
 import { Modal } from "@/components/modal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { api } from "@/hooks/api/axios";
+import { LinksDto } from "@/hooks/api/generated";
+import { useAuth } from "@/hooks/use-auth";
+import { encodeTag, normalizeTag } from "@/lib/tags";
 import {
-  DndContext,
-  DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  CheckCircle,
-  GripVertical,
+  BadgeCheck,
+  Loader2,
   Plus,
+  RotateCw,
   ShieldAlert,
-  Swords,
   Trash2,
-  User,
+  UserRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// Mock data
-type ProfilePlayer = {
-  tag: string;
-  name: string;
-  townHall: number;
-  verified: boolean;
-  role: string;
-  league: string;
-  warStars: number;
-};
+const API_TOKEN_HINT =
+  "In Clash of Clans: Settings → More Settings → API Token.";
 
-const initialPlayers: ProfilePlayer[] = [
-  {
-    tag: "#PJV202R9L",
-    name: "Suvajit",
-    townHall: 16,
-    verified: true,
-    role: "Leader",
-    league: "Legends League",
-    warStars: 1450,
-  },
-  {
-    tag: "#GLU882R0",
-    name: "Mini Suva",
-    townHall: 13,
-    verified: false,
-    role: "Member",
-    league: "Crystal I",
-    warStars: 320,
-  },
-  {
-    tag: "#2Q98Y2YJ",
-    name: "War Chief",
-    townHall: 15,
-    verified: true,
-    role: "Co-Leader",
-    league: "Titan II",
-    warStars: 890,
-  },
-];
-
-// Sortable Item Component
-function SortablePlayerItem({
+function PlayerRow({
   player,
-  onUnlink,
   onVerify,
+  onUnlink,
 }: {
-  player: ProfilePlayer;
-  onUnlink: (tag: string) => void;
-  onVerify: (tag: string) => void;
+  player: LinksDto;
+  onVerify: () => void;
+  onUnlink: () => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: player.tag });
-
-  const style = {
-    transform: CSS.Translate.toString(
-      transform ? { ...transform, x: 0 } : null,
-    ),
-    transition,
-    zIndex: isDragging ? 1 : 0,
-    position: "relative" as const,
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "flex flex-col sm:flex-row items-start sm:items-center p-3 pl-2 rounded-lg border bg-card hover:border-primary/20 transition-all gap-3 shadow-sm group",
-        isDragging && "opacity-50",
-      )}
-    >
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="hidden sm:flex h-10 w-6 items-center justify-center cursor-grab text-muted-foreground/20 hover:text-foreground hover:bg-muted rounded transition-colors self-center"
-      >
-        <GripVertical className="size-4" />
+    <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-sm font-semibold text-brand">
+        {player.name.charAt(0).toUpperCase()}
       </div>
 
-      {/* Town Hall Icon */}
-      <div
-        className={cn(
-          "flex items-center justify-center size-10 md:size-12 rounded-lg font-bold text-white text-sm md:text-base shrink-0 shadow-sm transition-all",
-          player.townHall >= 16
-            ? "bg-amber-600 border-amber-500"
-            : player.townHall === 15
-              ? "bg-purple-600 border-purple-500"
-              : player.townHall === 14
-                ? "bg-yellow-700 border-yellow-600"
-                : "bg-slate-500",
-        )}
-      >
-        {player.townHall}
-      </div>
-
-      {/* Details */}
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h4 className="font-semibold leading-none text-base">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate font-medium tracking-tight">
             {player.name}
-          </h4>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground border px-1.5 py-0.5 rounded bg-muted/50">
-            {player.role}
           </span>
-          {player.verified ? (
-            <Badge
-              variant="secondary"
-              className="gap-1 text-[10px] h-5 px-1.5 text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20"
-            >
-              <CheckCircle className="h-3 w-3" />
-              Verified
-            </Badge>
-          ) : (
-            <Badge
-              variant="secondary"
-              className="gap-1 text-[10px] h-5 px-1.5 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20"
-            >
-              <ShieldAlert className="h-3 w-3" />
-              Unverified
-            </Badge>
+          {player.verified && (
+            <BadgeCheck
+              className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+              aria-label="Verified"
+            />
           )}
         </div>
-        <div className="flex items-center gap-3 text-muted-foreground text-xs font-medium">
-          <span className="font-mono">{player.tag}</span>
-          <span>•</span>
-          <span>{player.league}</span>
-          <span className="flex items-center gap-1">
-            <Swords className="size-3" /> {player.warStars}
-          </span>
-        </div>
+        <span className="font-mono text-xs text-muted-foreground">
+          {player.tag}
+        </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end">
+      <div className="flex shrink-0 items-center gap-1.5">
         {!player.verified && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex-1 sm:flex-none h-8 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-700"
-            onClick={() => onVerify(player.tag)}
-          >
+          <Button variant="outline" size="sm" onClick={onVerify}>
+            <ShieldAlert />
             Verify
           </Button>
         )}
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={() => onUnlink(player.tag)}
+          className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          onClick={onUnlink}
+          aria-label={`Unlink ${player.name}`}
+          title="Unlink"
         >
-          <Trash2 className="h-4 w-4" />
-          <span className="sr-only">Unlink</span>
+          <Trash2 className="size-4" />
         </Button>
       </div>
-    </div>
+    </li>
+  );
+}
+
+function SkeletonRows() {
+  return (
+    <ul className="divide-y" aria-busy="true" aria-label="Loading accounts">
+      {[0, 1].map((i) => (
+        <li key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+          <div className="size-10 animate-pulse rounded-xl bg-muted" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3.5 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
 export default function ProfilePage() {
-  const [players, setPlayers] = useState<ProfilePlayer[]>(initialPlayers);
+  const session = useAuth();
+  const userId = session.user.id;
+
+  const [players, setPlayers] = useState<LinksDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [isLinkOpen, setIsLinkOpen] = useState(false);
-  const [isVerifyOpen, setIsVerifyOpen] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [verifyTarget, setVerifyTarget] = useState<LinksDto | null>(null);
+  const [unlinkTarget, setUnlinkTarget] = useState<LinksDto | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+  const loadLinks = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const { data } = await api.links.getLinks({ userIds: [userId] });
+      setPlayers(data);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadLinks();
+  }, [loadLinks]);
+
+  const verifiedCount = players.filter((p) => p.verified).length;
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
+            Profile
+          </h2>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Clash of Clans accounts linked to your Discord.
+          </p>
+        </div>
+        <Button
+          className="w-full md:w-auto"
+          onClick={() => setIsLinkOpen(true)}
+        >
+          <Plus />
+          Link account
+        </Button>
+      </div>
+
+      <section className="max-w-3xl space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h3 className="font-medium tracking-tight">Linked accounts</h3>
+          {!loading && players.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {players.length} linked · {verifiedCount} verified
+            </span>
+          )}
+        </div>
+
+        {loading ? (
+          <Card className="gap-0 py-0">
+            <SkeletonRows />
+          </Card>
+        ) : loadError ? (
+          <Card className="items-center gap-3 py-10 text-center shadow-none">
+            <p className="text-sm text-destructive">{loadError}</p>
+            <Button variant="outline" size="sm" onClick={loadLinks}>
+              <RotateCw />
+              Try again
+            </Button>
+          </Card>
+        ) : players.length === 0 ? (
+          <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+              <UserRound className="size-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium">No accounts linked yet</p>
+              <p className="text-sm text-muted-foreground">
+                Link your player tag to show up in clan stats and rosters.
+              </p>
+            </div>
+            <Button size="sm" onClick={() => setIsLinkOpen(true)}>
+              <Plus />
+              Link account
+            </Button>
+          </Card>
+        ) : (
+          <Card className="gap-0 py-0">
+            <ul className="divide-y">
+              {players.map((player) => (
+                <PlayerRow
+                  key={player.tag}
+                  player={player}
+                  onVerify={() => setVerifyTarget(player)}
+                  onUnlink={() => setUnlinkTarget(player)}
+                />
+              ))}
+            </ul>
+          </Card>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Verified accounts can only be unlinked by you. Verify with the
+          in-game API token to prove you own an account.
+        </p>
+      </section>
+
+      <LinkModal
+        open={isLinkOpen}
+        userId={userId}
+        onClose={() => setIsLinkOpen(false)}
+        onDone={loadLinks}
+      />
+      <VerifyModal
+        player={verifyTarget}
+        userId={userId}
+        onClose={() => setVerifyTarget(null)}
+        onDone={loadLinks}
+      />
+      <UnlinkModal
+        player={unlinkTarget}
+        onClose={() => setUnlinkTarget(null)}
+        onDone={loadLinks}
+      />
+    </div>
   );
+}
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+function LinkModal({
+  open,
+  userId,
+  onClose,
+  onDone,
+}: {
+  open: boolean;
+  userId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [tag, setTag] = useState("");
+  const [token, setToken] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    if (over && active.id !== over.id) {
-      setPlayers((items) => {
-        const oldIndex = items.findIndex((item) => item.tag === active.id);
-        const newIndex = items.findIndex((item) => item.tag === over.id);
-        return arrayMove(items, oldIndex, newIndex);
+  const close = () => {
+    setTag("");
+    setToken("");
+    setError(null);
+    onClose();
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const playerTag = normalizeTag(tag);
+    if (!playerTag) {
+      setError("Enter a player tag.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await api.links.link({
+        playerTag,
+        userId,
+        apiToken: token.trim() || null,
       });
+      onDone();
+      close();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleUnlink = (tag: string) => {
-    setPlayers(players.filter((p) => p.tag !== tag));
-  };
-
-  const handleVerify = () => {
-    if (selectedTag) {
-      setPlayers(
-        players.map((p) =>
-          p.tag === selectedTag ? { ...p, verified: true } : p,
-        ),
-      );
-      setIsVerifyOpen(false);
-      setSelectedTag(null);
-    }
-  };
-
-  const openVerifyModal = (tag: string) => {
-    setSelectedTag(tag);
-    setIsVerifyOpen(true);
   };
 
   return (
-    <div className="flex flex-1 flex-col h-full w-full">
-      <div className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-10 space-y-8">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
-            <p className="text-muted-foreground">
-              Manage your linked Clash of Clans accounts.
-            </p>
-          </div>
-
-          <Modal
-            open={isLinkOpen}
-            onOpenChange={setIsLinkOpen}
-            title="Link Knowledge Account"
-            description="Enter your player tag and API token to verify ownership."
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Link Account
-              </Button>
-            }
-            footer={
-              <Button onClick={() => setIsLinkOpen(false)}>Link Account</Button>
-            }
-          >
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tag" className="text-right">
-                  Player Tag
-                </Label>
-                <Input
-                  id="tag"
-                  placeholder="#PJV202R9"
-                  className="col-span-3 uppercase font-mono"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="token" className="text-right">
-                  API Token
-                </Label>
-                <Input
-                  id="token"
-                  type="password"
-                  placeholder="Find in Settings > API Token"
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-          </Modal>
+    <Modal
+      open={open}
+      onOpenChange={(next) => !next && close()}
+      title="Link account"
+      description="Add a Clash of Clans account to your profile."
+    >
+      <form onSubmit={submit} className="grid gap-4 py-2">
+        <div className="grid gap-2">
+          <Label htmlFor="link-tag">Player tag</Label>
+          <Input
+            id="link-tag"
+            placeholder="#2PP"
+            className="font-mono uppercase"
+            autoComplete="off"
+            autoFocus
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+          />
         </div>
-
-        {/* Verification Modal (Shared) */}
-        <Modal
-          open={isVerifyOpen}
-          onOpenChange={setIsVerifyOpen}
-          title="Verify Account"
-          description="To verify this account, please enter the API token found in Supcell ID Settings."
-          footer={<Button onClick={handleVerify}>Verify Now</Button>}
-        >
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="verify-token">API Token</Label>
-              <Input
-                id="verify-token"
-                type="password"
-                placeholder="xxxxxxxx"
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Only you can see this token.
-              </p>
-            </div>
-          </div>
-        </Modal>
-
-        {/* Players List */}
-        <div className="space-y-6">
-          <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-xl">
-                Linked Players ({players.length})
-              </CardTitle>
-              <CardDescription>
-                These accounts are linked to your profile. Drag to reorder.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 px-0">
-              {players.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground border-2 border-dashed rounded-xl">
-                  <User className="h-12 w-12 mb-4 opacity-20" />
-                  <p>No players linked yet.</p>
-                </div>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={players.map((p) => p.tag)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {players.map((player) => (
-                      <SortablePlayerItem
-                        key={player.tag}
-                        player={player}
-                        onUnlink={handleUnlink}
-                        onVerify={openVerifyModal}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid gap-2">
+          <Label htmlFor="link-token">
+            API token{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional, verifies the account)
+            </span>
+          </Label>
+          <Input
+            id="link-token"
+            type="password"
+            autoComplete="off"
+            className="font-mono"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">{API_TOKEN_HINT}</p>
         </div>
-      </div>
-    </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={saving || !tag.trim()}>
+            {saving && <Loader2 className="animate-spin" />}
+            Link account
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function VerifyModal({
+  player,
+  userId,
+  onClose,
+  onDone,
+}: {
+  player: LinksDto | null;
+  userId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [token, setToken] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const close = () => {
+    setToken("");
+    setError(null);
+    onClose();
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!player) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await api.links.link({
+        playerTag: player.tag,
+        userId,
+        apiToken: token.trim(),
+      });
+      onDone();
+      close();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={player !== null}
+      onOpenChange={(next) => !next && close()}
+      title={`Verify ${player?.name ?? "account"}`}
+      description="Enter the account's API token to prove you own it."
+    >
+      <form onSubmit={submit} className="grid gap-4 py-2">
+        <div className="grid gap-2">
+          <Label htmlFor="verify-token">API token</Label>
+          <Input
+            id="verify-token"
+            type="password"
+            autoComplete="off"
+            autoFocus
+            className="font-mono"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">{API_TOKEN_HINT}</p>
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={saving || !token.trim()}>
+            {saving && <Loader2 className="animate-spin" />}
+            Verify
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function UnlinkModal({
+  player,
+  onClose,
+  onDone,
+}: {
+  player: LinksDto | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const close = () => {
+    setError(null);
+    onClose();
+  };
+
+  const unlink = async () => {
+    if (!player) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await api.links.unlink({ playerTag: encodeTag(player.tag) });
+      onDone();
+      close();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={player !== null}
+      onOpenChange={(next) => !next && close()}
+      title={`Unlink ${player?.name ?? "account"}?`}
+      description={`${player?.tag ?? ""} will be removed from your profile. You can link it again later.`}
+      footer={
+        <>
+          <Button variant="outline" onClick={close}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={unlink} disabled={saving}>
+            {saving && <Loader2 className="animate-spin" />}
+            Unlink
+          </Button>
+        </>
+      }
+    >
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </Modal>
   );
 }
