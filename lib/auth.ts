@@ -71,6 +71,9 @@ const decodeHandoffToken = async (token: string): Promise<HandoffUserDto> => {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Discord({
+      // Discord now sends an `iss` param on the OAuth callback (RFC 9207); without a
+      // matching issuer Auth.js compares it to its "https://authjs.dev" placeholder and fails.
+      issuer: "https://discord.com",
       authorization: {
         params: { scope: "identify guilds", prompt: "none" },
       },
