@@ -1,5 +1,6 @@
 "use client";
 
+import { StickyBar } from "@/components/sticky-bar";
 import { Modal } from "@/components/modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -427,7 +428,7 @@ function RosterManager() {
             <main className="@container min-w-0 space-y-4">
               <RosterHeader roster={activeRoster} />
 
-              <div className="space-y-2.5 md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+              <StickyBar className="space-y-2.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="flex h-9 shrink-0 items-center gap-2 rounded-full border bg-card px-3.5 text-sm">
                     <Checkbox
@@ -554,7 +555,7 @@ function RosterManager() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </StickyBar>
 
               {results.length > 0 && (
                 <div

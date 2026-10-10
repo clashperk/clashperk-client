@@ -4,6 +4,8 @@
 - Footer Patreon and Ko-fi tiles use the official full-color logos.
 
 ## 2026-10-11
+- Dashboard: Clans and Rosters sit in matching cards with same-height headers, so both columns line up; category filters and clan rows live inside the Clans card, and rosters are rows in one card. Phone width no longer scrolls sideways by a few pixels.
+- Pinned filter bars on links, rosters, reminders and the server picker get a bottom edge and soft shadow once content scrolls under them, so table headers no longer look like part of the bar.
 - Login page: ClashPerk logo, "Continue with Discord" with a short note on what happens next, friendly messages when sign-in fails, and after sign-in you land on the page you were trying to open. Signed-in visitors see Continue and Sign out instead of a role chip.
 - Handoff links without a token show "This sign-in link doesn't work" with a way to sign in, instead of spinning forever.
 - Public pages linked from Discord (war history, single war, capital contributions, activity charts) use the landing page header and footer with the Supercell fan content notice, a theme toggle, the dashboard style, and an error state with Try again.

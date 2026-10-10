@@ -1,5 +1,6 @@
 "use client";
 
+import { StickyBar } from "@/components/sticky-bar";
 import { ClanPicker } from "@/components/clan-picker";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
@@ -377,7 +378,7 @@ function LinksManager() {
         </div>
       ) : (
         <section className="space-y-4">
-          <div className="md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+          <StickyBar>
             <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-[0_1px_2px_rgba(13,15,13,.04)] lg:flex-row lg:items-center lg:gap-6">
               <div className="min-w-0 lg:w-64">
                 <div className="flex items-baseline justify-between text-sm">
@@ -447,7 +448,7 @@ function LinksManager() {
                 />
               </div>
             </div>
-          </div>
+          </StickyBar>
 
           {owner && (
             <div className="flex items-center gap-2 text-sm">

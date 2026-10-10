@@ -76,7 +76,7 @@ function Overview({ guildId }: { guildId: string }) {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-8">
       <ServerHero clans={clans} rosters={rosters} links={links} />
-      <div className="grid gap-4 md:gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
         <RostersPanel rosters={rosters} />
         <ClansPanel clans={clans} />
       </div>
@@ -236,38 +236,47 @@ function HeroStat({
   );
 }
 
-function PanelHead({
+function Panel({
   title,
   count,
   href,
   action,
+  className,
   children,
 }: {
   title: string;
   count?: number;
   href: string;
   action: string;
-  children?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <h3 className="text-lg font-medium tracking-tight">
-        {title}
-        {count !== undefined && (
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
-            {count}
-          </span>
-        )}
-      </h3>
+    <section
+      className={cn(
+        "min-w-0 overflow-hidden rounded-2xl border bg-card shadow-[0_1px_2px_rgba(13,15,13,.04),0_12px_32px_-16px_rgba(13,15,13,.12)]",
+        className,
+      )}
+    >
+      <div className="flex h-14 items-center gap-3 border-b px-4">
+        <h3 className="font-medium tracking-tight">
+          {title}
+          {count !== undefined && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              {count}
+            </span>
+          )}
+        </h3>
+        <Link
+          href={href}
+          className="ml-auto flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {action}
+          <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
       {children}
-      <Link
-        href={href}
-        className="ml-auto flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        {action}
-        <ArrowRight className="size-3.5" />
-      </Link>
-    </div>
+    </section>
   );
 }
 
@@ -282,16 +291,15 @@ function ClansPanel({ clans }: { clans: Load<CategoryDto[]> }) {
   const total = categories.reduce((n, c) => n + c.clans.length, 0);
 
   return (
-    <section className="min-w-0 space-y-4 xl:order-first">
-      <PanelHead
-        title="Clans"
-        count={clans.status === "ready" ? total : undefined}
-        href="/clans"
-        action="Manage"
-      />
-
+    <Panel
+      title="Clans"
+      count={clans.status === "ready" ? total : undefined}
+      href="/clans"
+      action="Manage"
+      className="xl:order-first"
+    >
       {categories.length > 1 && (
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+        <div className="flex gap-1.5 overflow-x-auto border-b px-4 py-3 md:flex-wrap">
           <FilterChip active={!filter} onClick={() => setFilter(null)}>
             All
           </FilterChip>
@@ -315,52 +323,49 @@ function ClansPanel({ clans }: { clans: Load<CategoryDto[]> }) {
       )}
 
       {clans.status === "loading" ? (
-        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid gap-2 p-3 sm:grid-cols-2 2xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div
-              key={i}
-              className="h-[4.5rem] animate-pulse rounded-2xl bg-muted"
-            />
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : clans.status === "error" ? (
-        <Card className="p-5 text-sm text-destructive">{clans.message}</Card>
+        <p className="p-4 text-sm text-destructive">{clans.message}</p>
       ) : categories.length === 0 ? (
-        <Card className="items-center gap-2 border-dashed p-8 text-center shadow-none">
+        <div className="space-y-1 px-4 py-10 text-center">
           <p className="font-medium">No clans yet</p>
           <p className="text-sm text-muted-foreground">
             Clans added to this server show up here.
           </p>
-        </Card>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="divide-y">
           {visible.map((category) => {
             const theme = categoryTheme(category.displayName);
             return (
-              <div key={category._id} className="space-y-2.5">
+              <div key={category._id} className="space-y-1 p-3">
                 {!filter && categories.length > 1 && (
-                  <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <p className="flex items-center gap-2 px-1 pb-1 text-xs font-medium text-muted-foreground">
                     <theme.Icon className="size-3.5" />
                     {category.displayName}
                   </p>
                 )}
-                <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                <ul className="grid gap-1 sm:grid-cols-2 2xl:grid-cols-3">
                   {category.clans.map((clan) => (
                     <li key={clan.tag}>
                       <Link
                         href={`/links?tag=${encodeURIComponent(clan.tag)}`}
-                        className="group flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-[0_1px_2px_rgba(13,15,13,.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-md"
+                        className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-accent"
                       >
                         <div
                           className={cn(
-                            "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                            "flex size-10 shrink-0 items-center justify-center rounded-xl",
                             theme.tile,
                           )}
                         >
-                          <theme.Icon className="size-5" />
+                          <theme.Icon className="size-[1.125rem]" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium tracking-tight">
+                          <p className="truncate text-sm font-medium tracking-tight">
                             {clan.name}
                           </p>
                           <p className="truncate font-mono text-xs text-muted-foreground">
@@ -377,7 +382,7 @@ function ClansPanel({ clans }: { clans: Load<CategoryDto[]> }) {
           })}
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -398,8 +403,8 @@ function FilterChip({
       className={cn(
         "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         active
-          ? "border-foreground bg-foreground text-background [&_.text-muted-foreground]:text-background/60"
-          : "bg-card hover:bg-accent",
+          ? "border-transparent bg-foreground/[0.08] font-medium text-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
       )}
     >
       {children}
@@ -420,24 +425,22 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
       : [];
 
   return (
-    <section className="min-w-0 space-y-4">
-      <PanelHead title="Rosters" href="/rosters" action="All rosters" />
-
+    <Panel title="Rosters" href="/rosters" action="All rosters">
       {rosters.status === "loading" ? (
-        <div className="space-y-3">
+        <div className="space-y-2 p-3">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
+            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : rosters.status === "error" ? (
-        <Card className="p-5 text-sm text-destructive">{rosters.message}</Card>
+        <p className="p-4 text-sm text-destructive">{rosters.message}</p>
       ) : recent.length === 0 ? (
-        <Card className="items-center gap-2 border-dashed p-8 text-center shadow-none">
+        <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
           <ListChecks className="size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">No rosters yet.</p>
-        </Card>
+        </div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        <ul className="divide-y">
           {recent.map((roster) => {
             const filled = roster.maxMembers
               ? Math.min(roster.members.length / roster.maxMembers, 1)
@@ -446,7 +449,7 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
               <li key={roster._id}>
                 <Link
                   href={`/rosters?roster=${roster._id}`}
-                  className="block rounded-2xl border bg-card p-4 shadow-[0_1px_2px_rgba(13,15,13,.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-md"
+                  className="block space-y-3 px-4 py-3.5 transition-colors hover:bg-accent/60"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="size-10 shrink-0 rounded-xl">
@@ -458,7 +461,7 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium tracking-tight">
+                      <p className="truncate text-sm font-medium tracking-tight">
                         {roster.name}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
@@ -479,7 +482,7 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
                       {roster.closed ? "Closed" : "Open"}
                     </span>
                   </div>
-                  <div className="mt-4 flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                       {filled !== null && (
                         <div
@@ -505,13 +508,13 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
 
       <Link
         href="/profile"
-        className="flex items-center gap-3 rounded-2xl border border-dashed p-4 text-sm transition-colors hover:bg-accent/50"
+        className="flex items-center gap-3 border-t px-4 py-3.5 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
       >
-        <BadgeCheck className="size-4 text-muted-foreground" />
+        <BadgeCheck className="size-4" />
         <span className="flex-1">Link and verify your own accounts</span>
-        <ArrowRight className="size-3.5 text-muted-foreground" />
+        <ArrowRight className="size-3.5" />
       </Link>
-    </section>
+    </Panel>
   );
 }
 

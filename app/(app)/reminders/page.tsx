@@ -1,5 +1,6 @@
 "use client";
 
+import { StickyBar } from "@/components/sticky-bar";
 import { ClanPicker, PickerCategory } from "@/components/clan-picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -814,7 +815,7 @@ export default function RemindersPage() {
         )}
 
         <div className="flex min-w-0 flex-col gap-6 xl:order-1">
-          <div className="@container flex flex-col gap-4 md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+          <StickyBar className="@container flex flex-col gap-4">
             <div
               role="tablist"
               aria-label="Reminder type"
@@ -909,7 +910,7 @@ export default function RemindersPage() {
                 )}
               </div>
             </div>
-          </div>
+          </StickyBar>
 
           {loading ? (
             <SkeletonCards />
