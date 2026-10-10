@@ -19,7 +19,7 @@ export function LegalDocument({
   sections: LegalSection[];
 }) {
   return (
-    <article className="mx-auto w-full max-w-3xl px-4 py-10">
+    <article className="landing mx-auto w-full max-w-3xl bg-background px-4 py-10 text-foreground">
       <h1 className="text-3xl font-bold">{title}</h1>
       <p className="mt-1 font-semibold text-muted-foreground">Last Updated: {lastUpdated}</p>
 
@@ -37,7 +37,7 @@ export function LegalDocument({
                     href={SUPPORT_SERVER}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-500 hover:underline"
+                    className="text-primary hover:underline"
                   >
                     discord.gg/clashperk
                   </a>
