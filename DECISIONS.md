@@ -50,3 +50,6 @@ The `(app)` layout reads request headers, so every page there is dynamic and `us
 
 ## 2026-10-11 — No preview deployments
 Every branch push deployed twice (the preview workflow and Vercel's Git integration) and used up the free plan's 100 deployments a day. Production deploys only from `main` through `release-prod.yaml` with the Vercel CLI, so `vercel.json` turns off Git-triggered deployments and the preview workflow is gone.
+
+## 2026-10-11 — Production deploys from dev
+The site moved to a new Vercel account (team `suvajit-org`, project `clashperk`, served at `dash.clashperk.com`). `release-prod.yaml` now deploys every push to `dev`; `main` no longer triggers a deploy.
