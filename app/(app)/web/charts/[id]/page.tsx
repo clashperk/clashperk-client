@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WebCard, WebPage } from "../../components/web-page";
 import { ActivityChart, type ChartData } from "./activity-chart";
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,10 +17,16 @@ export default async function ChartPage({ params }: Props) {
   if (!res.ok) notFound();
 
   const data = (await res.json()) as ChartData;
+  const clans = Math.min(data.datasets.length, 20);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
-      <ActivityChart {...data} />
-    </div>
+    <WebPage
+      title={data.title}
+      subtitle={`${clans} clan${clans === 1 ? "" : "s"} · Tap a clan below to hide or show it`}
+    >
+      <WebCard>
+        <ActivityChart {...data} />
+      </WebCard>
+    </WebPage>
   );
 }

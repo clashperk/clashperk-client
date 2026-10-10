@@ -35,3 +35,9 @@ The backend only has `GET /guilds/:id/reminders`, so the page shows reminders an
 
 ## 2026-10-11 — Rosters filter row uses container queries
 The member column's width depends on the app sidebar and the roster list as much as the window, so the filter row breaks on the column's own width (`@container` on the roster `main`). Roster create, edit, delete, clone, add-members and refresh stay out of the UI: those backend endpoints are still stubs. CSV export runs in the browser on the members currently shown.
+
+## 2026-10-11 — Public /web pages share the landing chrome
+Pages opened from Discord links use `SiteHeader` (plus a theme toggle) and the footer's legal row, which carries Supercell's fan content notice required for pages showing game assets. The four community tiles stay on the landing page only. Stars keep their gold colour because players read them as the game's stars; everything else follows the neutral dashboard style. Town Hall images come from `assets.clashperk.com`.
+
+## 2026-10-11 — Links page renders without a Suspense wrapper
+The `(app)` layout reads request headers, so every page there is dynamic and `useSearchParams` needs no Suspense boundary. The extra boundary shifted React's generated IDs between server and client and caused a hydration mismatch on the clan picker.
