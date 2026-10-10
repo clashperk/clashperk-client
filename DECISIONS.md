@@ -4,7 +4,7 @@
 Decided by: Suvajit. Visual style only — ClashPerk keeps its name, logo and copy.
 - Dashboard tokens live in `:root` / `.dark`; marketing tokens are scoped under `.landing`.
 - `--primary` is the brand orange so buttons and selected states match the landing: `#c44800` in light (white text passes 4.5:1; the logo's `#d14c00` does not) and `#ee7d2b` with near-black text in dark. `--brand` stays the logo orange (`#d14c00` to `#de8f28`) for accents. Success states stay green.
-- Google Sans Flex is self-hosted from `public/fonts` instead of Google Fonts.
+- Google Sans Flex loads through `next/font/google`, which downloads it at build time and serves it from our domain.
 
 ## 2026-10-10 — Light-only marketing routes via next-themes `forcedTheme`
 `/`, `/terms`, `/privacy` force `light` in `ThemeProvider`, so the user's saved dashboard theme is untouched. Chosen over overriding variables with a nested class, which would still trigger `dark:` variants on those pages.
