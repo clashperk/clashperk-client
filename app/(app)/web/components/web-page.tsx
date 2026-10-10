@@ -1,22 +1,14 @@
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
-import { SiteFooterLegal } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { ThemeToggle } from "./theme-toggle";
+import { PublicShell } from "@/components/public-shell";
 
 export function WebShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col">
-      <SiteHeader actions={<ThemeToggle />} />
+    <PublicShell>
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-6 md:gap-8 md:py-10">
         {children}
       </main>
-      <footer className="border-t">
-        <div className="mx-auto max-w-7xl px-6 py-6">
-          <SiteFooterLegal />
-        </div>
-      </footer>
-    </div>
+    </PublicShell>
   );
 }
 

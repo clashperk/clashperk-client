@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-10-11
+- Login page: ClashPerk logo, "Continue with Discord" with a short note on what happens next, friendly messages when sign-in fails, and after sign-in you land on the page you were trying to open. Signed-in visitors see Continue and Sign out instead of a role chip.
+- Handoff links without a token show "This sign-in link doesn't work" with a way to sign in, instead of spinning forever.
 - Public pages linked from Discord (war history, single war, capital contributions, activity charts) use the landing page header and footer with the Supercell fan content notice, a theme toggle, the dashboard style, and an error state with Try again.
 - War page shows a scoreboard for both clans with Clan / Opponent tabs; war history adds totals, working Town Hall images and CWL seasons that fit on phones (repeated CWLs in a month are labelled "1 of 2"); capital contributions add totals and a per-player ranking; activity charts fit on phones with a legend that hides or shows each clan.
 - Links page no longer logs a hydration mismatch for the clan picker.

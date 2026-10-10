@@ -41,3 +41,6 @@ Pages opened from Discord links use `SiteHeader` (plus a theme toggle) and the f
 
 ## 2026-10-11 — Links page renders without a Suspense wrapper
 The `(app)` layout reads request headers, so every page there is dynamic and `useSearchParams` needs no Suspense boundary. The extra boundary shifted React's generated IDs between server and client and caused a hydration mismatch on the clan picker.
+
+## 2026-10-11 — Sign-in redirects are same-site paths only
+`/login` and `/handoff` read `?redirect=` through `safeRedirect` (`lib/redirect.ts`): only paths starting with a single `/` are kept, `/login` itself falls back to `/dashboard`, so the parameter cannot send people to another site or loop. The Discord sign-in button keeps Discord's blue instead of the brand orange because people recognise it as the Discord button.
