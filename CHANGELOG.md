@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-11
+- Sidebar highlights the page you're on, and the mobile header shows that page's name instead of always "Dashboard".
 - Dashboard uses the brand orange for buttons, progress bars and selected states; buttons are pills and cards have softer corners and shadows.
 - Dashboard headings are lighter, stat cards get orange icon tiles, and sidebar labels are no longer all caps.
 - Sidebar server and user blocks sit on a soft tint.
