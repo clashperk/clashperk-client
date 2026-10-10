@@ -58,13 +58,14 @@ function ThemePicker() {
             onClick={() => setTheme(value)}
             className={cn(
               "flex cursor-pointer items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              active && "border-primary bg-brand-soft hover:bg-brand-soft",
+              active &&
+                "border-foreground/40 bg-foreground/[0.06] hover:bg-foreground/[0.06]",
             )}
           >
             <div
               className={cn(
                 "flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground",
-                active && "bg-primary text-primary-foreground",
+                active && "bg-foreground text-background",
               )}
             >
               <Icon className="size-4" />

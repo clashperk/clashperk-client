@@ -59,18 +59,23 @@ function LinksManager() {
   const [error, setError] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
 
-  const [linkTarget, setLinkTarget] = React.useState<ClanLinkedMemberDto | null>(null);
-  const [unlinkTarget, setUnlinkTarget] = React.useState<ClanLinkedMemberDto | null>(null);
+  const [linkTarget, setLinkTarget] =
+    React.useState<ClanLinkedMemberDto | null>(null);
+  const [unlinkTarget, setUnlinkTarget] =
+    React.useState<ClanLinkedMemberDto | null>(null);
 
   React.useEffect(() => {
     const loadClans = async () => {
       try {
         const { data } = await api.guilds.getGuildClans({ guildId });
-        const guildClans = data.categories.flatMap((category) => category.clans);
+        const guildClans = data.categories.flatMap(
+          (category) => category.clans,
+        );
         setClans(guildClans);
 
         const requested = normalizeTag(searchParams.get("tag") ?? "");
-        const initial = guildClans.find((c) => c.tag === requested) ?? guildClans[0];
+        const initial =
+          guildClans.find((c) => c.tag === requested) ?? guildClans[0];
         if (initial) setClanTag(initial.tag);
       } catch (err) {
         setError((err as Error).message);
@@ -84,7 +89,9 @@ function LinksManager() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.clans.getClanLinks({ clanTag: encodeTag(clanTag) });
+      const { data } = await api.clans.getClanLinks({
+        clanTag: encodeTag(clanTag),
+      });
       setClan(data);
     } catch (err) {
       setClan(null);
@@ -114,48 +121,55 @@ function LinksManager() {
   const linkedCount = clan?.memberList.filter((m) => m.userId).length ?? 0;
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:px-6 md:pt-6 pb-10">
-      <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm md:flex-row md:items-center">
-        <div className="flex-1">
-          <h1 className="text-lg font-bold leading-tight">Discord Links</h1>
-          <p className="text-xs font-medium text-muted-foreground">
+    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end">
+        <div className="flex-1 space-y-1">
+          <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
+            Discord links
+          </h2>
+          <p className="text-sm text-muted-foreground md:text-base">
             {clan
-              ? `${linkedCount}/${clan.memberList.length} members linked`
-              : "Link clan members to their Discord accounts"}
+              ? `${linkedCount} of ${clan.memberList.length} members linked to Discord.`
+              : "Link clan members to their Discord accounts."}
           </p>
         </div>
 
-        <Select value={clanTag} onValueChange={setClanTag}>
-          <SelectTrigger className="w-full md:w-64">
-            <SelectValue placeholder="Select a clan" />
-          </SelectTrigger>
-          <SelectContent>
-            {clans.map((c) => (
-              <SelectItem key={c._id} value={c.tag}>
-                {c.name} ({c.tag})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Select value={clanTag} onValueChange={setClanTag}>
+            <SelectTrigger className="w-full sm:w-64">
+              <SelectValue placeholder="Select a clan" />
+            </SelectTrigger>
+            <SelectContent>
+              {clans.map((c) => (
+                <SelectItem key={c._id} value={c.tag}>
+                  {c.name} ({c.tag})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search members..."
-            className="h-9 pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search members"
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive"
+        >
           {error}
         </div>
       )}
 
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-2xl border bg-card shadow-[0_1px_2px_rgba(13,15,13,.04),0_12px_32px_-16px_rgba(13,15,13,.12)]">
         {loading ? (
           <div className="flex h-64 items-center justify-center text-muted-foreground">
             <Loader2 className="size-6 animate-spin" />
@@ -178,8 +192,10 @@ function LinksManager() {
             <TableBody>
               {members.map((member) => (
                 <TableRow key={member.tag}>
-                  <TableCell className="text-right font-semibold text-orange-600 dark:text-orange-400">
-                    {member.townHallLevel}
+                  <TableCell className="text-right">
+                    <span className="inline-flex size-7 items-center justify-center rounded-lg bg-muted text-xs font-semibold tabular-nums">
+                      {member.townHallLevel}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{member.name}</div>
@@ -198,18 +214,22 @@ function LinksManager() {
                         </span>
                         {member.verified && (
                           <BadgeCheck
-                            className="size-4 text-sky-600 dark:text-sky-400"
+                            className="size-4 text-emerald-600 dark:text-emerald-400"
                             aria-label="Verified"
                           />
                         )}
-                        {member.username && member.displayName !== member.username && (
-                          <span className="hidden text-xs text-muted-foreground md:inline">
-                            @{member.username}
-                          </span>
-                        )}
+                        {member.username &&
+                          member.displayName !== member.username && (
+                            <span className="hidden text-xs text-muted-foreground md:inline">
+                              @{member.username}
+                            </span>
+                          )}
                       </div>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="text-muted-foreground"
+                      >
                         Not linked
                       </Badge>
                     )}
@@ -233,7 +253,11 @@ function LinksManager() {
                         <Unlink className="size-4" />
                       </Button>
                     ) : (
-                      <Button size="sm" variant="secondary" onClick={() => setLinkTarget(member)}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setLinkTarget(member)}
+                      >
                         <Link2 className="mr-1 size-4" /> Link
                       </Button>
                     )}
@@ -242,7 +266,10 @@ function LinksManager() {
               ))}
               {clan && members.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No members found.
                   </TableCell>
                 </TableRow>
@@ -322,7 +349,11 @@ function LinkMemberModal({
     setSaving(true);
     setError(null);
     try {
-      await api.links.link({ playerTag: member.tag, userId: selected.id, apiToken: null });
+      await api.links.link({
+        playerTag: member.tag,
+        userId: selected.id,
+        apiToken: null,
+      });
       onLinked();
       onClose();
     } catch (err) {
@@ -341,7 +372,7 @@ function LinkMemberModal({
       footer={
         <Button onClick={link} disabled={!selected || saving}>
           {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-          Link Account
+          Link account
         </Button>
       }
     >
@@ -350,7 +381,7 @@ function LinkMemberModal({
           <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             autoFocus
-            placeholder="Username or display name..."
+            placeholder="Search username or display name"
             className="pl-8"
             value={query}
             onChange={(e) => {
@@ -383,7 +414,9 @@ function LinkMemberModal({
               </button>
             ))}
           {!searching && query.trim().length >= 2 && results.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">No members found.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No members found.
+            </p>
           )}
         </div>
 
@@ -446,7 +479,8 @@ function UnlinkMemberModal({
       <div className="space-y-2 py-2 text-sm">
         {isSelf && (
           <p className="rounded-md border border-orange-500/40 bg-orange-500/10 p-3 text-orange-600 dark:text-orange-400">
-            This is your own account. You will lose access to features that depend on it.
+            This is your own account. You will lose access to features that
+            depend on it.
           </p>
         )}
         {error && <p className="text-destructive">{error}</p>}

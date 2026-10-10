@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/modal";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { api } from "@/hooks/api/axios";
 import {
   RosterGroupsEntity,
@@ -25,13 +24,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
   ArrowRightCircle,
-  ChevronRight,
   FolderInput,
+  ListChecks,
   Loader2,
   Lock,
-  Menu,
   Search,
-  Shield,
   Trash2,
   Users,
   X,
@@ -42,7 +39,8 @@ import * as React from "react";
 const DEFAULT_MAX_MEMBERS = 50;
 
 /** Rosters can be detached from a clan (`/roster edit detach_clan`); the bot calls those "All Clans". */
-const rosterClanName = (roster: RostersEntity) => roster.clan?.name ?? "All Clans";
+const rosterClanName = (roster: RostersEntity) =>
+  roster.clan?.name ?? "All Clans";
 const NO_GROUP = "none";
 
 type TransferResult = TransferRosterMembersDto["result"];
@@ -68,7 +66,9 @@ function RosterManager() {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
-  const [dialog, setDialog] = React.useState<"move" | "group" | "remove" | null>(null);
+  const [dialog, setDialog] = React.useState<
+    "move" | "group" | "remove" | null
+  >(null);
   const [results, setResults] = React.useState<TransferResult>([]);
 
   const loadRosters = React.useCallback(async () => {
@@ -77,9 +77,14 @@ function RosterManager() {
       setRosters(data.rosters);
       setGroups(data.categories);
       setActiveRosterId((current) => {
-        if (current && data.rosters.some((r) => r._id === current)) return current;
+        if (current && data.rosters.some((r) => r._id === current))
+          return current;
         const requested = searchParams.get("roster");
-        return data.rosters.find((r) => r._id === requested)?._id ?? data.rosters[0]?._id ?? "";
+        return (
+          data.rosters.find((r) => r._id === requested)?._id ??
+          data.rosters[0]?._id ??
+          ""
+        );
       });
     } catch (err) {
       setError((err as Error).message);
@@ -116,7 +121,10 @@ function RosterManager() {
 
     const grouped = new Map<string, RosterMemberOfRostersEntity[]>();
     for (const member of members) {
-      const key = member.categoryId && groupNames.has(member.categoryId) ? member.categoryId : NO_GROUP;
+      const key =
+        member.categoryId && groupNames.has(member.categoryId)
+          ? member.categoryId
+          : NO_GROUP;
       grouped.set(key, [...(grouped.get(key) ?? []), member]);
     }
 
@@ -126,11 +134,18 @@ function RosterManager() {
         name: id === NO_GROUP ? "No Group" : groupNames.get(id)!,
         members: list.sort((a, b) => b.townHallLevel - a.townHallLevel),
       }))
-      .sort((a, b) => (a.id === NO_GROUP ? 1 : b.id === NO_GROUP ? -1 : a.name.localeCompare(b.name)));
+      .sort((a, b) =>
+        a.id === NO_GROUP
+          ? 1
+          : b.id === NO_GROUP
+            ? -1
+            : a.name.localeCompare(b.name),
+      );
   }, [activeRoster, groupNames, search]);
 
   const visibleTags = memberGroups.flatMap((g) => g.members.map((m) => m.tag));
-  const allSelected = visibleTags.length > 0 && visibleTags.every((tag) => selected.has(tag));
+  const allSelected =
+    visibleTags.length > 0 && visibleTags.every((tag) => selected.has(tag));
 
   const toggle = (tags: string[], checked: boolean) => {
     setSelected((prev) => {
@@ -147,138 +162,179 @@ function RosterManager() {
     await loadRosters();
   };
 
-  const sidebar = (
-    <RosterSidebar
-      rosters={rosters}
-      activeRosterId={activeRosterId}
-      onSelect={selectRoster}
-    />
-  );
+  const openCount = rosters.filter((r) => !r.closed).length;
 
   return (
-    <div className="h-[calc(100vh)] flex flex-col md:flex-row gap-6 p-4 md:px-6 md:pt-6 pb-10">
-      <aside className="hidden md:flex w-72 shrink-0 flex-col gap-4">{sidebar}</aside>
+    <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
+          Rosters
+        </h2>
+        <p className="text-sm text-muted-foreground md:text-base">
+          {loading
+            ? "Sign-up lists for wars, CWL and events."
+            : `${rosters.length} rosters, ${openCount} open for sign-ups.`}
+        </p>
+      </div>
 
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden absolute top-4 right-4 z-50">
-            <Menu className="size-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="p-0 w-80">
-          <div className="h-full p-4 pt-12 flex flex-col gap-4">{sidebar}</div>
-        </SheetContent>
-      </Sheet>
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive"
+        >
+          {error}
+        </div>
+      )}
 
-      <main className="flex-1 flex flex-col min-h-0 gap-4">
-        {error && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-[17rem_minmax(0,1fr)]">
+          <div className="hidden space-y-2 md:block">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-muted" />
+            ))}
           </div>
-        )}
-
-        {loading ? (
-          <div className="flex flex-1 items-center justify-center text-muted-foreground">
-            <Loader2 className="size-6 animate-spin" />
+          <div className="space-y-3">
+            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-64 animate-pulse rounded-2xl bg-muted" />
           </div>
-        ) : !activeRoster ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-            <Shield className="size-16 mb-4 opacity-10" />
-            <h3 className="text-lg font-medium">
-              {rosters.length ? "Select a Roster" : "No rosters in this server"}
-            </h3>
-            {!rosters.length && (
-              <p className="text-sm">Create one with the /roster create command.</p>
-            )}
+        </div>
+      ) : !rosters.length ? (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed py-14 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
+            <ListChecks className="size-6" />
           </div>
-        ) : (
-          <>
-            <RosterHeader roster={activeRoster} />
-
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2 shadow-sm">
-              <label className="flex items-center gap-2 px-2 text-sm">
-                <Checkbox
-                  checked={allSelected}
-                  disabled={!visibleTags.length}
-                  onCheckedChange={(checked) => toggle(visibleTags, checked === true)}
-                />
-                {selected.size ? `${selected.size} selected` : "Select all"}
-              </label>
-
-              <div className="ml-auto flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={!selected.size || rosters.length < 2}
-                  onClick={() => setDialog("move")}
-                >
-                  <ArrowRightCircle className="mr-1.5 size-4" /> Change Roster
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={!selected.size || !groups.length}
-                  onClick={() => setDialog("group")}
-                >
-                  <FolderInput className="mr-1.5 size-4" /> Change Group
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="hover:bg-destructive/10 hover:text-destructive"
-                  disabled={!selected.size}
-                  onClick={() => setDialog("remove")}
-                >
-                  <Trash2 className="mr-1.5 size-4" /> Remove
-                </Button>
-              </div>
-
-              <div className="relative w-full md:w-56">
-                <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search members..."
-                  className="h-8 pl-8"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+          <p className="font-medium">No rosters in this server</p>
+          <p className="text-sm text-muted-foreground">
+            Create one in Discord with the bot.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[17rem_minmax(0,1fr)] md:items-start">
+          <aside className="min-w-0 md:sticky md:top-6">
+            <Select value={activeRosterId} onValueChange={selectRoster}>
+              <SelectTrigger className="w-full md:hidden">
+                <SelectValue placeholder="Select a roster" />
+              </SelectTrigger>
+              <SelectContent>
+                {rosters.map((roster) => (
+                  <SelectItem key={roster._id} value={roster._id}>
+                    {roster.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="hidden md:block">
+              <RosterSidebar
+                rosters={rosters}
+                activeRosterId={activeRosterId}
+                onSelect={selectRoster}
+              />
             </div>
+          </aside>
 
-            {results.length > 0 && (
-              <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm">
-                <div className="mb-1 flex items-center justify-between font-medium text-orange-600 dark:text-orange-400">
-                  Some players could not be moved
-                  <Button size="icon" variant="ghost" className="size-6" onClick={() => setResults([])}>
-                    <X className="size-3.5" />
+          {activeRoster && (
+            <main className="min-w-0 space-y-4">
+              <RosterHeader roster={activeRoster} />
+
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex h-9 shrink-0 items-center gap-2 rounded-full border bg-card px-3.5 text-sm">
+                  <Checkbox
+                    checked={allSelected}
+                    disabled={!visibleTags.length}
+                    onCheckedChange={(checked) =>
+                      toggle(visibleTags, checked === true)
+                    }
+                  />
+                  {selected.size ? `${selected.size} selected` : "Select all"}
+                </label>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={!selected.size || rosters.length < 2}
+                    onClick={() => setDialog("move")}
+                  >
+                    <ArrowRightCircle /> Change roster
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={!selected.size || !groups.length}
+                    onClick={() => setDialog("group")}
+                  >
+                    <FolderInput /> Change group
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="hover:bg-destructive/10 hover:text-destructive"
+                    disabled={!selected.size}
+                    onClick={() => setDialog("remove")}
+                  >
+                    <Trash2 /> Remove
                   </Button>
                 </div>
-                <ul className="space-y-0.5 text-muted-foreground">
-                  {results.map((r, i) => (
-                    <li key={i}>
-                      <span className="font-medium text-foreground">
-                        {r.player.name} ({r.player.tag})
-                      </span>
-                      : {r.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
+                <div className="relative w-full min-w-0 xl:ml-auto xl:w-60">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search members"
+                    className="pl-9"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {results.length > 0 && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm"
+                >
+                  <div className="mb-1 flex items-center justify-between font-medium text-destructive">
+                    Some players could not be moved
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-6"
+                      aria-label="Dismiss"
+                      onClick={() => setResults([])}
+                    >
+                      <X className="size-3.5" />
+                    </Button>
+                  </div>
+                  <ul className="space-y-0.5 text-muted-foreground">
+                    {results.map((r, i) => (
+                      <li key={i}>
+                        <span className="font-medium text-foreground">
+                          {r.player.name} ({r.player.tag})
+                        </span>
+                        : {r.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {memberGroups.map((group) => {
                 const tags = group.members.map((m) => m.tag);
                 return (
-                  <section key={group.id} className="rounded-lg border bg-card">
-                    <header className="flex items-center gap-2 border-b px-3 py-2">
+                  <section
+                    key={group.id}
+                    className="overflow-hidden rounded-2xl border bg-card shadow-[0_1px_2px_rgba(13,15,13,.04)]"
+                  >
+                    <header className="flex items-center gap-2.5 border-b px-4 py-2.5">
                       <Checkbox
                         checked={tags.every((tag) => selected.has(tag))}
-                        onCheckedChange={(checked) => toggle(tags, checked === true)}
+                        onCheckedChange={(checked) =>
+                          toggle(tags, checked === true)
+                        }
                       />
-                      <span className="text-sm font-semibold">{group.name}</span>
-                      <Badge variant="secondary" className="text-[10px]">
+                      <span className="text-sm font-medium">{group.name}</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
                         {group.members.length}
-                      </Badge>
+                      </span>
                     </header>
                     <div className="divide-y">
                       {group.members.map((member) => (
@@ -294,15 +350,17 @@ function RosterManager() {
                 );
               })}
               {memberGroups.length === 0 && (
-                <div className="flex h-48 flex-col items-center justify-center text-muted-foreground opacity-60">
-                  <Users className="size-10 mb-2 opacity-20" />
-                  <p className="text-sm">{search ? "No members found." : "This roster is empty."}</p>
+                <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed py-12 text-center text-sm text-muted-foreground">
+                  <Users className="size-5" />
+                  {search
+                    ? "No members match your search."
+                    : "Nobody has signed up yet."}
                 </div>
               )}
-            </div>
-          </>
-        )}
-      </main>
+            </main>
+          )}
+        </div>
+      )}
 
       {activeRoster && (
         <>
@@ -339,6 +397,25 @@ function RosterManager() {
   );
 }
 
+function RosterBadge({
+  roster,
+  className,
+}: {
+  roster: RostersEntity;
+  className?: string;
+}) {
+  return (
+    <Avatar className={cn("shrink-0 rounded-lg", className)}>
+      {roster.clan?.badgeUrl && (
+        <AvatarImage src={roster.clan.badgeUrl} alt="" />
+      )}
+      <AvatarFallback className="rounded-lg bg-foreground/[0.06] text-foreground/70">
+        <ListChecks className="size-4" />
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 function RosterSidebar({
   rosters,
   activeRosterId,
@@ -349,86 +426,123 @@ function RosterSidebar({
   onSelect: (id: string) => void;
 }) {
   return (
-    <>
-      <div className="flex items-center p-4 bg-card border rounded-lg shadow-sm h-[72px] shrink-0">
-        <div>
-          <h2 className="text-lg font-bold leading-none">Your Rosters</h2>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
-            {rosters.length} Total &middot; {rosters.filter((r) => r.closed).length} Closed
-          </p>
-        </div>
-      </div>
-
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3">
-        {rosters.map((roster) => {
-          const isActive = roster._id === activeRosterId;
-          return (
-            <button
-              key={roster._id}
-              onClick={() => onSelect(roster._id)}
-              className={cn(
-                "w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between overflow-hidden",
-                isActive
-                  ? "bg-primary/10 border-primary/50 ring-1 ring-primary/20"
-                  : "bg-card border-border hover:border-primary/20",
-              )}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className={cn("font-semibold truncate", isActive && "text-primary")}>
-                    {roster.name}
-                  </span>
-                  {roster.closed && <Lock className="size-3 text-muted-foreground shrink-0" />}
-                </div>
-                <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
-                    {roster.members.length}/{roster.maxMembers ?? DEFAULT_MAX_MEMBERS}
-                  </Badge>
-                  <span className="truncate">{rosterClanName(roster)}</span>
-                </div>
+    <nav aria-label="Rosters" className="space-y-0.5">
+      {rosters.map((roster) => {
+        const isActive = roster._id === activeRosterId;
+        return (
+          <button
+            key={roster._id}
+            type="button"
+            onClick={() => onSelect(roster._id)}
+            aria-current={isActive}
+            className={cn(
+              "flex w-full cursor-pointer items-center gap-3 rounded-xl p-2 text-left transition-colors",
+              isActive ? "bg-foreground/[0.07]" : "hover:bg-accent/60",
+            )}
+          >
+            <RosterBadge roster={roster} className="size-9" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={cn(
+                    "truncate text-sm",
+                    isActive ? "font-medium" : "text-foreground/80",
+                  )}
+                >
+                  {roster.name}
+                </span>
+                {roster.closed && (
+                  <Lock className="size-3 shrink-0 text-muted-foreground" />
+                )}
               </div>
-              {isActive && <ChevronRight className="size-4 text-primary opacity-50 shrink-0" />}
-            </button>
-          );
-        })}
-      </div>
-    </>
+              <span className="block truncate text-xs text-muted-foreground">
+                {rosterClanName(roster)}
+              </span>
+            </div>
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+              {roster.members.length}/{roster.maxMembers ?? DEFAULT_MAX_MEMBERS}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
 function RosterHeader({ roster }: { roster: RostersEntity }) {
-  const stats = [
-    ["Members", `${roster.members.length}/${roster.maxMembers ?? DEFAULT_MAX_MEMBERS}`],
+  const max = roster.maxMembers ?? DEFAULT_MAX_MEMBERS;
+  const filled = Math.min(roster.members.length / max, 1);
+  const facts = [
     roster.minTownHall || roster.maxTownHall
-      ? ["Town Hall", `${roster.minTownHall ?? 1} - ${roster.maxTownHall ?? "max"}`]
+      ? [
+          "Town Hall",
+          `${roster.minTownHall ?? 1}–${roster.maxTownHall ?? "max"}`,
+        ]
       : null,
-    roster.minHeroLevels ? ["Min. Hero Levels", `${roster.minHeroLevels}`] : null,
-  ].filter((stat): stat is string[] => !!stat);
+    roster.minHeroLevels
+      ? ["Min. hero levels", `${roster.minHeroLevels}`]
+      : null,
+  ].filter((fact): fact is string[] => !!fact);
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4 shadow-sm">
-      <div className="p-2 bg-primary/10 rounded-lg text-primary">
-        {roster.closed ? <Lock className="size-5" /> : <Shield className="size-5" />}
-      </div>
-      <div className="min-w-0 flex-1">
-        <h1 className="text-lg font-bold leading-tight flex items-center gap-2">
-          {roster.name}
-          {roster.closed && (
-            <Badge variant="destructive" className="text-[10px] h-5">
-              Closed
-            </Badge>
-          )}
-        </h1>
-        <p className="text-xs text-muted-foreground font-medium">
-          {roster.clan ? `${roster.clan.name} (${roster.clan.tag})` : "All Clans"}
-        </p>
-      </div>
-      <div className="flex gap-6">
-        {stats.map(([label, value]) => (
-          <div key={label} className="text-right">
-            <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-            <div className="font-semibold">{value}</div>
+    <div className="rounded-2xl border bg-card p-4 shadow-[0_1px_2px_rgba(13,15,13,.04),0_12px_32px_-16px_rgba(13,15,13,.12)] md:p-5">
+      <div className="flex items-center gap-3">
+        <RosterBadge roster={roster} className="size-12 rounded-xl" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-lg font-medium tracking-tight">
+              {roster.name}
+            </h3>
+            <span
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs",
+                roster.closed
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
+              )}
+            >
+              {roster.closed ? (
+                <Lock className="size-3" />
+              ) : (
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+              )}
+              {roster.closed ? "Closed" : "Open"}
+            </span>
           </div>
+          <p className="truncate text-sm text-muted-foreground">
+            {roster.clan ? (
+              <>
+                {roster.clan.name}{" "}
+                <span className="font-mono text-xs">{roster.clan.tag}</span>
+              </>
+            ) : (
+              "All Clans"
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex min-w-48 flex-1 items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-foreground/70"
+              style={{ width: `${filled * 100}%` }}
+            />
+          </div>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="text-foreground">{roster.members.length}</span> /{" "}
+            {max} signed up
+          </span>
+        </div>
+        {facts.map(([label, value]) => (
+          <span
+            key={label}
+            className="flex items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1 text-xs"
+          >
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-medium">{value}</span>
+          </span>
         ))}
       </div>
     </div>
@@ -447,22 +561,32 @@ function MemberRow({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-accent/50",
-        selected && "bg-primary/5",
+        "flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50",
+        selected && "bg-foreground/[0.04]",
       )}
     >
-      <Checkbox checked={selected} onCheckedChange={(checked) => onToggle(checked === true)} />
-      <span className="w-7 text-right font-semibold text-orange-600 dark:text-orange-400">{member.townHallLevel}</span>
+      <Checkbox
+        checked={selected}
+        onCheckedChange={(checked) => onToggle(checked === true)}
+      />
+      <span
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold tabular-nums"
+        title="Town Hall"
+      >
+        {member.townHallLevel}
+      </span>
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{member.name}</div>
-        <div className="font-mono text-[11px] text-muted-foreground">{member.tag}</div>
+        <div className="font-mono text-xs text-muted-foreground">
+          {member.tag}
+        </div>
       </div>
       <div className="hidden min-w-0 text-right md:block">
-        <div className="truncate text-xs">{member.clan?.name ?? "No Clan"}</div>
-        <div className="text-[11px] text-muted-foreground">{member.role ?? ""}</div>
+        <div className="truncate text-xs">{member.clan?.name ?? "No clan"}</div>
+        <div className="text-xs text-muted-foreground">{member.role ?? ""}</div>
       </div>
-      <div className="w-32 truncate text-right text-xs text-muted-foreground">
-        {member.username ?? "Unlinked"}
+      <div className="w-28 truncate text-right text-xs text-muted-foreground">
+        {member.username ? `@${member.username}` : "Not linked"}
       </div>
     </label>
   );
@@ -528,7 +652,10 @@ function MoveMembersModal({
   rosters,
   groups,
   ...props
-}: ActionModalProps & { rosters: RostersEntity[]; groups: RosterGroupsEntity[] }) {
+}: ActionModalProps & {
+  rosters: RostersEntity[];
+  groups: RosterGroupsEntity[];
+}) {
   const { open, guildId, roster, playerTags, onClose, onDone } = props;
   const [targetId, setTargetId] = React.useState("");
   const [groupId, setGroupId] = React.useState(NO_GROUP);
@@ -589,7 +716,12 @@ function MoveMembersModal({
         {groups.length > 0 && (
           <div className="space-y-2">
             <Label>Group (optional)</Label>
-            <GroupSelect groups={groups} value={groupId} onChange={setGroupId} allowNone />
+            <GroupSelect
+              groups={groups}
+              value={groupId}
+              onChange={setGroupId}
+              allowNone
+            />
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -652,7 +784,10 @@ function RemoveMembersModal(props: ActionModalProps) {
 
   const submit = () =>
     run(async () => {
-      await api.rosters.deleteRosterMembers({ guildId, rosterId: roster._id }, { playerTags });
+      await api.rosters.deleteRosterMembers(
+        { guildId, rosterId: roster._id },
+        { playerTags },
+      );
       await onDone();
     });
 

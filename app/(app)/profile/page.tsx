@@ -44,7 +44,7 @@ function PlayerRow({
 }) {
   return (
     <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-sm font-semibold text-brand">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground/70">
         {player.name.charAt(0).toUpperCase()}
       </div>
 
@@ -179,13 +179,14 @@ export default function ProfilePage() {
           </Card>
         ) : players.length === 0 ? (
           <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
               <UserRound className="size-6" />
             </div>
             <div className="space-y-1">
               <p className="font-medium">No accounts linked yet</p>
               <p className="text-sm text-muted-foreground">
-                Link your player tag so ClashPerk knows which Discord account is yours.
+                Link your player tag so ClashPerk knows which Discord account is
+                yours.
               </p>
             </div>
             <Button size="sm" onClick={() => setIsLinkOpen(true)}>
@@ -210,8 +211,8 @@ export default function ProfilePage() {
 
         <p className="text-xs text-muted-foreground">
           Only you can unlink a verified account. Unverified ones can also be
-          unlinked by whoever linked them, or by a verified Leader or
-          Co-Leader of their clan.
+          unlinked by whoever linked them, or by a verified Leader or Co-Leader
+          of their clan.
         </p>
       </section>
 
