@@ -1,20 +1,48 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { WarTypes } from "@/hooks/api/generated";
+import { AttackHistoryDto, WarTypes } from "@/hooks/api/generated";
 import { dataOrNull, serverApi } from "@/lib/server-api";
 import { encodeTag, normalizeTag } from "@/lib/tags";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Stars, WebEmpty, WebPage, formatDate, townHallImage } from "../../../components/web-page";
+import {
+  Chip,
+  StatGrid,
+  Stars,
+  TownHall,
+  WebCard,
+  WebEmpty,
+  WebPage,
+  formatDate,
+  townHallImage,
+} from "../../../components/web-page";
 
 type Props = { params: Promise<{ tag: string }> };
 
 const HISTORY_MONTHS = 6;
 
+const WAR_TYPE_LABELS: Record<WarTypes, string> = {
+  [WarTypes.REGULAR]: "War",
+  [WarTypes.FRIENDLY]: "Friendly",
+  [WarTypes.CWL]: "CWL",
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tag = normalizeTag((await params).tag);
   return { title: `War Attack History ${tag ?? ""} | ClashPerk` };
 }
+
+const ended = (war: AttackHistoryDto) =>
+  new Date(war.endTime).getTime() < Date.now();
+
+const missedAttacks = (war: AttackHistoryDto) =>
+  ended(war) ? Math.max(0, war.attacksPerMember - war.attacks.length) : 0;
+
+const formatSeason = (season: string) =>
+  new Date(season).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 
 export default async function PlayerWarsPage({ params }: Props) {
   const tag = normalizeTag((await params).tag);
@@ -23,112 +51,189 @@ export default async function PlayerWarsPage({ params }: Props) {
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - HISTORY_MONTHS);
 
-  const query = { playerTag: encodeTag(tag), startDate: startDate.toISOString() };
+  const query = {
+    playerTag: encodeTag(tag),
+    startDate: startDate.toISOString(),
+  };
   const [history, cwl] = await Promise.all([
     dataOrNull(serverApi.players.getAttackHistory(query)),
     dataOrNull(serverApi.players.aggregateClanWarLeagueHistory(query)),
   ]);
 
   const wars = history?.items ?? [];
-  if (!wars.length) return <WebEmpty message="No war attacks found for this player." />;
+  if (!wars.length) {
+    return (
+      <WebEmpty
+        title="No war attacks yet"
+        message={`ClashPerk has no wars for ${tag} in the last ${HISTORY_MONTHS} months.`}
+      />
+    );
+  }
 
   const attacker = wars[0].attacker;
-  const seasons = cwl?.items ?? [];
+  const attacks = wars.flatMap((war) => war.attacks);
+  const triples = attacks.filter((attack) => attack.stars === 3).length;
+  const missed = wars.reduce((sum, war) => sum + missedAttacks(war), 0);
+
+  // Supercell can run more than one CWL in a month, so a season may repeat.
+  const items = cwl?.items ?? [];
+  const seasons = items.map((season, i) => {
+    const total = items.filter((s) => s.season === season.season).length;
+    const index = items
+      .slice(0, i + 1)
+      .filter((s) => s.season === season.season).length;
+    return {
+      ...season,
+      key: `${season.season}-${i}`,
+      label: formatSeason(season.season),
+      part: total > 1 ? `${index} of ${total}` : null,
+      avgDestruction: season.totalAttacks
+        ? `${Math.round(season.totalDestruction / season.totalAttacks)}%`
+        : "–",
+    };
+  });
 
   return (
     <WebPage
-      title={`${attacker.name} (${attacker.tag})`}
-      subtitle={`War attacks from the last ${HISTORY_MONTHS} months`}
-      aside={
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={townHallImage(attacker.townHallLevel)}
-          alt={`Town Hall ${attacker.townHallLevel}`}
-          className="size-10 shrink-0"
-        />
-      }
+      title={attacker.name}
+      subtitle={`${attacker.tag} · War attacks from the last ${HISTORY_MONTHS} months`}
+      image={{
+        src: townHallImage(attacker.townHallLevel),
+        alt: `Town Hall ${attacker.townHallLevel}`,
+      }}
     >
-      <Table>
-        <TableBody>
+      <StatGrid
+        stats={[
+          { label: "Wars", value: wars.length },
+          { label: "Attacks", value: attacks.length },
+          {
+            label: "Three stars",
+            value: attacks.length
+              ? `${Math.round((triples / attacks.length) * 100)}%`
+              : "–",
+          },
+          { label: "Missed", value: missed },
+        ]}
+      />
+
+      <WebCard title="Wars">
+        <ul className="divide-y">
           {wars.map((war) => (
-            <TableRow key={war.id}>
-              <TableCell className="max-w-0 w-full">
+            <li
+              key={war.id}
+              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+            >
+              <div className="min-w-0 flex-1">
                 <Link
                   href={`/web/clans/${encodeTag(war.clan.tag)}/wars/${war.id}`}
-                  className="block truncate font-medium hover:underline"
+                  className="block truncate text-sm font-medium hover:underline"
                 >
-                  {war.clan.name} vs {war.opponent.name}
+                  {war.clan.name}{" "}
+                  <span className="text-muted-foreground">vs</span>{" "}
+                  {war.opponent.name}
                 </Link>
-                <div className="text-xs text-muted-foreground">
-                  {war.warType === WarTypes.CWL && (
-                    <span className="mr-1 font-semibold text-sky-600 dark:text-sky-400">CWL</span>
-                  )}
-                  {war.warType === WarTypes.FRIENDLY && (
-                    <span className="mr-1 font-semibold text-yellow-600 dark:text-yellow-400">Friendly</span>
-                  )}
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Chip>{WAR_TYPE_LABELS[war.warType]}</Chip>
                   {formatDate(war.startTime)}
                 </div>
-              </TableCell>
-              <TableCell className="text-right align-top text-xs">
-                {war.attacks.length ? (
-                  war.attacks.map((attack, i) => (
-                    <div key={i} className="flex items-center justify-end gap-2 leading-5">
-                      <span className="text-sky-600 dark:text-sky-400">{war.attacker.mapPosition}</span>
-                      <span className="text-orange-600 dark:text-orange-400">{war.attacker.townHallLevel}</span>
-                      <Stars stars={attack.stars} newStars={attack.trueStars} />
-                      <span className="w-9">{attack.destruction.toFixed(0)}%</span>
-                      <span className="text-muted-foreground">vs</span>
-                      <span className="text-sky-600 dark:text-sky-400">{attack.defender.mapPosition}</span>
-                      <span className="text-orange-600 dark:text-orange-400">{attack.defender.townHallLevel}</span>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-red-600 dark:text-red-400">Missed</span>
+              </div>
+              <div className="flex flex-col gap-1 text-sm sm:items-end">
+                {war.attacks.map((attack, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Stars stars={attack.stars} newStars={attack.trueStars} />
+                    <span className="w-10 text-right tabular-nums">
+                      {attack.destruction.toFixed(0)}%
+                    </span>
+                    <span className="text-xs text-muted-foreground">on</span>
+                    <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">
+                      #{attack.defender.mapPosition}
+                    </span>
+                    <TownHall
+                      level={attack.defender.townHallLevel}
+                      className="size-5"
+                    />
+                  </div>
+                ))}
+                {missedAttacks(war) > 0 && (
+                  <span className="text-xs text-destructive">
+                    {missedAttacks(war) === 1
+                      ? "1 attack missed"
+                      : `${missedAttacks(war)} attacks missed`}
+                  </span>
                 )}
-              </TableCell>
-            </TableRow>
+                {!ended(war) && war.attacks.length === 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    No attacks yet
+                  </span>
+                )}
+              </div>
+            </li>
           ))}
-        </TableBody>
-      </Table>
+        </ul>
+      </WebCard>
 
       {seasons.length > 0 && (
-        <div className="border-t">
-          <h2 className="py-3 text-center text-sm font-bold text-brand">CWL Summary</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Season</TableHead>
-                <TableHead className="text-right">Stars</TableHead>
-                <TableHead className="text-right">Destruction</TableHead>
-                <TableHead className="text-right">Missed</TableHead>
-                <TableHead className="text-right">Wars</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <WebCard title="CWL seasons">
+          <table className="hidden w-full text-sm sm:table">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="border-b">
+                <th className="px-4 py-2 text-left font-normal">Season</th>
+                <th className="px-4 py-2 text-right font-normal">Wars</th>
+                <th className="px-4 py-2 text-right font-normal">Stars</th>
+                <th className="px-4 py-2 text-right font-normal">
+                  Avg. destruction
+                </th>
+                <th className="px-4 py-2 text-right font-normal">Missed</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
               {seasons.map((season) => (
-                <TableRow key={season.season}>
-                  <TableCell>
-                    {new Date(season.season).toLocaleDateString("en-GB", {
-                      month: "long",
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })}
-                  </TableCell>
-                  <TableCell className="text-right">{season.totalStars}</TableCell>
-                  <TableCell className="text-right">
-                    {season.totalDestruction.toFixed(0)}%
-                  </TableCell>
-                  <TableCell
-                    className={season.totalMissed > 0 ? "text-right text-red-600 dark:text-red-400" : "text-right"}
+                <tr key={season.key}>
+                  <td className="px-4 py-2.5">
+                    {season.label}
+                    {season.part && <Chip className="ml-2">{season.part}</Chip>}
+                  </td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">
+                    {season.totalWars}
+                  </td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">
+                    {season.totalStars}
+                  </td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">
+                    {season.avgDestruction}
+                  </td>
+                  <td
+                    className={`px-4 py-2.5 text-right tabular-nums ${season.totalMissed > 0 ? "text-destructive" : ""}`}
                   >
                     {season.totalMissed}
-                  </TableCell>
-                  <TableCell className="text-right text-sky-600 dark:text-sky-400">{season.totalWars}</TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+            </tbody>
+          </table>
+          <ul className="divide-y sm:hidden">
+            {seasons.map((season) => (
+              <li key={season.key} className="space-y-1 px-4 py-3 text-sm">
+                <p className="font-medium">
+                  {season.label}
+                  {season.part && (
+                    <Chip className="ml-2 font-normal">{season.part}</Chip>
+                  )}
+                </p>
+                <p className="text-muted-foreground">
+                  {season.totalWars} wars · {season.totalStars} stars ·{" "}
+                  {season.avgDestruction} avg.
+                  {season.totalMissed > 0 && (
+                    <span className="text-destructive">
+                      {" "}
+                      · {season.totalMissed} missed
+                    </span>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </WebCard>
       )}
     </WebPage>
   );

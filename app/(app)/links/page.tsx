@@ -75,11 +75,7 @@ const unlinkHint = (member: ClanLinkedMemberDto) =>
     : "Only verified Leaders and Co-Leaders of this clan can unlink";
 
 export default function LinksPage() {
-  return (
-    <React.Suspense>
-      <LinksManager />
-    </React.Suspense>
-  );
+  return <LinksManager />;
 }
 
 function SortHeader({
