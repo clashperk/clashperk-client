@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Trophy,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import { SiDiscord, SiGithub, SiPatreon, SiPaypal } from "react-icons/si";
@@ -52,6 +53,28 @@ const WAR_FEATURES = [
   },
 ];
 
+const FOOTER_LINKS = [
+  { href: "https://docs.clashperk.com", label: "Guide" },
+  { href: "https://discord.gg/ppuppun", label: "Discord" },
+  { href: "/terms", label: "Terms" },
+  { href: "/privacy", label: "Privacy" },
+];
+
+const SOCIAL_LINKS = [
+  {
+    href: "https://www.patreon.com/clashperk",
+    label: "Support on Patreon",
+    Icon: SiPatreon,
+  },
+  {
+    href: "https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L",
+    label: "Donate via PayPal",
+    Icon: SiPaypal,
+  },
+  { href: "https://github.com/clashperk", label: "ClashPerk on GitHub", Icon: SiGithub },
+  { href: "https://discord.gg/ppuppun", label: "Join the Discord server", Icon: SiDiscord },
+];
+
 const CARD =
   "relative overflow-hidden rounded-[28px] border border-border bg-card p-6 md:p-8 shadow-[0_1px_2px_rgba(13,15,13,.04),0_18px_44px_rgba(13,15,13,.05)]";
 
@@ -65,7 +88,11 @@ export default function Home() {
     <div className="landing flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="text-xl font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xl font-semibold tracking-tight"
+          >
+            <Image src="/icons/icon.svg" alt="" width={32} height={32} unoptimized />
             ClashPerk
           </Link>
           <nav className="flex items-center gap-2 text-sm font-medium md:gap-4">
@@ -259,43 +286,41 @@ export default function Home() {
       <footer className="w-full border-t border-border bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-12 md:flex-row">
           <div className="space-y-2 text-center md:text-left">
-            <h4 className="text-xl font-semibold tracking-tight">ClashPerk</h4>
+            <h4 className="flex items-center justify-center gap-2 text-xl font-semibold tracking-tight md:justify-start">
+              <Image src="/icons/icon.svg" alt="" width={28} height={28} unoptimized />
+              ClashPerk
+            </h4>
             <p className="text-sm text-muted-foreground">
               Copyright © ClashPerk 2019-{new Date().getFullYear()}
             </p>
           </div>
 
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground">
+            {FOOTER_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                target={href.startsWith("http") ? "_blank" : undefined}
+                className="transition-colors hover:text-foreground"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
           <div className="flex items-center gap-8 text-muted-foreground">
-            <Link
-              href="https://www.patreon.com/clashperk"
-              target="_blank"
-              className="transition-all hover:-translate-y-0.5 hover:text-foreground"
-              title="Support on Patreon"
-            >
-              <SiPatreon className="size-6" />
-            </Link>
-            <Link
-              href="https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L"
-              target="_blank"
-              className="transition-all hover:-translate-y-0.5 hover:text-foreground"
-              title="Donate via PayPal"
-            >
-              <SiPaypal className="size-6" />
-            </Link>
-            <Link
-              href="https://github.com/clashperk"
-              target="_blank"
-              className="transition-all hover:-translate-y-0.5 hover:text-foreground"
-            >
-              <SiGithub className="size-6" />
-            </Link>
-            <Link
-              href="https://discord.gg/ppuppun"
-              target="_blank"
-              className="transition-all hover:-translate-y-0.5 hover:text-foreground"
-            >
-              <SiDiscord className="size-6" />
-            </Link>
+            {SOCIAL_LINKS.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                target="_blank"
+                aria-label={label}
+                title={label}
+                className="transition-all hover:-translate-y-0.5 hover:text-foreground"
+              >
+                <Icon className="size-6" />
+              </Link>
+            ))}
           </div>
         </div>
       </footer>
