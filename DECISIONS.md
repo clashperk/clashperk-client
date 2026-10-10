@@ -26,3 +26,6 @@ The subtitle counts clans from `GET /guilds/:id/clans`. It does not show players
 
 ## 2026-10-11 — Dashboard shows only fields the API fills in
 `GET /guilds/:id/clans` returns placeholder `members` (50), `level` (10) and `league` ("Unknown") for every clan, so clan cards show only name, tag and category. Category icons and colors are matched by keyword on the server-defined category name (CWL, war, esports, events, farming, feeder), with a neutral shield otherwise. No subscription or plan content until there is a real billing API.
+
+## 2026-10-11 — Server picker verifies on the server, not the browser
+Discord sign-in keeps the user's OAuth access token inside the encrypted session cookie (never in the session JSON sent to the browser). Switching servers goes through next-auth's session `update({ guildId })`; the `jwt` callback re-fetches `/users/@me/guilds`, requires owner, Manage Server or Administrator, and checks ClashPerk is in the server via the backend's API-key `POST /auth/bot-guilds` before issuing an API token for it. A forged `guildId` is ignored. Sessions from a bot handoff link have no Discord token, so the picker asks them to sign in with Discord.
