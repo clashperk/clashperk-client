@@ -814,7 +814,7 @@ export default function RemindersPage() {
         )}
 
         <div className="flex min-w-0 flex-col gap-6 xl:order-1">
-          <div className="@container sticky top-0 z-10 -my-4 flex flex-col gap-4 bg-background py-4">
+          <div className="@container flex flex-col gap-4 md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
             <div
               role="tablist"
               aria-label="Reminder type"
