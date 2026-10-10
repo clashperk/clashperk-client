@@ -102,9 +102,9 @@ export default function Home() {
           className="relative mx-auto max-w-4xl space-y-8"
         >
           <h1 className="text-[38px] font-medium leading-[0.98] tracking-[-1.2px] sm:text-[48px] md:text-[64px]">
-            Build the best <br />
+            Build the Best <br />
             <span className="bg-linear-to-r from-brand-from to-brand-to bg-clip-text text-transparent">
-              Discord community
+              Discord Community
             </span>
           </h1>
 
@@ -128,7 +128,7 @@ export default function Home() {
               }}
               className="inline-flex h-12 cursor-pointer items-center justify-center rounded-full border border-border bg-card px-8 font-semibold transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-8px_rgba(13,13,26,0.18)]"
             >
-              View features
+              View Features
             </button>
           </div>
         </motion.div>
@@ -141,7 +141,7 @@ export default function Home() {
       >
         <div className="mb-14 flex flex-col items-center space-y-3 text-center">
           <h2 className="text-3xl font-medium tracking-tight md:text-5xl">
-            Everything you need
+            Everything You Need
           </h2>
           <p className="text-lg text-muted-foreground">
             Powering top clans worldwide
