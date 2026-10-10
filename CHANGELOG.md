@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-10
+- Logging in from the landing page without a server selected opens the server picker instead of a blank page.
 - Footer copyright shows only the current year.
 - Footer Patreon and Ko-fi tiles use the official full-color logos.
 
