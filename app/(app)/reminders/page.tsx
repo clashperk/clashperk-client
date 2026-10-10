@@ -1,14 +1,9 @@
 "use client";
 
+import { ClanPicker, PickerCategory } from "@/components/clan-picker";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { api } from "@/hooks/api/axios";
 import {
   CapitalRaidReminderDto,
@@ -20,7 +15,9 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
+  AlertCircle,
   BellOff,
+  BellRing,
   CalendarClock,
   ChevronDown,
   Clock,
@@ -34,12 +31,13 @@ import {
   Trophy,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 type Kind = "clanWars" | "capitalRaids" | "clanGames";
 type AnyReminder =
   ClanWarReminderDto | CapitalRaidReminderDto | ClanGamesReminderDto;
 type Fact = { label: string; value: string };
+type Status = "all" | "scheduled" | "idle" | "failing";
+type Tone = "ok" | "muted" | "error" | "pending";
 
 const KINDS: { id: Kind; label: string; event: string; Icon: typeof Swords }[] =
   [
@@ -53,6 +51,13 @@ const KINDS: { id: Kind; label: string; event: string; Icon: typeof Swords }[] =
     { id: "clanGames", label: "Clan games", event: "clan games", Icon: Trophy },
   ];
 
+const STATUSES: { id: Status; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "scheduled", label: "Scheduled" },
+  { id: "idle", label: "Idle" },
+  { id: "failing", label: "Failing" },
+];
+
 const ROLE_NAMES: Record<string, string> = {
   leader: "Leader",
   coLeader: "Co-Leader",
@@ -65,8 +70,6 @@ const WAR_TYPE_NAMES: Record<string, string> = {
   friendly: "Friendly",
   cwl: "CWL",
 };
-
-const ALL_CLANS = "all";
 
 /** Matches how the bot prints durations: hours and minutes, zero parts dropped. */
 function formatDuration(ms: number) {
@@ -156,17 +159,18 @@ function gamesFacts(reminder: ClanGamesReminderDto): Fact[] {
   ];
 }
 
+const isDisabled = (reminder: AnyReminder) =>
+  "disabled" in reminder && reminder.disabled;
+
 function badgesFor(kind: Kind, reminder: AnyReminder) {
-  const badges: { label: string; tone: "muted" | "warn" }[] = [];
+  const badges: string[] = [];
   if (kind === "clanWars") {
     const war = reminder as ClanWarReminderDto;
-    if (war.disabled) badges.push({ label: "Disabled", tone: "warn" });
-    if (war.silent) badges.push({ label: "Message only", tone: "muted" });
-    if (war.smartSkip) badges.push({ label: "Skips at 100%", tone: "muted" });
-    if (war.randomLimit)
-      badges.push({ label: `${war.randomLimit} random`, tone: "muted" });
+    if (war.silent) badges.push("Message only");
+    if (war.smartSkip) badges.push("Skips at 100%");
+    if (war.randomLimit) badges.push(`${war.randomLimit} random`);
   }
-  if (reminder.linkedOnly) badges.push({ label: "Linked only", tone: "muted" });
+  if (reminder.linkedOnly) badges.push("Linked only");
   return badges;
 }
 
@@ -181,101 +185,6 @@ function factsFor(kind: Kind, reminder: AnyReminder) {
         ? raidFacts(reminder as CapitalRaidReminderDto)
         : gamesFacts(reminder as ClanGamesReminderDto);
   return facts.filter((fact) => !UNRESTRICTED.has(fact.value));
-}
-
-function ReminderCard({
-  kind,
-  reminder,
-}: {
-  kind: Kind;
-  reminder: AnyReminder;
-}) {
-  const event = KINDS.find((k) => k.id === kind)!.event;
-  const badges = badgesFor(kind, reminder);
-  const facts = factsFor(kind, reminder);
-  const disabled =
-    kind === "clanWars" && (reminder as ClanWarReminderDto).disabled;
-
-  return (
-    <Card className={cn("gap-4 p-4 sm:p-5", disabled && "opacity-60")}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.07] px-2.5 py-1 text-xs font-medium text-foreground">
-          <Clock className="size-3.5" />
-          {formatDuration(reminder.duration)} before {event} ends
-        </span>
-        {badges.map((badge) => (
-          <span
-            key={badge.label}
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium",
-              badge.tone === "warn"
-                ? "bg-rose-500/10 text-rose-600 dark:text-rose-300"
-                : "bg-muted text-muted-foreground",
-            )}
-          >
-            {badge.label}
-          </span>
-        ))}
-        <span
-          className="ml-auto font-mono text-xs text-muted-foreground"
-          title="Reminder ID shown by the bot in Discord"
-        >
-          {reminder.shortId}
-        </span>
-      </div>
-
-      <p className="line-clamp-4 whitespace-pre-line text-sm leading-relaxed">
-        {reminder.message || (
-          <span className="text-muted-foreground">No message</span>
-        )}
-      </p>
-
-      {facts.length > 0 && (
-        <dl className="flex flex-wrap gap-1.5">
-          {facts.map((fact) => (
-            <div
-              key={fact.label}
-              className="flex max-w-full items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1 text-xs"
-            >
-              <dt className="text-muted-foreground">{fact.label}</dt>
-              <dd className="truncate font-medium" title={fact.value}>
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-        <span className="inline-flex min-w-0 items-center gap-1">
-          <Hash className="size-3.5 shrink-0" />
-          <span className="truncate">
-            {reminder.channelName ?? reminder.channelId}
-            {reminder.threadId && " · thread"}
-          </span>
-        </span>
-        <span className="flex flex-wrap gap-1.5">
-          {reminder.clans.length === 0 ? (
-            <span className="rounded-md border px-2 py-0.5 text-xs">
-              All clans
-            </span>
-          ) : (
-            reminder.clans.map((clan) => (
-              <span
-                key={clan.tag}
-                className="rounded-md border px-2 py-0.5 text-xs text-foreground"
-                title={clan.tag}
-              >
-                {clan.name}
-              </span>
-            ))
-          )}
-        </span>
-      </div>
-
-      <ReminderRuns schedules={reminder.schedules} />
-    </Card>
-  );
 }
 
 const OUTCOMES: Record<string, { label: string; tone: Tone }> = {
@@ -296,8 +205,6 @@ const OUTCOMES: Record<string, { label: string; tone: Tone }> = {
   guild_not_found: { label: "Failed · bot not in server", tone: "error" },
 };
 
-type Tone = "ok" | "muted" | "error" | "pending";
-
 const TONE_DOT: Record<Tone, string> = {
   ok: "bg-emerald-500",
   muted: "bg-muted-foreground/40",
@@ -305,10 +212,11 @@ const TONE_DOT: Record<Tone, string> = {
   pending: "bg-sky-500",
 };
 
-const WAR_TYPE_SHORT: Record<string, string> = {
-  normal: "Regular",
-  friendly: "Friendly",
-  cwl: "CWL",
+const TONE_TEXT: Record<Tone, string> = {
+  ok: "text-emerald-600 dark:text-emerald-400",
+  muted: "text-muted-foreground",
+  error: "text-destructive",
+  pending: "text-sky-600 dark:text-sky-400",
 };
 
 const relativeFormat = new Intl.RelativeTimeFormat(undefined, {
@@ -332,11 +240,13 @@ const formatWhen = (date: Date) =>
     minute: "2-digit",
   });
 
+const time = (schedule: ReminderScheduleDto) =>
+  new Date(schedule.timestamp).getTime();
+
 function outcomeOf(schedule: ReminderScheduleDto, now: number) {
   if (!schedule.triggered) {
-    const due = new Date(schedule.timestamp).getTime() <= now;
     return {
-      label: due ? "Sending now" : "Scheduled",
+      label: time(schedule) <= now ? "Sending now" : "Scheduled",
       tone: "pending" as Tone,
     };
   }
@@ -348,14 +258,27 @@ function outcomeOf(schedule: ReminderScheduleDto, now: number) {
   );
 }
 
+function runsOf(reminder: AnyReminder) {
+  const sorted = [...reminder.schedules].sort((a, b) => time(a) - time(b));
+  const upcoming = sorted.filter((s) => !s.triggered);
+  const past = sorted.filter((s) => s.triggered);
+  return { upcoming, past, last: past[past.length - 1] };
+}
+
+function matchesStatus(reminder: AnyReminder, status: Status, now: number) {
+  if (status === "all") return true;
+  const { upcoming, last } = runsOf(reminder);
+  if (status === "failing")
+    return !!last && outcomeOf(last, now).tone === "error";
+  if (status === "scheduled") return upcoming.length > 0;
+  return upcoming.length === 0;
+}
+
 function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
   const [open, setOpen] = useState(false);
   const now = Date.now();
-
-  const upcoming = schedules.filter((s) => !s.triggered);
-  const past = schedules.filter((s) => s.triggered);
+  const { upcoming, past, last } = runsOf({ schedules } as AnyReminder);
   const next = upcoming[0];
-  const last = past[past.length - 1];
 
   if (schedules.length === 0) {
     return (
@@ -372,6 +295,7 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
     );
   }
 
+  const lastOutcome = last && outcomeOf(last, now);
   // Upcoming soonest first, then history newest first.
   const rows = [...upcoming, ...[...past].reverse()];
 
@@ -388,7 +312,7 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
             <CalendarClock className="size-4 text-sky-600 dark:text-sky-400" />
             <span className="text-muted-foreground">Next</span>
             <span className="font-medium">
-              {formatRelative(new Date(next.timestamp).getTime(), now)}
+              {formatRelative(time(next), now)}
             </span>
             <span className="text-muted-foreground">· {next.clan.name}</span>
           </span>
@@ -398,11 +322,18 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
             Nothing scheduled
           </span>
         )}
-        {last && (
-          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        {last && lastOutcome && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5",
+              lastOutcome.tone === "error"
+                ? "text-destructive"
+                : "text-muted-foreground",
+            )}
+          >
             <History className="size-4" />
-            Last {outcomeOf(last, now).label.split(" · ")[0].toLowerCase()}{" "}
-            {formatRelative(new Date(last.timestamp).getTime(), now)}
+            Last {lastOutcome.label.split(" · ")[0].toLowerCase()}{" "}
+            {formatRelative(time(last), now)}
           </span>
         )}
         <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -434,22 +365,12 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
                 <span className="min-w-0 flex-1 truncate font-medium">
                   {schedule.clan.name}
                   {schedule.warType && (
-                    <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
-                      {WAR_TYPE_SHORT[schedule.warType]}
+                    <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                      {WAR_TYPE_NAMES[schedule.warType]}
                     </span>
                   )}
                 </span>
-                <span
-                  className={cn(
-                    "text-xs",
-                    outcome.tone === "ok" &&
-                      "text-emerald-600 dark:text-emerald-400",
-                    outcome.tone === "error" && "text-destructive",
-                    outcome.tone === "pending" &&
-                      "text-sky-600 dark:text-sky-400",
-                    outcome.tone === "muted" && "text-muted-foreground",
-                  )}
-                >
+                <span className={cn("text-xs", TONE_TEXT[outcome.tone])}>
                   {outcome.label}
                 </span>
                 <time
@@ -468,14 +389,278 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
   );
 }
 
+function ReminderCard({
+  kind,
+  reminder,
+  highlighted,
+}: {
+  kind: Kind;
+  reminder: AnyReminder;
+  highlighted: boolean;
+}) {
+  const badges = badgesFor(kind, reminder);
+  const facts = factsFor(kind, reminder);
+  const disabled = isDisabled(reminder);
+
+  return (
+    <Card
+      id={`reminder-${reminder.id}`}
+      className={cn(
+        "scroll-mt-24 gap-3 p-4 transition-shadow sm:p-5",
+        highlighted && "ring-2 ring-foreground/30",
+      )}
+    >
+      <div className={cn("space-y-3", disabled && "opacity-60")}>
+        <div className="flex items-start gap-3">
+          <p className="line-clamp-3 min-w-0 flex-1 whitespace-pre-line text-sm font-medium leading-relaxed">
+            {reminder.message || (
+              <span className="font-normal text-muted-foreground">
+                No message
+              </span>
+            )}
+          </p>
+          <span className="flex shrink-0 items-center gap-1.5">
+            {disabled && (
+              <span className="rounded-full bg-foreground/[0.07] px-2 py-0.5 text-xs font-medium">
+                Disabled
+              </span>
+            )}
+            <span
+              className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+              title="Reminder ID shown by the bot in Discord"
+            >
+              {reminder.shortId}
+            </span>
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md bg-muted px-2 py-1 text-muted-foreground">
+            <Hash className="size-3.5 shrink-0" />
+            <span className="truncate">
+              {reminder.channelName ?? reminder.channelId}
+              {reminder.threadId && " · thread"}
+            </span>
+          </span>
+          {reminder.clans.length === 0 ? (
+            <span className="rounded-md border px-2 py-0.5">All clans</span>
+          ) : (
+            reminder.clans.map((clan) => (
+              <span
+                key={clan.tag}
+                className="rounded-md border px-2 py-0.5"
+                title={clan.tag}
+              >
+                {clan.name}
+              </span>
+            ))
+          )}
+          {facts.map((fact) => (
+            <span
+              key={fact.label}
+              className="inline-flex max-w-full items-center gap-1.5 rounded-md bg-muted/70 px-2 py-1"
+            >
+              <span className="text-muted-foreground">{fact.label}</span>
+              <span className="truncate font-medium" title={fact.value}>
+                {fact.value}
+              </span>
+            </span>
+          ))}
+          {badges.map((badge) => (
+            <span
+              key={badge}
+              className="rounded-md bg-muted/70 px-2 py-1 text-muted-foreground"
+            >
+              {badge}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <ReminderRuns schedules={reminder.schedules} />
+    </Card>
+  );
+}
+
+function SummaryCard({
+  data,
+  onFocus,
+}: {
+  data: GuildRemindersDto;
+  onFocus: (kind: Kind, id: string) => void;
+}) {
+  const now = Date.now();
+  const all = KINDS.flatMap((k) =>
+    (data[k.id] as AnyReminder[]).map((reminder) => ({ kind: k, reminder })),
+  );
+
+  const next = all
+    .flatMap(({ kind, reminder }) =>
+      runsOf(reminder).upcoming.map((schedule) => ({ kind, schedule })),
+    )
+    .sort((a, b) => time(a.schedule) - time(b.schedule))[0];
+
+  const tones = { ok: 0, muted: 0, error: 0 };
+  for (const { reminder } of all) {
+    for (const schedule of runsOf(reminder).past) {
+      const tone = outcomeOf(schedule, now).tone;
+      if (tone !== "pending") tones[tone]++;
+    }
+  }
+
+  const failing = all.filter(({ reminder }) =>
+    matchesStatus(reminder, "failing", now),
+  );
+  const channels = new Set(all.map(({ reminder }) => reminder.channelId)).size;
+  const disabled = all.filter(({ reminder }) => isDisabled(reminder)).length;
+
+  const cells = [
+    {
+      Icon: CalendarClock,
+      label: "Next reminder",
+      value: next ? formatRelative(time(next.schedule), now) : "Nothing yet",
+      sub: next
+        ? `${next.schedule.clan.name} · ${next.kind.label}`
+        : "No reminder is scheduled",
+    },
+    {
+      Icon: History,
+      label: "Last 3 days",
+      value: `${tones.ok} sent`,
+      sub: (
+        <>
+          {tones.muted} skipped ·{" "}
+          <span className={cn(tones.error > 0 && "text-destructive")}>
+            {tones.error} failed
+          </span>
+        </>
+      ),
+    },
+    {
+      Icon: BellRing,
+      label: "Reminders",
+      value: `${all.length}`,
+      sub: `${channels} channel${channels === 1 ? "" : "s"}${
+        disabled ? ` · ${disabled} disabled` : ""
+      }`,
+    },
+  ];
+
+  return (
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="grid divide-y @lg:grid-cols-3 @lg:divide-x @lg:divide-y-0">
+        {cells.map(({ Icon, label, value, sub }) => (
+          <div key={label} className="flex items-start gap-3 p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground/70">
+              <Icon className="size-4" />
+            </span>
+            <div className="min-w-0 space-y-0.5">
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-lg font-medium leading-tight">{value}</p>
+              <p className="truncate text-sm text-muted-foreground">{sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {failing.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-t p-4">
+          <span className="inline-flex items-center gap-1.5 text-sm text-destructive">
+            <AlertCircle className="size-4" />
+            Needs attention
+          </span>
+          {failing.map(({ kind, reminder }) => {
+            const last = runsOf(reminder).last!;
+            return (
+              <button
+                key={reminder.id}
+                type="button"
+                onClick={() => onFocus(kind.id, reminder.id)}
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <kind.Icon className="size-3.5 text-muted-foreground" />
+                <span className="font-mono">{reminder.shortId}</span>
+                <span className="text-muted-foreground">
+                  {outcomeOf(last, now).label.replace("Failed · ", "")}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function UpcomingCard({
+  data,
+  onFocus,
+}: {
+  data: GuildRemindersDto;
+  onFocus: (kind: Kind, id: string) => void;
+}) {
+  const now = Date.now();
+  const runs = KINDS.flatMap((kind) =>
+    (data[kind.id] as AnyReminder[]).flatMap((reminder) =>
+      runsOf(reminder).upcoming.map((schedule) => ({
+        kind,
+        reminder,
+        schedule,
+      })),
+    ),
+  )
+    .sort((a, b) => time(a.schedule) - time(b.schedule))
+    .slice(0, 6);
+
+  return (
+    <Card className="hidden gap-0 p-0 xl:flex">
+      <p className="px-4 pt-4 pb-2 text-sm font-medium">Coming up</p>
+      {runs.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-muted-foreground">
+          Nothing scheduled right now.
+        </p>
+      ) : (
+        <ul className="divide-y px-2 pb-2">
+          {runs.map(({ kind, reminder, schedule }) => (
+            <li key={schedule.id}>
+              <button
+                type="button"
+                onClick={() => onFocus(kind.id, reminder.id)}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.06] text-foreground/70">
+                  <kind.Icon className="size-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {schedule.clan.name}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {reminder.message || reminder.shortId}
+                  </span>
+                </span>
+                <span
+                  className="shrink-0 text-xs tabular-nums text-muted-foreground"
+                  title={new Date(schedule.timestamp).toLocaleString()}
+                >
+                  {formatRelative(time(schedule), now)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 function SkeletonCards() {
   return (
     <div className="grid gap-3" aria-busy="true" aria-label="Loading reminders">
       {[0, 1, 2].map((i) => (
         <Card key={i} className="gap-3 p-5">
-          <div className="h-6 w-44 animate-pulse rounded-full bg-muted" />
           <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-          <div className="h-14 animate-pulse rounded-xl bg-muted" />
+          <div className="h-6 w-56 animate-pulse rounded-md bg-muted" />
+          <div className="h-5 w-48 animate-pulse rounded bg-muted" />
         </Card>
       ))}
     </div>
@@ -487,18 +672,26 @@ export default function RemindersPage() {
   const guildId = session.user.guild.id;
 
   const [data, setData] = useState<GuildRemindersDto | null>(null);
+  const [categories, setCategories] = useState<PickerCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kind, setKind] = useState<Kind>("clanWars");
-  const [clanTag, setClanTag] = useState(ALL_CLANS);
+  const [status, setStatus] = useState<Status>("all");
+  const [clanTag, setClanTag] = useState("");
   const [search, setSearch] = useState("");
+  const [focusId, setFocusId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.guilds.getGuildReminders({ guildId });
-      setData(data);
+      // Clan categories only group the clan filter, so the page works without them.
+      const [reminders, clans] = await Promise.all([
+        api.guilds.getGuildReminders({ guildId }),
+        api.guilds.getGuildClans({ guildId }).catch(() => null),
+      ]);
+      setData(reminders.data);
+      setCategories(clans?.data.categories ?? []);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -510,23 +703,50 @@ export default function RemindersPage() {
     load();
   }, [load]);
 
-  const clans = useMemo(() => {
-    const byTag = new Map<string, string>();
+  useEffect(() => {
+    if (!focusId) return;
+    document
+      .getElementById(`reminder-${focusId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = setTimeout(() => setFocusId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [focusId]);
+
+  // Only clans that have a reminder, in the server's category order.
+  const pickerCategories = useMemo(() => {
+    const used = new Map<string, string>();
     for (const list of Object.values(data ?? {}) as AnyReminder[][]) {
       for (const reminder of list) {
-        for (const clan of reminder.clans) byTag.set(clan.tag, clan.name);
+        for (const clan of reminder.clans) used.set(clan.tag, clan.name);
       }
     }
-    return [...byTag].sort((a, b) => a[1].localeCompare(b[1]));
-  }, [data]);
+    const grouped: PickerCategory[] = categories
+      .map((category) => ({
+        _id: category._id,
+        displayName: category.displayName,
+        clans: category.clans.filter((clan) => used.delete(clan.tag)),
+      }))
+      .filter((category) => category.clans.length > 0);
+    if (used.size) {
+      grouped.push({
+        _id: "other",
+        displayName: grouped.length ? "Other" : "Clans",
+        clans: [...used]
+          .map(([tag, name]) => ({ tag, name }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      });
+    }
+    return grouped;
+  }, [data, categories]);
 
-  const reminders = useMemo(() => {
+  const now = Date.now();
+  const byClanAndSearch = useMemo(() => {
     const list: AnyReminder[] = data?.[kind] ?? [];
     const q = search.trim().toLowerCase();
     return list
       .filter(
         (r) =>
-          clanTag === ALL_CLANS ||
+          !clanTag ||
           r.clans.length === 0 ||
           r.clans.some((c) => c.tag === clanTag),
       )
@@ -537,12 +757,37 @@ export default function RemindersPage() {
           r.shortId.toLowerCase().includes(q) ||
           r.channelName?.toLowerCase().includes(q) ||
           r.clans.some((c) => c.name.toLowerCase().includes(q)),
-      )
-      .sort((a, b) => b.duration - a.duration);
+      );
   }, [data, kind, clanTag, search]);
 
+  const statusCounts = Object.fromEntries(
+    STATUSES.map(({ id }) => [
+      id,
+      byClanAndSearch.filter((r) => matchesStatus(r, id, now)).length,
+    ]),
+  ) as Record<Status, number>;
+
+  const groups = useMemo(() => {
+    const byDuration = new Map<number, AnyReminder[]>();
+    for (const reminder of byClanAndSearch) {
+      if (!matchesStatus(reminder, status, Date.now())) continue;
+      const list = byDuration.get(reminder.duration) ?? [];
+      list.push(reminder);
+      byDuration.set(reminder.duration, list);
+    }
+    return [...byDuration].sort((a, b) => b[0] - a[0]);
+  }, [byClanAndSearch, status]);
+
   const activeKind = KINDS.find((k) => k.id === kind)!;
-  const filtering = clanTag !== ALL_CLANS || search.trim() !== "";
+  const filtering = clanTag !== "" || search.trim() !== "" || status !== "all";
+
+  const focus = (target: Kind, id: string) => {
+    setKind(target);
+    setStatus("all");
+    setClanTag("");
+    setSearch("");
+    setFocusId(id);
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
@@ -551,7 +796,8 @@ export default function RemindersPage() {
           Reminders
         </h2>
         <p className="text-sm text-muted-foreground md:text-base">
-          Pings ClashPerk sends before a war, raid weekend or clan games ends.
+          ClashPerk pings members before wars, raid weekends and clan games end.
+          See what&apos;s set up and how each run went.
         </p>
         <p className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
           <Info className="size-3.5 shrink-0" />
@@ -559,105 +805,167 @@ export default function RemindersPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div
-          role="tablist"
-          aria-label="Reminder type"
-          className="flex shrink-0 rounded-full bg-muted p-1"
-        >
-          {KINDS.map(({ id, label, Icon }) => {
-            const active = kind === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setKind(id)}
-                className={cn(
-                  "flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:flex-none",
-                  active && "bg-background text-foreground shadow-sm",
-                )}
-              >
-                <Icon className="size-4" />
-                <span className="hidden sm:inline">{label}</span>
-                {data && (
-                  <span
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
+        {data && (
+          <aside className="@container space-y-4 xl:sticky xl:top-4 xl:order-2">
+            <SummaryCard data={data} onFocus={focus} />
+            <UpcomingCard data={data} onFocus={focus} />
+          </aside>
+        )}
+
+        <div className="flex min-w-0 flex-col gap-6 xl:order-1">
+          <div className="@container flex flex-col gap-4 md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+            <div
+              role="tablist"
+              aria-label="Reminder type"
+              className="flex gap-4 overflow-x-auto border-b @md:gap-5"
+            >
+              {KINDS.map(({ id, label, Icon }) => {
+                const active = kind === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setKind(id)}
                     className={cn(
-                      "rounded-full px-1.5 text-xs tabular-nums",
-                      active ? "bg-foreground/10" : "bg-background/60",
+                      "-mb-px flex shrink-0 cursor-pointer items-center gap-1.5 border-b-2 pb-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active
+                        ? "border-foreground font-medium text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {data[id].length}
-                  </span>
+                    <Icon className="hidden size-4 @md:block" />
+                    {label}
+                    {data && (
+                      <span className="text-xs font-normal tabular-nums text-muted-foreground">
+                        {data[id].length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col gap-2 @3xl:flex-row @3xl:items-center">
+              <div className="relative min-w-0 @3xl:flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search message, channel or ID"
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex min-w-0 flex-col gap-2 @xl:flex-row @xl:items-center">
+                <div
+                  role="radiogroup"
+                  aria-label="Reminder status"
+                  className="flex h-10 shrink-0 items-center rounded-xl border bg-card p-1"
+                >
+                  {STATUSES.map(({ id, label }) => {
+                    const active = status === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setStatus(id)}
+                        className={cn(
+                          "flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          active
+                            ? "bg-foreground/[0.08] font-medium text-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {label}
+                        {data && (
+                          <span
+                            className={cn(
+                              "text-xs font-normal tabular-nums",
+                              id === "failing" && statusCounts.failing > 0
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {statusCounts[id]}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {pickerCategories.length > 0 && (
+                  <div className="min-w-0 @xl:w-56 [&>button]:w-full">
+                    <ClanPicker
+                      categories={pickerCategories}
+                      value={clanTag}
+                      onChange={setClanTag}
+                      allLabel="All clans"
+                    />
+                  </div>
                 )}
-              </button>
-            );
-          })}
-        </div>
+              </div>
+            </div>
+          </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row xl:justify-end">
-          <Select value={clanTag} onValueChange={setClanTag}>
-            <SelectTrigger className="w-full shrink-0 sm:w-52">
-              <SelectValue placeholder="All clans" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_CLANS}>All clans</SelectItem>
-              {clans.map(([tag, name]) => (
-                <SelectItem key={tag} value={tag}>
-                  {name}
-                </SelectItem>
+          {loading ? (
+            <SkeletonCards />
+          ) : error ? (
+            <Card className="items-center gap-3 py-10 text-center shadow-none">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button variant="outline" size="sm" onClick={load}>
+                <RotateCw />
+                Try again
+              </Button>
+            </Card>
+          ) : groups.length === 0 ? (
+            <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
+                <BellOff className="size-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {filtering
+                    ? "No reminders match these filters"
+                    : `No ${activeKind.label.toLowerCase()} reminders yet`}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {filtering
+                    ? "Try another status or clan, or clear the search."
+                    : `Set one up from Discord to ping members before the ${activeKind.event} ends.`}
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {groups.map(([duration, reminders]) => (
+                <section key={duration} className="space-y-3">
+                  <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Clock className="size-4" />
+                    {formatDuration(duration)} before the {activeKind.event}{" "}
+                    ends
+                    <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">
+                      {reminders.length}
+                    </span>
+                  </h3>
+                  <div className="grid gap-3">
+                    {reminders.map((reminder) => (
+                      <ReminderCard
+                        key={reminder.id}
+                        kind={kind}
+                        reminder={reminder}
+                        highlighted={focusId === reminder.id}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
-            </SelectContent>
-          </Select>
-          <div className="relative min-w-0 flex-1 xl:w-64 xl:flex-none">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search message, channel or ID"
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="max-w-4xl">
-        {loading ? (
-          <SkeletonCards />
-        ) : error ? (
-          <Card className="items-center gap-3 py-10 text-center shadow-none">
-            <p className="text-sm text-destructive">{error}</p>
-            <Button variant="outline" size="sm" onClick={load}>
-              <RotateCw />
-              Try again
-            </Button>
-          </Card>
-        ) : reminders.length === 0 ? (
-          <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
-              <BellOff className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium">
-                {filtering
-                  ? "No reminders match these filters"
-                  : `No ${activeKind.label.toLowerCase()} reminders yet`}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {filtering
-                  ? "Try another clan or clear the search."
-                  : `Set one up from Discord to ping members before the ${activeKind.event} ends.`}
-              </p>
-            </div>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {reminders.map((reminder) => (
-              <ReminderCard key={reminder.id} kind={kind} reminder={reminder} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
