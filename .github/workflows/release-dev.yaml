@@ -13,6 +13,10 @@ on:
 jobs:
   preview-build:
     runs-on: ubuntu-latest
+    # GitHub records a deployment for the pushed commit, so its PR shows a "View deployment" link.
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - uses: actions/checkout@v2
@@ -33,4 +37,8 @@ jobs:
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
