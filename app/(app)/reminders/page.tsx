@@ -807,14 +807,14 @@ export default function RemindersPage() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         {data && (
-          <aside className="@container space-y-4 xl:sticky xl:top-6 xl:order-2">
+          <aside className="@container space-y-4 xl:sticky xl:top-4 xl:order-2">
             <SummaryCard data={data} onFocus={focus} />
             <UpcomingCard data={data} onFocus={focus} />
           </aside>
         )}
 
         <div className="flex min-w-0 flex-col gap-6 xl:order-1">
-          <div className="@container flex flex-col gap-4">
+          <div className="@container sticky top-0 z-10 -my-4 flex flex-col gap-4 bg-background py-4">
             <div
               role="tablist"
               aria-label="Reminder type"
