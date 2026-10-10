@@ -15,7 +15,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
-import { SiDiscord, SiGithub, SiPatreon, SiPaypal } from "react-icons/si";
+import { SiDiscord, SiGithub, SiKofi, SiPatreon } from "react-icons/si";
 
 const SEARCH_FEATURES = [
   "Player Profiles & Hero Equipment",
@@ -73,11 +73,7 @@ const ICON_GROUPS = [
     title: "Support ClashPerk",
     links: [
       { href: "https://www.patreon.com/clashperk", label: "Support on Patreon", Icon: SiPatreon },
-      {
-        href: "https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L",
-        label: "Donate via PayPal",
-        Icon: SiPaypal,
-      },
+      { href: "https://ko-fi.com/clashperk", label: "Support on Ko-fi", Icon: SiKofi },
     ],
   },
 ];
