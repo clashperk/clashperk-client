@@ -43,5 +43,5 @@ Follow what the existing `(app)` pages do; don't reintroduce the old look.
 ## Docs and git
 
 - `CHANGELOG.md` gets a line for every user-visible change; non-obvious choices go in `DECISIONS.md`. Code comments state the current WHY only, max 3 lines.
-- Branch from `dev`, PRs target `dev`. Conventional commits.
+- Branch from `main`, PRs target `main`. Conventional commits.
 - Don't use bot slash-command names on the landing page.
