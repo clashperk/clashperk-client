@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
-import localFont from "next/font/local";
+import { Geist_Mono, Google_Sans_Flex } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
-const googleSans = localFont({
-  src: "../public/fonts/GoogleSansFlex-300-800.woff2",
+const googleSans = Google_Sans_Flex({
   variable: "--font-google-sans",
-  weight: "300 800",
+  subsets: ["latin"],
+  weight: "variable",
   display: "swap",
 });
 
