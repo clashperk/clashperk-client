@@ -3,8 +3,15 @@
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UserAvatar } from "@/components/user-avatar";
 import { api } from "@/hooks/api/axios";
 import { LinksDto } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,10 +19,11 @@ import { encodeTag, normalizeTag } from "@/lib/tags";
 import {
   BadgeCheck,
   Loader2,
+  MoreHorizontal,
   Plus,
   RotateCw,
-  ShieldAlert,
-  Trash2,
+  ShieldCheck,
+  Unlink,
   UserRound,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -33,7 +41,13 @@ const NO_AUTOFILL = {
 const API_TOKEN_HINT =
   "In Clash of Clans: Settings → More Settings → API Token.";
 
-function PlayerRow({
+const VERIFY_STEPS = [
+  "Open Clash of Clans and tap Settings.",
+  "Go to More Settings and copy your API Token.",
+  "Tap Verify on the account here and paste the token.",
+];
+
+function AccountCard({
   player,
   onVerify,
   onUnlink,
@@ -43,69 +57,86 @@ function PlayerRow({
   onUnlink: () => void;
 }) {
   return (
-    <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground/70">
+    <li className="flex items-center gap-3 rounded-2xl border bg-card p-3 pr-2 shadow-[0_1px_2px_rgba(13,15,13,.04)]">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground/70">
         {player.name.charAt(0).toUpperCase()}
       </div>
-
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate font-medium tracking-tight">
-            {player.name}
-          </span>
-          {player.verified && (
-            <BadgeCheck
-              className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-              aria-label="Verified"
-            />
-          )}
-        </div>
-        <span className="font-mono text-xs text-muted-foreground">
-          {player.tag}
-        </span>
+        <p className="truncate font-medium tracking-tight">{player.name}</p>
+        <p className="font-mono text-xs text-muted-foreground">{player.tag}</p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5">
-        {!player.verified && (
-          <Button variant="outline" size="sm" onClick={onVerify}>
-            <ShieldAlert />
-            Verify
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-          onClick={onUnlink}
-          aria-label={`Unlink ${player.name}`}
-          title="Unlink"
-        >
-          <Trash2 className="size-4" />
+      {player.verified ? (
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs text-emerald-700 dark:text-emerald-300">
+          <BadgeCheck className="size-3.5" />
+          Verified
+        </span>
+      ) : (
+        <Button variant="outline" size="sm" onClick={onVerify}>
+          <ShieldCheck />
+          Verify
         </Button>
-      </div>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0 text-muted-foreground"
+            aria-label={`More actions for ${player.name}`}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="rounded-xl">
+          <DropdownMenuItem
+            onClick={onUnlink}
+            className="text-destructive focus:text-destructive [&_svg]:text-destructive"
+          >
+            <Unlink />
+            Unlink account
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </li>
   );
 }
 
-function SkeletonRows() {
+function VerifyGuide() {
   return (
-    <ul className="divide-y" aria-busy="true" aria-label="Loading accounts">
-      {[0, 1].map((i) => (
-        <li key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-          <div className="size-10 animate-pulse rounded-xl bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3.5 w-32 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <Card className="gap-4 p-5">
+      <div className="flex items-center gap-2.5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-foreground/[0.06] text-foreground/70">
+          <ShieldCheck className="size-4" />
+        </div>
+        <h3 className="font-medium tracking-tight">How to verify</h3>
+      </div>
+      <ol className="space-y-3">
+        {VERIFY_STEPS.map((step, i) => (
+          <li key={step} className="flex gap-3 text-sm">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium tabular-nums">
+              {i + 1}
+            </span>
+            <span className="pt-0.5 text-muted-foreground">{step}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="space-y-1.5 border-t pt-4 text-sm">
+        <p className="font-medium">Why verify?</p>
+        <p className="text-muted-foreground">
+          Only you can unlink a verified account. Unverified ones can also be
+          unlinked by whoever linked them, or by a verified Leader or Co-Leader
+          of their clan.
+        </p>
+      </div>
+    </Card>
   );
 }
 
 export default function ProfilePage() {
-  const session = useAuth();
-  const userId = session.user.id;
+  const { user } = useAuth();
+  const userId = user.id;
 
   const [players, setPlayers] = useState<LinksDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,13 +167,21 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
-            Profile
+      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+        <UserAvatar
+          className="size-14 shrink-0 rounded-full ring-1 ring-border"
+          src={user.avatarUrl}
+          alt={user.displayName.charAt(0)}
+        />
+        <div className="min-w-0 flex-1 space-y-1">
+          <h2 className="truncate text-2xl font-medium tracking-tight md:text-4xl">
+            {user.displayName}
           </h2>
           <p className="text-sm text-muted-foreground md:text-base">
-            Clash of Clans accounts linked to your Discord.
+            @{user.username}
+            {!loading &&
+              !loadError &&
+              ` · ${players.length} ${players.length === 1 ? "account" : "accounts"} linked, ${verifiedCount} verified`}
           </p>
         </div>
         <Button
@@ -154,51 +193,54 @@ export default function ProfilePage() {
         </Button>
       </div>
 
-      <section className="max-w-3xl space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h3 className="font-medium tracking-tight">Linked accounts</h3>
-          {!loading && players.length > 0 && (
-            <span className="text-sm text-muted-foreground">
-              {players.length} linked
-              {verifiedCount > 0 && ` · ${verifiedCount} verified`}
-            </span>
-          )}
-        </div>
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <section className="min-w-0 space-y-4">
+          <h3 className="text-lg font-medium tracking-tight">
+            Clash of Clans accounts
+          </h3>
 
-        {loading ? (
-          <Card className="gap-0 py-0">
-            <SkeletonRows />
-          </Card>
-        ) : loadError ? (
-          <Card className="items-center gap-3 py-10 text-center shadow-none">
-            <p className="text-sm text-destructive">{loadError}</p>
-            <Button variant="outline" size="sm" onClick={loadLinks}>
-              <RotateCw />
-              Try again
-            </Button>
-          </Card>
-        ) : players.length === 0 ? (
-          <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
-              <UserRound className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium">No accounts linked yet</p>
-              <p className="text-sm text-muted-foreground">
-                Link your player tag so ClashPerk knows which Discord account is
-                yours.
-              </p>
-            </div>
-            <Button size="sm" onClick={() => setIsLinkOpen(true)}>
-              <Plus />
-              Link account
-            </Button>
-          </Card>
-        ) : (
-          <Card className="gap-0 py-0">
-            <ul className="divide-y">
+          {loading ? (
+            <ul
+              className="space-y-2.5"
+              aria-busy="true"
+              aria-label="Loading accounts"
+            >
+              {[0, 1].map((i) => (
+                <li
+                  key={i}
+                  className="h-[4.25rem] animate-pulse rounded-2xl bg-muted"
+                />
+              ))}
+            </ul>
+          ) : loadError ? (
+            <Card className="items-center gap-3 py-10 text-center shadow-none">
+              <p className="text-sm text-destructive">{loadError}</p>
+              <Button variant="outline" size="sm" onClick={loadLinks}>
+                <RotateCw />
+                Try again
+              </Button>
+            </Card>
+          ) : players.length === 0 ? (
+            <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
+                <UserRound className="size-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">No accounts linked yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Link your player tag so ClashPerk knows which Discord account
+                  is yours.
+                </p>
+              </div>
+              <Button size="sm" onClick={() => setIsLinkOpen(true)}>
+                <Plus />
+                Link account
+              </Button>
+            </Card>
+          ) : (
+            <ul className="space-y-2.5">
               {players.map((player) => (
-                <PlayerRow
+                <AccountCard
                   key={player.tag}
                   player={player}
                   onVerify={() => setVerifyTarget(player)}
@@ -206,15 +248,13 @@ export default function ProfilePage() {
                 />
               ))}
             </ul>
-          </Card>
-        )}
+          )}
+        </section>
 
-        <p className="text-xs text-muted-foreground">
-          Only you can unlink a verified account. Unverified ones can also be
-          unlinked by whoever linked them, or by a verified Leader or Co-Leader
-          of their clan.
-        </p>
-      </section>
+        <aside className="min-w-0">
+          <VerifyGuide />
+        </aside>
+      </div>
 
       <LinkModal
         open={isLinkOpen}
@@ -290,8 +330,15 @@ function LinkModal({
       onOpenChange={(next) => !next && close()}
       title="Link account"
       description="Add a Clash of Clans account to your profile."
+      onSubmit={submit}
+      footer={
+        <Button type="submit" disabled={saving || !tag.trim()}>
+          {saving && <Loader2 className="animate-spin" />}
+          Link account
+        </Button>
+      }
     >
-      <form onSubmit={submit} className="grid gap-4 py-2">
+      <div className="grid gap-4 py-2">
         <div className="grid gap-2">
           <Label htmlFor="link-tag">Player tag</Label>
           <Input
@@ -321,13 +368,7 @@ function LinkModal({
           <p className="text-xs text-muted-foreground">{API_TOKEN_HINT}</p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end">
-          <Button type="submit" disabled={saving || !tag.trim()}>
-            {saving && <Loader2 className="animate-spin" />}
-            Link account
-          </Button>
-        </div>
-      </form>
+      </div>
     </Modal>
   );
 }
@@ -379,8 +420,15 @@ function VerifyModal({
       onOpenChange={(next) => !next && close()}
       title={`Verify ${player?.name ?? "account"}`}
       description="Enter this account's in-game API token to prove it's yours. Verified accounts can only be unlinked by you."
+      onSubmit={submit}
+      footer={
+        <Button type="submit" disabled={saving || !token.trim()}>
+          {saving && <Loader2 className="animate-spin" />}
+          Verify
+        </Button>
+      }
     >
-      <form onSubmit={submit} className="grid gap-4 py-2">
+      <div className="grid gap-4 py-2">
         <div className="grid gap-2">
           <Label htmlFor="verify-token">API token</Label>
           <Input
@@ -394,13 +442,7 @@ function VerifyModal({
           <p className="text-xs text-muted-foreground">{API_TOKEN_HINT}</p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end">
-          <Button type="submit" disabled={saving || !token.trim()}>
-            {saving && <Loader2 className="animate-spin" />}
-            Verify
-          </Button>
-        </div>
-      </form>
+      </div>
     </Modal>
   );
 }
