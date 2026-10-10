@@ -54,25 +54,32 @@ const WAR_FEATURES: { title: string; text: React.ReactNode }[] = [
 ];
 
 const FOOTER_LINKS = [
+  { href: "/invite", label: "Add to Discord" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "https://docs.clashperk.com", label: "Guide" },
-  { href: "https://discord.gg/ppuppun", label: "Discord" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
 ];
 
-const SOCIAL_LINKS = [
+const ICON_GROUPS = [
   {
-    href: "https://www.patreon.com/clashperk",
-    label: "Support on Patreon",
-    Icon: SiPatreon,
+    title: "Community",
+    links: [
+      { href: "https://discord.gg/ppuppun", label: "Join the Discord server", Icon: SiDiscord },
+      { href: "https://github.com/clashperk", label: "ClashPerk on GitHub", Icon: SiGithub },
+    ],
   },
   {
-    href: "https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L",
-    label: "Donate via PayPal",
-    Icon: SiPaypal,
+    title: "Support ClashPerk",
+    links: [
+      { href: "https://www.patreon.com/clashperk", label: "Support on Patreon", Icon: SiPatreon },
+      {
+        href: "https://www.paypal.com/ncp/payment/3MHCY7FZYEZ6L",
+        label: "Donate via PayPal",
+        Icon: SiPaypal,
+      },
+    ],
   },
-  { href: "https://github.com/clashperk", label: "ClashPerk on GitHub", Icon: SiGithub },
-  { href: "https://discord.gg/ppuppun", label: "Join the Discord server", Icon: SiDiscord },
 ];
 
 const CARD =
@@ -165,7 +172,7 @@ export default function Home() {
       <section
         id="features"
         ref={featuresRef}
-        className="mx-auto w-full max-w-7xl scroll-mt-24 px-6 pb-32"
+        className="mx-auto w-full max-w-7xl scroll-mt-24 px-6 pb-20"
       >
         <div className="mb-14 flex flex-col items-center space-y-3 text-center">
           <h2 className="text-3xl font-medium tracking-tight md:text-5xl">
@@ -282,44 +289,97 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="w-full border-t border-border bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-12 md:flex-row">
-          <div className="space-y-2 text-center md:text-left">
-            <h4 className="flex items-center justify-center gap-2 text-xl font-semibold tracking-tight md:justify-start">
-              <Image src="/icons/icon.svg" alt="" width={28} height={28} unoptimized />
-              ClashPerk
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              Copyright © ClashPerk 2019-{new Date().getFullYear()}
+      <section className="mx-auto w-full max-w-7xl px-6 pb-24">
+        <div className="relative overflow-hidden rounded-[28px] bg-foreground px-6 py-14 text-center text-background md:px-12 md:py-16">
+          <div className="pointer-events-none absolute inset-x-0 -top-24 h-64 bg-[radial-gradient(50%_60%_at_50%_0%,color-mix(in_oklab,var(--brand-from)_35%,transparent),transparent)]" />
+          <div className="relative mx-auto max-w-2xl space-y-6">
+            <h2 className="text-3xl font-medium tracking-tight md:text-5xl">
+              Ready to Level Up{" "}
+              <span className="bg-linear-to-r from-brand-from to-brand-to bg-clip-text text-transparent">
+                Your Clan?
+              </span>
+            </h2>
+            <p className="text-lg text-background/70">
+              Bring war logs, reminders and rosters to your Discord server.
             </p>
+            <Link
+              href="/invite"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-linear-to-r from-brand-from to-brand-to px-8 font-semibold text-white transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-6px_#d14c0099] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+            >
+              Add to Discord
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="w-full border-t border-border bg-surface">
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2 text-center md:text-left">
+              <p className="flex items-center justify-center gap-2 text-xl font-semibold tracking-tight md:justify-start">
+                <Image src="/icons/icon.svg" alt="" width={28} height={28} unoptimized />
+                ClashPerk
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The Clash of Clans Discord bot for serious clans.
+              </p>
+            </div>
+
+            <nav
+              aria-label="Footer"
+              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground md:pt-1"
+            >
+              {FOOTER_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  className="transition-colors hover:text-foreground"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="flex gap-10">
+              {ICON_GROUPS.map(({ title, links }) => (
+                <div key={title} className="space-y-3 text-center md:text-left">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {title}
+                  </p>
+                  <div className="flex items-center justify-center gap-5 text-muted-foreground md:justify-start">
+                    {links.map(({ href, label, Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        target="_blank"
+                        aria-label={label}
+                        title={label}
+                        className="transition-all hover:-translate-y-0.5 hover:text-foreground"
+                      >
+                        <Icon className="size-5" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground">
-            {FOOTER_LINKS.map(({ href, label }) => (
+          <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground md:flex-row md:justify-between md:text-left">
+            <p>© 2019–{new Date().getFullYear()} ClashPerk</p>
+            <p className="max-w-xl md:text-right">
+              This material is unofficial and is not endorsed by Supercell. For
+              more information see{" "}
               <Link
-                key={href}
-                href={href}
-                target={href.startsWith("http") ? "_blank" : undefined}
-                className="transition-colors hover:text-foreground"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-8 text-muted-foreground">
-            {SOCIAL_LINKS.map(({ href, label, Icon }) => (
-              <Link
-                key={href}
-                href={href}
+                href="https://supercell.com/en/fan-content-policy/"
                 target="_blank"
-                aria-label={label}
-                title={label}
-                className="transition-all hover:-translate-y-0.5 hover:text-foreground"
+                className="underline underline-offset-2 hover:text-foreground"
               >
-                <Icon className="size-6" />
+                Supercell&apos;s Fan Content Policy
               </Link>
-            ))}
+              .
+            </p>
           </div>
         </div>
       </footer>
