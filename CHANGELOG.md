@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-10
+- Footer copyright shows only the current year.
 - Footer Patreon and Ko-fi tiles use the official full-color logos.
 
 ## 2026-10-11

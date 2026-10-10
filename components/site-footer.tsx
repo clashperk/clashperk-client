@@ -107,7 +107,7 @@ export function SiteFooterLegal() {
           </span>
         </p>
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span>© 2019–{new Date().getFullYear()} ClashPerk</span>
+          <span>© {new Date().getFullYear()} ClashPerk</span>
           {LEGAL_LINKS.map(({ href, label }) => (
             <Link
               key={href}
