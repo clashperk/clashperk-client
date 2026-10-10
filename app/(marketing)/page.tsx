@@ -28,7 +28,7 @@ const SEARCH_FEATURES = [
   "Clan Capital Overview",
 ];
 
-const WAR_FEATURES: { title: string; text: React.ReactNode }[] = [
+const WAR_FEATURES = [
   {
     title: "Attack Logs",
     text: "Every attack posted live with stars and destruction %, searchable across past wars.",
@@ -43,15 +43,7 @@ const WAR_FEATURES: { title: string; text: React.ReactNode }[] = [
   },
   {
     title: "Compositions",
-    text: (
-      <>
-        Town Hall hit rates and army trends with{" "}
-        <code className="rounded-md bg-surface-strong px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
-          /compo
-        </code>
-        .
-      </>
-    ),
+    text: "Town Hall hit rates and army trends across your clan.",
   },
 ];
 
