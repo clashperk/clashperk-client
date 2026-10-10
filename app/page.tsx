@@ -333,48 +333,41 @@ export default function Home() {
 
       <footer className="w-full border-t border-border bg-surface">
         <div className="mx-auto max-w-7xl px-6 py-12">
-          <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2 text-center md:text-left">
-              <p className="flex items-center justify-center gap-2 text-xl font-semibold tracking-tight md:justify-start">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+            <div className="col-span-2 space-y-2 md:col-span-1">
+              <p className="flex items-center gap-2 text-xl font-semibold tracking-tight">
                 <Image src="/icons/icon.svg" alt="" width={28} height={28} unoptimized />
                 ClashPerk
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="max-w-xs text-sm text-muted-foreground">
                 The all-in-one Clash of Clans bot for Discord.
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8 md:gap-10">
-              <nav
-                aria-label="Explore"
-                className="space-y-3 text-center md:text-left"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Explore
-                </p>
-                <div className="flex h-8 items-center justify-center gap-5 text-sm font-medium text-foreground/80 md:justify-start">
-                  {EXPLORE_LINKS.map(({ href, label }) => (
+            <nav aria-label="Explore" className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Explore</p>
+              <ul className="space-y-3 text-sm font-medium text-foreground/80">
+                {EXPLORE_LINKS.map(({ href, label }) => (
+                  <li key={href}>
                     <Link
-                      key={href}
                       href={href}
                       target={href.startsWith("http") ? "_blank" : undefined}
                       className="transition-colors hover:text-primary"
                     >
                       {label}
                     </Link>
-                  ))}
-                </div>
-              </nav>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-              {FOOTER_GROUPS.map(({ title, links }) => (
-                <div key={title} className="space-y-3 text-center md:text-left">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {title}
-                  </p>
-                  <div className="flex items-center justify-center gap-2 md:justify-start">
-                    {links.map(({ href, name, Icon, hover }) => (
+            {FOOTER_GROUPS.map(({ title, links }) => (
+              <div key={title} className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+                <ul className="flex flex-col items-start gap-2">
+                  {links.map(({ href, name, Icon, hover }) => (
+                    <li key={href}>
                       <Link
-                        key={href}
                         href={href}
                         target="_blank"
                         className={cn(
@@ -385,15 +378,15 @@ export default function Home() {
                         <Icon className="size-3.5" />
                         {name}
                       </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground md:flex-row md:justify-between md:text-left">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 md:justify-start">
+          <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:justify-between">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <p>© 2019–{new Date().getFullYear()} ClashPerk</p>
               {LEGAL_LINKS.map(({ href, label }) => (
                 <Link
