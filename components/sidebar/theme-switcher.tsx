@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { Laptop, Moon, Sun } from "lucide-react";
+import { useMounted } from "@/hooks/use-mounted";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 const OPTIONS = [
   { value: "system", label: "System", Icon: Laptop },
@@ -13,15 +13,13 @@ const OPTIONS = [
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
-  // next-themes only knows the stored theme after hydration.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   return (
     <div
       role="radiogroup"
       aria-label="Theme"
-      className="flex rounded-full bg-sidebar-accent p-0.5 group-data-[collapsible=icon]:hidden"
+      className="flex rounded-xl bg-sidebar p-0.5 group-data-[collapsible=icon]:hidden"
     >
       {OPTIONS.map(({ value, label, Icon }) => {
         const active = mounted && theme === value;
@@ -35,8 +33,8 @@ export function ThemeSwitcher() {
             title={label}
             onClick={() => setTheme(value)}
             className={cn(
-              "flex h-7 flex-1 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-              active && "bg-background text-foreground shadow-sm",
+              "flex h-7 flex-1 cursor-pointer items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              active && "bg-foreground/[0.08] text-foreground",
             )}
           >
             <Icon className="size-3.5" />
