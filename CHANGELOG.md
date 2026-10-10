@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-11
+- Removed the unlinked `/battlelog` page, which only showed bundled sample battles.
 - Links, rosters and server picker: the search and filter bar stays pinned at the top while you scroll (tablet and desktop).
 - Reminders page: on wide screens a side panel with the summary card and a "Coming up" list of the next runs; a summary card with the next reminder, sent / skipped / failed runs in the last 3 days and a "Needs attention" row that jumps to reminders whose last run failed; reminders grouped by timing in smaller cards; type tabs plus a search, All / Scheduled / Idle / Failing filter and the searchable clan picker from the Links page.
 - Rosters page: roster list with search, All / Open / Closed filters and category groups; a roster header with category, signup rules and schedule; member rows with war in/out, hero total, trophies, role and signup time; member search, an All / In war / Out filter, sort by Town Hall, heroes, newest sign-ups or name, and CSV export of the shown members. The filter row fits narrow columns and phones.
