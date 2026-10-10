@@ -29,3 +29,6 @@ The subtitle counts clans from `GET /guilds/:id/clans`. It does not show players
 
 ## 2026-10-11 — Server picker verifies on the server, not the browser
 Discord sign-in keeps the user's OAuth access token inside the encrypted session cookie (never in the session JSON sent to the browser). Switching servers goes through next-auth's session `update({ guildId })`; the `jwt` callback re-fetches `/users/@me/guilds`, requires owner, Manage Server or Administrator, and checks ClashPerk is in the server via the backend's API-key `POST /auth/bot-guilds` before issuing an API token for it. A forged `guildId` is ignored. Sessions from a bot handoff link have no Discord token, so the picker asks them to sign in with Discord.
+
+## 2026-10-11 — Reminders stay read-only
+The backend only has `GET /guilds/:id/reminders`, so the page shows reminders and their runs but has no create, edit or toggle controls. "Failing" means the reminder's latest run failed (channel missing, missing permissions, bot not in server); the summary counts only the runs the API returns, which cover the last 3 days. The clan filter loads the server's categories just to group clans and falls back to a flat list if that request fails.
