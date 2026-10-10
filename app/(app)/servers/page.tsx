@@ -1,5 +1,6 @@
 "use client";
 
+import { StickyBar } from "@/components/sticky-bar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -318,7 +319,7 @@ export default function ServersPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+          <StickyBar className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative min-w-0 lg:w-72">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -371,7 +372,7 @@ export default function ServersPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </StickyBar>
 
           {visible.length === 0 && (
             <Card className="items-center gap-1 border-dashed py-12 text-center shadow-none">
