@@ -477,7 +477,7 @@ export interface RostersEntity {
     tag: string;
     name: string;
     badgeUrl: string;
-  };
+  } | null;
   members: RosterMemberOfRostersEntity[];
   layout?: string;
   sheetId?: string;
