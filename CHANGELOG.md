@@ -3,7 +3,9 @@
 ## 2026-10-11
 - Dashboard uses the brand orange for buttons, progress bars and selected states; buttons are pills and cards have softer corners and shadows.
 - Dashboard headings are lighter, stat cards get orange icon tiles, and sidebar labels are no longer all caps.
-- Sidebar server and user blocks sit on a soft tint; a System/Light/Dark theme switcher sits above the user row.
+- Sidebar server and user blocks sit on a soft tint.
+- Sidebar user row expands in place into a menu: profile, settings, System/Light/Dark theme switcher, resource links (guide, FAQ, support Discord, invite, Patreon, Ko-fi) and log out.
+- Settings theme tabs no longer cause a hydration error on load.
 - Sidebar shows the server's clan and player counts under its name instead of the raw server ID.
 - Dashboard subscription and server cards stack until large screens, so the upgrade button no longer overflows.
 - Local development: optional `/api-proxy` rewrite (set `API_PROXY_TARGET`) so the dashboard can call the production API from localhost.
