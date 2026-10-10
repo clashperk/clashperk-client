@@ -9,6 +9,10 @@ export type ServerOption = {
   name: string;
   iconUrl: string | null;
   hasBot: boolean;
+  /** Discord's approximate member count. */
+  memberCount: number | null;
+  /** Clans added to ClashPerk in this server; 0 without the bot. */
+  clanCount: number;
 };
 
 type DiscordGuild = {
@@ -17,6 +21,7 @@ type DiscordGuild = {
   icon: string | null;
   owner: boolean;
   permissions: string;
+  approximate_member_count?: number;
 };
 
 /** Discord rejected the stored OAuth token (expired or revoked); the user must sign in again. */
@@ -31,7 +36,8 @@ const iconUrl = (guild: DiscordGuild) =>
     ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`
     : null;
 
-async function botGuildIds(guildIds: string[]) {
+/** Clan count per server ClashPerk is in; servers without the bot are absent. */
+async function botGuilds(guildIds: string[]) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/bot-guilds`,
     {
@@ -45,15 +51,17 @@ async function botGuildIds(guildIds: string[]) {
     },
   );
   if (!res.ok) throw new Error(`Bot server lookup failed (${res.status})`);
-  const { guilds } = (await res.json()) as { guilds: { id: string }[] };
-  return new Set(guilds.map((guild) => guild.id));
+  const { guilds } = (await res.json()) as {
+    guilds: { id: string; clanCount: number }[];
+  };
+  return new Map(guilds.map((guild) => [guild.id, guild.clanCount]));
 }
 
 /** Servers the user can manage on Discord, flagged with whether ClashPerk is in each. */
 export async function listManageableServers(
   discordAccessToken: string,
 ): Promise<ServerOption[]> {
-  const res = await fetch(`${DISCORD_API}/users/@me/guilds`, {
+  const res = await fetch(`${DISCORD_API}/users/@me/guilds?with_counts=true`, {
     headers: { Authorization: `Bearer ${discordAccessToken}` },
     cache: "no-store",
   });
@@ -63,16 +71,13 @@ export async function listManageableServers(
   const manageable = ((await res.json()) as DiscordGuild[]).filter(canManage);
   if (manageable.length === 0) return [];
 
-  const withBot = await botGuildIds(manageable.map((guild) => guild.id));
-  return manageable
-    .map((guild) => ({
-      id: guild.id,
-      name: guild.name,
-      iconUrl: iconUrl(guild),
-      hasBot: withBot.has(guild.id),
-    }))
-    .sort(
-      (a, b) =>
-        Number(b.hasBot) - Number(a.hasBot) || a.name.localeCompare(b.name),
-    );
+  const withBot = await botGuilds(manageable.map((guild) => guild.id));
+  return manageable.map((guild) => ({
+    id: guild.id,
+    name: guild.name,
+    iconUrl: iconUrl(guild),
+    hasBot: withBot.has(guild.id),
+    memberCount: guild.approximate_member_count ?? null,
+    clanCount: withBot.get(guild.id) ?? 0,
+  }));
 }

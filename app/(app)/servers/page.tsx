@@ -3,27 +3,136 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import type { ServerOption } from "@/lib/discord-servers";
 import { cn } from "@/lib/utils";
+import { setCookie } from "cookies-next";
 import {
   ArrowRight,
   Check,
   Loader2,
   Plus,
   RotateCw,
+  Search,
   Server,
 } from "lucide-react";
-import { setCookie } from "cookies-next";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiDiscord } from "react-icons/si";
 
 const CLIENT_ID = "526971716711350273";
+const USAGE_KEY = "clashperk.serverUsage";
+const SORT_KEY = "clashperk.serverSort";
 
 const inviteUrl = (guildId: string) =>
   `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&guild_id=${guildId}&disable_guild_select=true`;
+
+const SORTS = {
+  recommended: "Recommended",
+  recent: "Recently used",
+  clans: "Most clans",
+  members: "Most members",
+  name: "Name (A–Z)",
+} as const;
+type Sort = keyof typeof SORTS;
+
+const FILTERS = {
+  all: "All",
+  added: "ClashPerk is here",
+  notAdded: "Not added",
+} as const;
+type Filter = keyof typeof FILTERS;
+
+/** Per-browser record of when each server was last opened from the picker. */
+type Usage = Record<string, number>;
+
+function readUsage(): Usage {
+  try {
+    return JSON.parse(localStorage.getItem(USAGE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function recordUsage(guildId: string) {
+  try {
+    localStorage.setItem(
+      USAGE_KEY,
+      JSON.stringify({ ...readUsage(), [guildId]: Date.now() }),
+    );
+  } catch {}
+}
+
+function readSort(): Sort {
+  try {
+    const saved = localStorage.getItem(SORT_KEY);
+    return saved && saved in SORTS ? (saved as Sort) : "recommended";
+  } catch {
+    return "recommended";
+  }
+}
+
+const compareName = (a: ServerOption, b: ServerOption) =>
+  a.name.localeCompare(b.name);
+const compareClans = (a: ServerOption, b: ServerOption) =>
+  b.clanCount - a.clanCount;
+const compareMembers = (a: ServerOption, b: ServerOption) =>
+  (b.memberCount ?? 0) - (a.memberCount ?? 0);
+
+function sortServers(
+  servers: ServerOption[],
+  sort: Sort,
+  usage: Usage,
+  currentId: string,
+) {
+  const recent = (a: ServerOption, b: ServerOption) =>
+    (usage[b.id] ?? 0) - (usage[a.id] ?? 0);
+  const chains: Record<Sort, ((a: ServerOption, b: ServerOption) => number)[]> =
+    {
+      recommended: [
+        (a, b) => Number(b.id === currentId) - Number(a.id === currentId),
+        recent,
+        compareClans,
+        compareMembers,
+        compareName,
+      ],
+      recent: [recent, compareName],
+      clans: [compareClans, compareMembers, compareName],
+      members: [compareMembers, compareName],
+      name: [compareName],
+    };
+  return [...servers].sort((a, b) => {
+    for (const compare of chains[sort]) {
+      const result = compare(a, b);
+      if (result) return result;
+    }
+    return 0;
+  });
+}
+
+const plural = (n: number, word: string) =>
+  `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
+
+function serverStats(server: ServerOption) {
+  const parts: string[] = [];
+  if (server.hasBot) {
+    parts.push(
+      server.clanCount ? plural(server.clanCount, "clan") : "No clans yet",
+    );
+  }
+  if (server.memberCount !== null)
+    parts.push(plural(server.memberCount, "member"));
+  return parts.join(" · ");
+}
 
 type Load =
   | { status: "loading" }
@@ -62,6 +171,22 @@ export default function ServersPage() {
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [selecting, setSelecting] = useState<string | null>(null);
   const [selectError, setSelectError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [sort, setSort] = useState<Sort>("recommended");
+  const [usage, setUsage] = useState<Usage>({});
+
+  useEffect(() => {
+    setSort(readSort());
+    setUsage(readUsage());
+  }, []);
+
+  const changeSort = (next: Sort) => {
+    setSort(next);
+    try {
+      localStorage.setItem(SORT_KEY, next);
+    } catch {}
+  };
 
   const fetchServers = useCallback(async () => {
     setLoad({ status: "loading" });
@@ -84,7 +209,12 @@ export default function ServersPage() {
     fetchServers();
   }, [fetchServers]);
 
-  const select = async (server: ServerOption) => {
+  const open = async (server: ServerOption) => {
+    recordUsage(server.id);
+    if (server.id === user.guild.id) {
+      router.push("/dashboard");
+      return;
+    }
     setSelecting(server.id);
     setSelectError(null);
     const session = await update({ guildId: server.id });
@@ -100,10 +230,27 @@ export default function ServersPage() {
     );
   };
 
-  const withBot =
-    load.status === "ready" ? load.servers.filter((s) => s.hasBot) : [];
-  const withoutBot =
-    load.status === "ready" ? load.servers.filter((s) => !s.hasBot) : [];
+  const all = useMemo(
+    () => (load.status === "ready" ? load.servers : []),
+    [load],
+  );
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const matching = all.filter(
+      (s) =>
+        (!q || s.name.toLowerCase().includes(q)) &&
+        (filter === "all" || (filter === "added") === s.hasBot),
+    );
+    return sortServers(matching, sort, usage, user.guild.id);
+  }, [all, search, filter, sort, usage, user.guild.id]);
+
+  const withBot = visible.filter((s) => s.hasBot);
+  const withoutBot = visible.filter((s) => !s.hasBot);
+  const counts: Record<Filter, number> = {
+    all: all.length,
+    added: all.filter((s) => s.hasBot).length,
+    notAdded: all.filter((s) => !s.hasBot).length,
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
@@ -160,7 +307,7 @@ export default function ServersPage() {
             Continue with Discord
           </Button>
         </Card>
-      ) : load.servers.length === 0 ? (
+      ) : all.length === 0 ? (
         <Card className="max-w-lg items-center gap-3 border-dashed px-6 py-12 text-center shadow-none">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
             <Server className="size-6" />
@@ -172,12 +319,78 @@ export default function ServersPage() {
           </p>
         </Card>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative min-w-0 lg:w-72">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search servers"
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+              {(Object.keys(FILTERS) as Filter[]).map((key) => {
+                const active = filter === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      "flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "bg-card hover:bg-accent",
+                    )}
+                  >
+                    {FILTERS[key]}
+                    <span
+                      className={
+                        active ? "text-background/60" : "text-muted-foreground"
+                      }
+                    >
+                      {counts[key]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <Select value={sort} onValueChange={(v) => changeSort(v as Sort)}>
+              <SelectTrigger
+                className="w-full lg:ml-auto lg:w-48"
+                aria-label="Sort servers"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {(Object.keys(SORTS) as Sort[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {SORTS[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {visible.length === 0 && (
+            <Card className="items-center gap-1 border-dashed py-12 text-center shadow-none">
+              <p className="font-medium">No servers match</p>
+              <p className="text-sm text-muted-foreground">
+                Try a different name or filter.
+              </p>
+            </Card>
+          )}
+
           {withBot.length > 0 && (
             <section className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                ClashPerk is here · {withBot.length}
-              </h3>
+              {filter === "all" && (
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  ClashPerk is here · {withBot.length}
+                </h3>
+              )}
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {withBot.map((server) => {
                   const current = server.id === user.guild.id;
@@ -187,9 +400,7 @@ export default function ServersPage() {
                       <button
                         type="button"
                         disabled={selecting !== null}
-                        onClick={() =>
-                          current ? router.push("/dashboard") : select(server)
-                        }
+                        onClick={() => open(server)}
                         className={cn(
                           "group flex w-full cursor-pointer items-center gap-3 rounded-2xl border bg-card p-3 text-left shadow-[0_1px_2px_rgba(13,15,13,.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none",
                           current && "border-foreground/30",
@@ -201,10 +412,14 @@ export default function ServersPage() {
                           <span className="block truncate font-medium tracking-tight">
                             {server.name}
                           </span>
-                          {current && (
+                          {current ? (
                             <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
                               <Check className="size-3" />
                               Current server
+                            </span>
+                          ) : (
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {serverStats(server)}
                             </span>
                           )}
                         </span>
@@ -223,9 +438,11 @@ export default function ServersPage() {
 
           {withoutBot.length > 0 && (
             <section className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Add ClashPerk · {withoutBot.length}
-              </h3>
+              {filter === "all" && (
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Add ClashPerk · {withoutBot.length}
+                </h3>
+              )}
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {withoutBot.map((server) => (
                   <li
@@ -233,8 +450,13 @@ export default function ServersPage() {
                     className="flex items-center gap-3 rounded-2xl border border-dashed p-3"
                   >
                     <ServerIcon server={server} className="opacity-70" />
-                    <span className="min-w-0 flex-1 truncate font-medium tracking-tight text-foreground/80">
-                      {server.name}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium tracking-tight text-foreground/80">
+                        {server.name}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {serverStats(server)}
+                      </span>
                     </span>
                     <Button asChild variant="outline" size="sm">
                       <a
