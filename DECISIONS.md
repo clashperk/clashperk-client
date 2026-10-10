@@ -21,5 +21,5 @@ The hero's Discord messages are built in HTML with invented clan and player name
 ## 2026-10-11 — Opt-in dev proxy for the API
 The production API's CORS allowlist excludes localhost. `next.config.ts` adds a `/api-proxy/*` rewrite only when `API_PROXY_TARGET` is set, so local dev can point `NEXT_PUBLIC_API_BASE_URL` at `http://localhost:<port>/api-proxy/v1`. Chosen over adding localhost to the production allowlist. Note: local runs then read and write live data.
 
-## 2026-10-11 — Sidebar server subtitle shows clans and players
-The subtitle sums `GET /guilds/:id/clans` (clan count and each clan's in-game `members`). Labelled "players" so it isn't read as Discord server members. The server ID moved to the block's tooltip.
+## 2026-10-11 — Sidebar server subtitle shows the clan count
+The subtitle counts clans from `GET /guilds/:id/clans`. It does not show players: that endpoint returns a placeholder `members: 50` for every clan, so a sum would be fake. Add players back once the API returns real member counts. The server ID is in the block's tooltip.

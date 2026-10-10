@@ -4,7 +4,7 @@ import { api } from "@/hooks/api/axios";
 import { NO_GUILD_ID } from "@/lib/guild";
 import { useEffect, useState } from "react";
 
-type Summary = { clans: number; members: number } | "loading" | "error";
+type Summary = { clans: number } | "loading" | "error";
 
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
@@ -19,11 +19,9 @@ export function ServerSummary({ guildId }: { guildId: string }) {
       .getGuildClans({ guildId })
       .then(({ data }) => {
         if (cancelled) return;
+        // Per-clan member counts from this endpoint are placeholders, so only clans are counted.
         const clans = data.categories.flatMap((category) => category.clans);
-        setSummary({
-          clans: clans.length,
-          members: clans.reduce((total, clan) => total + clan.members, 0),
-        });
+        setSummary({ clans: clans.length });
       })
       .catch(() => !cancelled && setSummary("error"));
 
@@ -42,7 +40,7 @@ export function ServerSummary({ guildId }: { guildId: string }) {
 
   return (
     <span className={className}>
-      {plural(summary.clans, "clan")} · {plural(summary.members, "player")}
+      {plural(summary.clans, "clan")}
     </span>
   );
 }
