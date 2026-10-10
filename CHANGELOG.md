@@ -11,6 +11,8 @@
 - Sidebar shows the server's clan count under its name instead of the raw server ID.
 - Dashboard redesigned around real data: a server banner with clan, roster, signup and linked-account counts; clans as cards filterable by category, each category with its own color and icon; open rosters with clan badges and signup progress. Subscription, plan and placeholder server content are gone.
 - Clans page redesigned: category sidebar (pills on mobile) with drag to reorder, clan cards with drag to reorder and a "Move to category" menu, search. A failed save now shows an error and restores the previous order. Fake level/league/member fields, the dead "New Clan" button and local-only "New Category" are gone.
+- Links and Rosters pages follow the dashboard style: page headers, rounded cards, neutral Town Hall chips, clan badges in the roster list and a signup progress bar; the rosters mobile menu is now a roster picker.
+- Inputs, selects and textareas are taller with softer corners; focus rings are neutral grey instead of orange; disabled primary buttons turn grey instead of faded orange.
 - Reminders page redesigned around the server's real reminders (read-only): clan war, capital raid and clan games tabs, clan filter and search, each reminder's timing, targets and channel, plus its upcoming runs and the last 3 days of runs with sent/skipped/failed outcomes. Needs the backend's `GET /guilds/:guildId/reminders`.
 - Local development: optional `/api-proxy` rewrite (set `API_PROXY_TARGET`) so the dashboard can call the production API from localhost.
 
