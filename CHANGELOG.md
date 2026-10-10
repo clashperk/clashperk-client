@@ -9,7 +9,7 @@
 - Settings page shows only what works: your Discord account and current server with log out, and a System/Light/Dark theme picker. The placeholder bot settings (language, maintenance, automation) are gone.
 - Profile page lists your real linked accounts and can link, verify (in-game API token) and unlink them; reordering and per-player game stats are gone.
 - Sidebar shows the server's clan count under its name instead of the raw server ID.
-- Dashboard subscription and server cards stack until large screens, so the upgrade button no longer overflows.
+- Dashboard redesigned around real data: a server banner with clan, roster, signup and linked-account counts; clans as cards filterable by category, each category with its own color and icon; open rosters with clan badges and signup progress. Subscription, plan and placeholder server content are gone.
 - Local development: optional `/api-proxy` rewrite (set `API_PROXY_TARGET`) so the dashboard can call the production API from localhost.
 
 ## 2026-10-10

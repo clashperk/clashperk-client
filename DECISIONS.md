@@ -23,3 +23,6 @@ The production API's CORS allowlist excludes localhost. `next.config.ts` adds a 
 
 ## 2026-10-11 — Sidebar server subtitle shows the clan count
 The subtitle counts clans from `GET /guilds/:id/clans`. It does not show players: that endpoint returns a placeholder `members: 50` for every clan, so a sum would be fake. Add players back once the API returns real member counts. The server ID is in the block's tooltip.
+
+## 2026-10-11 — Dashboard shows only fields the API fills in
+`GET /guilds/:id/clans` returns placeholder `members` (50), `level` (10) and `league` ("Unknown") for every clan, so clan cards show only name, tag and category. Category icons and colors are matched by keyword on the server-defined category name (CWL, war, esports, events, farming, feeder), with a neutral shield otherwise. No subscription or plan content until there is a real billing API.
