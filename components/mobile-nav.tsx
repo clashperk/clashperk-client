@@ -1,6 +1,10 @@
+"use client";
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { HomeIcon, SearchIcon, SettingsIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { items, userItems } from "./sidebar/app-sidebar";
 
 export function MobileBottomNav() {
   return (
@@ -42,10 +46,17 @@ export function MobileBottomNav() {
 }
 
 export function MobileHeader() {
+  const pathname = usePathname();
+  const current = [...items, ...userItems].find(
+    (item) => pathname === item.url || pathname.startsWith(`${item.url}/`),
+  );
+
   return (
     <header className="sticky top-0 z-50 flex items-center gap-4 border-b bg-background p-4 md:hidden">
       <SidebarTrigger />
-      <div className="font-semibold">Dashboard</div>
+      <div className="font-medium tracking-tight">
+        {current?.title ?? "ClashPerk"}
+      </div>
     </header>
   );
 }
