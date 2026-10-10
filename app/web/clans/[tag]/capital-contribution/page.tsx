@@ -48,7 +48,7 @@ export default async function CapitalContributionPage({ params }: Props) {
                 <div className="truncate font-semibold">{log.name}</div>
                 <div className="text-xs text-muted-foreground">{timeAgo(log.createdAt)}</div>
               </TableCell>
-              <TableCell className="text-right font-bold text-sky-400">
+              <TableCell className="text-right font-bold text-sky-600 dark:text-sky-400">
                 {(log.current - log.initial).toLocaleString()}
               </TableCell>
             </TableRow>

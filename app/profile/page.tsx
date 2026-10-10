@@ -156,7 +156,7 @@ function SortablePlayerItem({
           {player.verified ? (
             <Badge
               variant="secondary"
-              className="gap-1 text-[10px] h-5 px-1.5 text-green-600 bg-green-500/10 border-green-500/20"
+              className="gap-1 text-[10px] h-5 px-1.5 text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20"
             >
               <CheckCircle className="h-3 w-3" />
               Verified
@@ -164,7 +164,7 @@ function SortablePlayerItem({
           ) : (
             <Badge
               variant="secondary"
-              className="gap-1 text-[10px] h-5 px-1.5 text-yellow-600 bg-yellow-500/10 border-yellow-500/20"
+              className="gap-1 text-[10px] h-5 px-1.5 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20"
             >
               <ShieldAlert className="h-3 w-3" />
               Unverified
@@ -187,7 +187,7 @@ function SortablePlayerItem({
           <Button
             variant="secondary"
             size="sm"
-            className="flex-1 sm:flex-none h-8 text-xs bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 hover:text-yellow-700"
+            className="flex-1 sm:flex-none h-8 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-700"
             onClick={() => onVerify(player.tag)}
           >
             Verify

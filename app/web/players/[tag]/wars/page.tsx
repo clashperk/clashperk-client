@@ -61,10 +61,10 @@ export default async function PlayerWarsPage({ params }: Props) {
                 </Link>
                 <div className="text-xs text-muted-foreground">
                   {war.warType === WarTypes.CWL && (
-                    <span className="mr-1 font-semibold text-sky-400">CWL</span>
+                    <span className="mr-1 font-semibold text-sky-600 dark:text-sky-400">CWL</span>
                   )}
                   {war.warType === WarTypes.FRIENDLY && (
-                    <span className="mr-1 font-semibold text-yellow-400">Friendly</span>
+                    <span className="mr-1 font-semibold text-yellow-600 dark:text-yellow-400">Friendly</span>
                   )}
                   {formatDate(war.startTime)}
                 </div>
@@ -73,17 +73,17 @@ export default async function PlayerWarsPage({ params }: Props) {
                 {war.attacks.length ? (
                   war.attacks.map((attack, i) => (
                     <div key={i} className="flex items-center justify-end gap-2 leading-5">
-                      <span className="text-sky-400">{war.attacker.mapPosition}</span>
-                      <span className="text-orange-400">{war.attacker.townHallLevel}</span>
+                      <span className="text-sky-600 dark:text-sky-400">{war.attacker.mapPosition}</span>
+                      <span className="text-orange-600 dark:text-orange-400">{war.attacker.townHallLevel}</span>
                       <Stars stars={attack.stars} newStars={attack.trueStars} />
                       <span className="w-9">{attack.destruction.toFixed(0)}%</span>
                       <span className="text-muted-foreground">vs</span>
-                      <span className="text-sky-400">{attack.defender.mapPosition}</span>
-                      <span className="text-orange-400">{attack.defender.townHallLevel}</span>
+                      <span className="text-sky-600 dark:text-sky-400">{attack.defender.mapPosition}</span>
+                      <span className="text-orange-600 dark:text-orange-400">{attack.defender.townHallLevel}</span>
                     </div>
                   ))
                 ) : (
-                  <span className="text-red-400">Missed</span>
+                  <span className="text-red-600 dark:text-red-400">Missed</span>
                 )}
               </TableCell>
             </TableRow>
@@ -93,7 +93,7 @@ export default async function PlayerWarsPage({ params }: Props) {
 
       {seasons.length > 0 && (
         <div className="border-t">
-          <h2 className="py-3 text-center text-sm font-bold text-sky-400">CWL Summary</h2>
+          <h2 className="py-3 text-center text-sm font-bold text-brand">CWL Summary</h2>
           <Table>
             <TableHeader>
               <TableRow>
@@ -119,11 +119,11 @@ export default async function PlayerWarsPage({ params }: Props) {
                     {season.totalDestruction.toFixed(0)}%
                   </TableCell>
                   <TableCell
-                    className={season.totalMissed > 0 ? "text-right text-red-400" : "text-right"}
+                    className={season.totalMissed > 0 ? "text-right text-red-600 dark:text-red-400" : "text-right"}
                   >
                     {season.totalMissed}
                   </TableCell>
-                  <TableCell className="text-right text-sky-400">{season.totalWars}</TableCell>
+                  <TableCell className="text-right text-sky-600 dark:text-sky-400">{season.totalWars}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

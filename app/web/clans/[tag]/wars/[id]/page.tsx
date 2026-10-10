@@ -43,10 +43,10 @@ export default async function ClanWarPage({ params }: Props) {
         <TableBody>
           {members.map((member) => (
             <TableRow key={member.tag}>
-              <TableCell className="w-8 text-right align-top text-sky-400">
+              <TableCell className="w-8 text-right align-top text-sky-600 dark:text-sky-400">
                 {member.mapPosition}
               </TableCell>
-              <TableCell className="w-8 text-right align-top text-orange-400">
+              <TableCell className="w-8 text-right align-top text-orange-600 dark:text-orange-400">
                 {member.townhallLevel}
               </TableCell>
               <TableCell className="max-w-0 w-full">
@@ -70,13 +70,13 @@ export default async function ClanWarPage({ params }: Props) {
                         <Stars stars={attack.stars} />
                         <span className="w-9">{attack.destructionPercentage.toFixed(0)}%</span>
                         <span className="text-muted-foreground">vs</span>
-                        <span className="text-sky-400">{defender?.mapPosition ?? "-"}</span>
-                        <span className="text-orange-400">{defender?.townhallLevel ?? "-"}</span>
+                        <span className="text-sky-600 dark:text-sky-400">{defender?.mapPosition ?? "-"}</span>
+                        <span className="text-orange-600 dark:text-orange-400">{defender?.townhallLevel ?? "-"}</span>
                       </div>
                     );
                   })
                 ) : (
-                  <span className="text-red-400">
+                  <span className="text-red-600 dark:text-red-400">
                     {war.state === "warEnded" ? "Missed" : "No attacks"}
                   </span>
                 )}

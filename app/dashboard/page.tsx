@@ -184,7 +184,7 @@ export default function DashboardPage() {
                   <div className="h-2 w-full rounded-full bg-secondary">
                     <div
                       className={`h-full rounded-full ${
-                        isPremium ? "w-full bg-green-500" : "w-[60%] bg-primary"
+                        isPremium ? "w-full bg-brand" : "w-[60%] bg-primary"
                       }`}
                     />
                   </div>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>
@@ -324,7 +324,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>

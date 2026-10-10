@@ -17,7 +17,7 @@ export function WebPage({
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
       <header className="mb-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold text-sky-400">{title}</h1>
+          <h1 className="truncate text-lg font-bold text-brand">{title}</h1>
           {subtitle && (
             <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
           )}
@@ -61,7 +61,7 @@ export function Stars({
             i < oldStars
               ? "fill-muted-foreground text-muted-foreground"
               : i < stars
-                ? "fill-yellow-400 text-yellow-400"
+                ? "fill-yellow-500 text-yellow-600 dark:text-yellow-400"
                 : "text-muted-foreground/30",
           )}
         />

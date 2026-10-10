@@ -409,11 +409,11 @@ export default function RemindersPage() {
                           className={cn(
                             "p-2 rounded-full",
                             reminder.type === "war" &&
-                              "bg-red-500/10 text-red-600",
+                              "bg-red-500/10 text-red-600 dark:text-red-400",
                             reminder.type === "raid" &&
-                              "bg-amber-500/10 text-amber-600",
+                              "bg-amber-500/10 text-amber-600 dark:text-amber-400",
                             reminder.type === "clanGames" &&
-                              "bg-emerald-500/10 text-emerald-600",
+                              "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                           )}
                         >
                           {getTypeIcon(reminder.type)}
@@ -518,7 +518,7 @@ export default function RemindersPage() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
+                              className="text-red-600 dark:text-red-400 focus:text-red-600 dark:text-red-400"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(reminder.id);

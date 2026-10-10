@@ -53,7 +53,7 @@ function StarDisplay({ count, max = 3 }: { count: number; max?: number }) {
           key={i}
           className={`h-4 w-4 ${
             i < count
-              ? "fill-yellow-400 text-yellow-400"
+              ? "fill-yellow-500 text-yellow-600 dark:text-yellow-400"
               : "fill-muted text-muted-foreground/30"
           }`}
         />
@@ -113,8 +113,8 @@ function BattleCard({
             <div
               className={`flex items-center justify-center rounded-md p-1.5 shrink-0 ${
                 isAttack
-                  ? "bg-red-500/10 text-red-400"
-                  : "bg-blue-500/10 text-blue-400"
+                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                  : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
               }`}
             >
               {isAttack ? (
@@ -136,8 +136,8 @@ function BattleCard({
                   variant="secondary"
                   className={`text-[10px] h-4 px-1.5 ${
                     isRanked
-                      ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
-                      : "bg-green-500/10 text-green-400 border-green-500/20"
+                      ? "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20"
+                      : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
                   }`}
                 >
                   {isRanked ? "Ranked" : "Village"}
@@ -154,7 +154,7 @@ function BattleCard({
               </span>
               <span
                 className={`flex items-center gap-0.5 text-xs font-semibold whitespace-nowrap ${
-                  trophies > 0 ? "text-yellow-400" : trophies < 0 ? "text-red-400" : "text-muted-foreground"
+                  trophies > 0 ? "text-yellow-600 dark:text-yellow-400" : trophies < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"
                 }`}
               >
                 <Trophy className="h-3 w-3" />
@@ -236,7 +236,7 @@ export default function BattlelogPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">3-Star Rate</CardTitle>
-            <Star className="h-4 w-4 text-yellow-400" />
+            <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -296,18 +296,18 @@ export default function BattlelogPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
-                  <span className="flex items-center gap-1 text-green-400">
+                  <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                     <Trophy className="h-3 w-3" />+{trophyGained}
                   </span>
-                  <span className="flex items-center gap-1 text-red-400">
+                  <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
                     <Trophy className="h-3 w-3" />{trophyLost}
                   </span>
-                  <span className={`flex items-center gap-1 font-semibold ${trophyNet >= 0 ? "text-yellow-400" : "text-red-400"}`}>
+                  <span className={`flex items-center gap-1 font-semibold ${trophyNet >= 0 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}`}>
                     <Trophy className="h-3 w-3" />
                     {trophyNet >= 0 ? `+${trophyNet}` : trophyNet}
                   </span>
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <Star className="h-3 w-3 fill-yellow-500 text-yellow-600 dark:text-yellow-400" />
                     {dayStars}
                   </span>
                 </div>
@@ -316,7 +316,7 @@ export default function BattlelogPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Attacks */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium text-red-400 flex items-center gap-1">
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center gap-1">
                     <Swords className="h-3.5 w-3.5" /> Attacks
                   </span>
                   {dayAttacks.length > 0 ? (
@@ -329,7 +329,7 @@ export default function BattlelogPage() {
                 </div>
                 {/* Defenses */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium text-blue-400 flex items-center gap-1">
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
                     <Shield className="h-3.5 w-3.5" /> Defenses
                   </span>
                   {dayDefenses.length > 0 ? (

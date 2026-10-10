@@ -178,7 +178,7 @@ function LinksManager() {
             <TableBody>
               {members.map((member) => (
                 <TableRow key={member.tag}>
-                  <TableCell className="text-right font-semibold text-orange-400">
+                  <TableCell className="text-right font-semibold text-orange-600 dark:text-orange-400">
                     {member.townHallLevel}
                   </TableCell>
                   <TableCell>
@@ -198,7 +198,7 @@ function LinksManager() {
                         </span>
                         {member.verified && (
                           <BadgeCheck
-                            className="size-4 text-sky-400"
+                            className="size-4 text-sky-600 dark:text-sky-400"
                             aria-label="Verified"
                           />
                         )}
@@ -445,7 +445,7 @@ function UnlinkMemberModal({
     >
       <div className="space-y-2 py-2 text-sm">
         {isSelf && (
-          <p className="rounded-md border border-orange-500/40 bg-orange-500/10 p-3 text-orange-400">
+          <p className="rounded-md border border-orange-500/40 bg-orange-500/10 p-3 text-orange-600 dark:text-orange-400">
             This is your own account. You will lose access to features that depend on it.
           </p>
         )}

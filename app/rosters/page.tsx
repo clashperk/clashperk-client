@@ -246,7 +246,7 @@ function RosterManager() {
 
             {results.length > 0 && (
               <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm">
-                <div className="mb-1 flex items-center justify-between font-medium text-orange-400">
+                <div className="mb-1 flex items-center justify-between font-medium text-orange-600 dark:text-orange-400">
                   Some players could not be moved
                   <Button size="icon" variant="ghost" className="size-6" onClick={() => setResults([])}>
                     <X className="size-3.5" />
@@ -452,7 +452,7 @@ function MemberRow({
       )}
     >
       <Checkbox checked={selected} onCheckedChange={(checked) => onToggle(checked === true)} />
-      <span className="w-7 text-right font-semibold text-orange-400">{member.townHallLevel}</span>
+      <span className="w-7 text-right font-semibold text-orange-600 dark:text-orange-400">{member.townHallLevel}</span>
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium">{member.name}</div>
         <div className="font-mono text-[11px] text-muted-foreground">{member.tag}</div>
