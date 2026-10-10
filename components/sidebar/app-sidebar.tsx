@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Home, Link2, Settings, Swords, User, Users } from "lucide-react";
+import {
+  Bell,
+  ChevronsUpDown,
+  Home,
+  Link2,
+  Settings,
+  Swords,
+  User,
+  Users,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -81,9 +90,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
-        <div
-          title={`Server ID: ${session.user.guild.id}`}
-          className="flex items-center gap-3 rounded-xl bg-sidebar-accent p-2 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+        <Link
+          href="/servers"
+          title="Switch server"
+          onClick={() => isMobile && setOpenMobile(false)}
+          className="group/server flex items-center gap-3 rounded-xl bg-sidebar-accent p-2 transition-colors hover:bg-sidebar-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
         >
           <UserAvatar
             src={session.user.guild.iconUrl || ""}
@@ -96,7 +107,8 @@ export function AppSidebar() {
             </span>
             <ServerSummary guildId={session.user.guild.id} />
           </div>
-        </div>
+          <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>

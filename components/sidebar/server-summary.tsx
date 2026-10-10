@@ -32,7 +32,7 @@ export function ServerSummary({ guildId }: { guildId: string }) {
 
   const className = "truncate text-xs text-muted-foreground";
 
-  if (guildId === NO_GUILD_ID) return <span className={className}>No server selected</span>;
+  if (guildId === NO_GUILD_ID) return <span className={className}>Choose a server</span>;
   if (summary === "loading") {
     return <span className="mt-1 h-3 w-24 animate-pulse rounded-full bg-muted-foreground/15" />;
   }

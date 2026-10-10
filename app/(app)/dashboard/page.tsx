@@ -16,14 +16,11 @@ import {
   ListChecks,
   Settings2,
   Shield,
-  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 const ROSTER_PREVIEW = 4;
-const INVITE_URL =
-  "https://discord.com/oauth2/authorize?client_id=526971716711350273";
 
 type Load<T> =
   | { status: "loading" }
@@ -532,15 +529,14 @@ function NoServer() {
             Hi, {user.displayName}
           </h2>
           <p className="text-sm text-muted-foreground">
-            No Discord server is selected. Add ClashPerk to a server you manage,
-            then sign in again from that server.
+            No Discord server is selected. Pick one of the servers you manage.
           </p>
         </div>
         <Button asChild>
-          <a href={INVITE_URL} target="_blank" rel="noopener noreferrer">
-            <UserPlus />
-            Invite ClashPerk
-          </a>
+          <Link href="/servers">
+            Choose a server
+            <ArrowRight />
+          </Link>
         </Button>
       </Card>
     </div>

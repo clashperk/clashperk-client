@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-11
+- Server picker: after signing in with Discord you choose one of the servers you manage (Manage Server or Administrator). Servers with ClashPerk can be opened; the rest get an Invite button. The list ranks your current and recently used servers first, then by clan and member count, with search, a ClashPerk here / not added filter and sort options. The sidebar server block opens the picker to switch servers. Needs the backend's `POST /auth/bot-guilds`.
 - Profile page: header with your Discord avatar and link counts, account cards with a Verified pill or Verify button, unlink moved into a "…" menu, and a "How to verify" guide.
 - Settings: theme options show a small light/dark preview, "No server selected" gets its own row with an Invite button, the account row links to Profile, and a new About section links to the guide, Support Discord, Terms and Privacy.
 - On mobile, the Link and Verify dialogs stack their submit and Cancel buttons together at the bottom.
