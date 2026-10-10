@@ -598,7 +598,7 @@ export default function RemindersPage() {
 
         <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row xl:justify-end">
           <Select value={clanTag} onValueChange={setClanTag}>
-            <SelectTrigger className="w-full shrink-0 rounded-full sm:w-52">
+            <SelectTrigger className="w-full shrink-0 sm:w-52">
               <SelectValue placeholder="All clans" />
             </SelectTrigger>
             <SelectContent>
@@ -614,7 +614,7 @@ export default function RemindersPage() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search message, channel or ID"
-              className="rounded-full pl-9"
+              className="pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

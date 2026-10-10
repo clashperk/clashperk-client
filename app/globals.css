@@ -83,7 +83,7 @@
   --destructive: hsl(0 84% 60%);
   --border: hsl(0 0% 89.8%);
   --input: hsl(0 0% 89.8%);
-  --ring: #d14c00;
+  --ring: hsl(0 0% 70%);
   --brand: #d14c00;
   --brand-foreground: hsl(0 0% 100%);
   --brand-soft: hsl(28 100% 94%);
@@ -101,7 +101,7 @@
   --sidebar-accent: hsl(0 7% 95%);
   --sidebar-accent-foreground: hsl(0 0% 9%);
   --sidebar-border: hsl(230 11% 89%);
-  --sidebar-ring: #d14c00;
+  --sidebar-ring: hsl(0 0% 70%);
 }
 
 .dark {
@@ -122,7 +122,7 @@
   --destructive: hsl(0 84% 60%);
   --border: hsl(0 0% 15%);
   --input: hsl(0 0% 18%);
-  --ring: #ee7d2b;
+  --ring: hsl(0 0% 45%);
   --brand: #ee7d2b;
   --brand-foreground: hsl(0 0% 100%);
   --brand-soft: hsl(22 60% 13%);
@@ -140,7 +140,7 @@
   --sidebar-accent: hsl(60 5% 16%);
   --sidebar-accent-foreground: hsl(0 0% 87.84%);
   --sidebar-border: hsl(0 0% 15%);
-  --sidebar-ring: #ee7d2b;
+  --sidebar-ring: hsl(0 0% 45%);
 }
 
 .landing {
