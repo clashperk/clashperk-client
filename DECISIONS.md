@@ -3,7 +3,7 @@
 ## 2026-10-10 — New design tokens
 Decided by: Suvajit. Visual style only — ClashPerk keeps its name, logo and copy.
 - Dashboard tokens live in `:root` / `.dark`; marketing tokens are scoped under `.landing`.
-- `--primary` is neutral (near-black/white); brand color is `--brand`, the logo orange (`#d14c00` to `#de8f28`), used for accents and focus rings. Success states stay green.
+- `--primary` is the brand orange so buttons and selected states match the landing: `#c44800` in light (white text passes 4.5:1; the logo's `#d14c00` does not) and `#ee7d2b` with near-black text in dark. `--brand` stays the logo orange (`#d14c00` to `#de8f28`) for accents. Success states stay green.
 - Google Sans Flex is self-hosted from `public/fonts` instead of Google Fonts.
 
 ## 2026-10-10 — Light-only marketing routes via next-themes `forcedTheme`
@@ -17,3 +17,9 @@ Stars, losses, map position and Town Hall keep their hues; `-400` shades become 
 
 ## 2026-10-10 — Hero embeds are illustrative HTML, not screenshots
 The hero's Discord messages are built in HTML with invented clan and player names, so they stay sharp, theme-consistent and free of real user data.
+
+## 2026-10-11 — Opt-in dev proxy for the API
+The production API's CORS allowlist excludes localhost. `next.config.ts` adds a `/api-proxy/*` rewrite only when `API_PROXY_TARGET` is set, so local dev can point `NEXT_PUBLIC_API_BASE_URL` at `http://localhost:<port>/api-proxy/v1`. Chosen over adding localhost to the production allowlist. Note: local runs then read and write live data.
+
+## 2026-10-11 — Sidebar server subtitle shows clans and players
+The subtitle sums `GET /guilds/:id/clans` (clan count and each clan's in-game `members`). Labelled "players" so it isn't read as Discord server members. The server ID moved to the block's tooltip.
