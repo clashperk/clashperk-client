@@ -28,7 +28,7 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+          <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
             Dashboard
           </h2>
           <p className="text-sm text-muted-foreground md:text-base">
@@ -50,10 +50,12 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clans</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <Shield className="size-4" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-3xl font-semibold tracking-tight">12</div>
             <p className="text-xs text-muted-foreground">
               +2 active from last month
             </p>
@@ -64,10 +66,12 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Active Rosters
             </CardTitle>
-            <Swords className="h-4 w-4 text-muted-foreground" />
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <Swords className="size-4" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-3xl font-semibold tracking-tight">5</div>
             <p className="text-xs text-muted-foreground">
               Across 3 different leagues
             </p>
@@ -76,10 +80,12 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <Users className="size-4" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">342</div>
+            <div className="text-3xl font-semibold tracking-tight">342</div>
             <p className="text-xs text-muted-foreground">
               +18 active this week
             </p>
@@ -90,10 +96,12 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Pending Actions
             </CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <Bell className="size-4" />
+            </span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">7</div>
+            <div className="text-3xl font-semibold tracking-tight">7</div>
             <p className="text-xs text-muted-foreground">
               Requires immediate attention
             </p>
@@ -121,7 +129,7 @@ export default function DashboardPage() {
                       variant={isPremium ? "secondary" : "outline"}
                       className={
                         isPremium
-                          ? "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-0"
+                          ? "bg-brand-soft text-brand hover:bg-brand-soft border-0"
                           : "text-muted-foreground"
                       }
                     >
@@ -169,7 +177,7 @@ export default function DashboardPage() {
                       className={`h-full rounded-full ${
                         isPremium
                           ? "w-[40%] bg-primary"
-                          : "w-full bg-orange-500"
+                          : "w-full bg-brand"
                       }`}
                     />
                   </div>
@@ -193,7 +201,7 @@ export default function DashboardPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-semibold tracking-tight">
                     {isPremium ? "Standard" : "Basic"}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -201,7 +209,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-semibold tracking-tight">
                     {isPremium ? "Enabled" : "Disabled"}
                   </div>
                   <p className="text-xs text-muted-foreground">

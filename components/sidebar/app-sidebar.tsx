@@ -85,7 +85,7 @@ export function AppSidebar() {
             />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-bold tracking-tight text-foreground uppercase">
+            <span className="truncate font-semibold tracking-tight text-foreground">
               {session.user.guild.name}
             </span>
             <span className="truncate text-xs text-muted-foreground">
@@ -98,7 +98,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* CLAN MANAGEMENT */}
         <SidebarGroup>
-          <SidebarGroupLabel>CLAN</SidebarGroupLabel>
+          <SidebarGroupLabel>Clan</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -129,7 +129,7 @@ export function AppSidebar() {
 
         {/* USER MANAGEMENT */}
         <SidebarGroup>
-          <SidebarGroupLabel>USER</SidebarGroupLabel>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {userItems.map((item) => (
