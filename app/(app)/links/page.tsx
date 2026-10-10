@@ -381,69 +381,75 @@ function LinksManager() {
         </div>
       ) : (
         <section className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-[0_1px_2px_rgba(13,15,13,.04)] lg:flex-row lg:items-center lg:gap-6">
-            <div className="min-w-0 lg:w-64">
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">
-                  {clan ? `${linkedCount} of ${memberList.length} linked` : "—"}
-                </span>
-                {clan && (
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {Math.round(progress * 100)}%
+          <div className="md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
+            <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-[0_1px_2px_rgba(13,15,13,.04)] lg:flex-row lg:items-center lg:gap-6">
+              <div className="min-w-0 lg:w-64">
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="font-medium">
+                    {clan
+                      ? `${linkedCount} of ${memberList.length} linked`
+                      : "—"}
                   </span>
-                )}
+                  {clan && (
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {Math.round(progress * 100)}%
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-emerald-500 transition-[width]"
+                    style={{ width: `${progress * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-emerald-500 transition-[width]"
-                  style={{ width: `${progress * 100}%` }}
+
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+                {(
+                  [
+                    ["all", "All"],
+                    ["linked", "Linked"],
+                    ["unlinked", "Not linked"],
+                  ] as const
+                ).map(([key, label]) => {
+                  const active = filter === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setFilter(key)}
+                      className={cn(
+                        "flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        active
+                          ? "border-foreground bg-foreground text-background"
+                          : "bg-card hover:bg-accent",
+                      )}
+                    >
+                      {label}
+                      <span
+                        className={
+                          active
+                            ? "text-background/60"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {counts[key]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative min-w-0 lg:ml-auto lg:w-64">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search players or Discord"
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
-              {(
-                [
-                  ["all", "All"],
-                  ["linked", "Linked"],
-                  ["unlinked", "Not linked"],
-                ] as const
-              ).map(([key, label]) => {
-                const active = filter === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setFilter(key)}
-                    className={cn(
-                      "flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      active
-                        ? "border-foreground bg-foreground text-background"
-                        : "bg-card hover:bg-accent",
-                    )}
-                  >
-                    {label}
-                    <span
-                      className={
-                        active ? "text-background/60" : "text-muted-foreground"
-                      }
-                    >
-                      {counts[key]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="relative min-w-0 lg:ml-auto lg:w-64">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search players or Discord"
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
             </div>
           </div>
 
