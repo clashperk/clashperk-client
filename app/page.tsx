@@ -333,8 +333,8 @@ export default function Home() {
 
       <footer className="w-full border-t border-border bg-surface">
         <div className="mx-auto max-w-7xl px-6 py-12">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
-            <div className="col-span-2 space-y-2 md:col-span-1">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:gap-x-6 md:gap-y-10">
+            <div className="space-y-2">
               <p className="flex items-center gap-2 text-xl font-semibold tracking-tight">
                 <Image src="/icons/icon.svg" alt="" width={28} height={28} unoptimized />
                 ClashPerk
@@ -344,9 +344,9 @@ export default function Home() {
               </p>
             </div>
 
-            <nav aria-label="Explore" className="space-y-4">
+            <nav aria-label="Explore" className="space-y-3 md:space-y-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Explore</p>
-              <ul className="space-y-3 text-sm font-medium text-foreground/80">
+              <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium text-foreground/80 md:flex-col md:gap-3">
                 {EXPLORE_LINKS.map(({ href, label }) => (
                   <li key={href}>
                     <Link
@@ -362,9 +362,9 @@ export default function Home() {
             </nav>
 
             {FOOTER_GROUPS.map(({ title, links }) => (
-              <div key={title} className="space-y-4">
+              <div key={title} className="space-y-3 md:space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
-                <ul className="flex flex-col items-start gap-2">
+                <ul className="flex flex-wrap gap-2 md:flex-col md:items-start">
                   {links.map(({ href, name, Icon, hover }) => (
                     <li key={href}>
                       <Link
