@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-10-11
+- Public pages linked from Discord (war history, single war, capital contributions, activity charts) use the landing page header and footer with the Supercell fan content notice, a theme toggle, the dashboard style, and an error state with Try again.
+- War page shows a scoreboard for both clans with Clan / Opponent tabs; war history adds totals, working Town Hall images and CWL seasons that fit on phones (repeated CWLs in a month are labelled "1 of 2"); capital contributions add totals and a per-player ranking; activity charts fit on phones with a legend that hides or shows each clan.
+- Links page no longer logs a hydration mismatch for the clan picker.
 - Removed the redirects for old bot links (`/charts/*`, `/players/:tag`, `/players/:tag/wars`, `/web/players/:tag`, `/members/:tag`, `/capital/:tag`); only the `/web/...` URLs work now.
 - Removed the unlinked `/battlelog` page, which only showed bundled sample battles.
 - Links, rosters and server picker: the search and filter bar stays pinned at the top while you scroll (tablet and desktop).
