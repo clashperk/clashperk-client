@@ -1,7 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export function SiteHeader({ actions }: { actions?: React.ReactNode }) {
+export function SiteHeader({
+  actions,
+  showLogin = true,
+}: {
+  actions?: React.ReactNode;
+  showLogin?: boolean;
+}) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -34,12 +40,14 @@ export function SiteHeader({ actions }: { actions?: React.ReactNode }) {
           >
             Discord
           </Link>
-          <Link
-            href="/dashboard"
-            className="inline-flex h-10 items-center rounded-full border border-brand bg-card px-5 font-semibold transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-8px_rgba(13,13,26,0.28)]"
-          >
-            Log In
-          </Link>
+          {showLogin && (
+            <Link
+              href="/dashboard"
+              className="inline-flex h-10 items-center rounded-full border border-brand bg-card px-5 font-semibold transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-8px_rgba(13,13,26,0.28)]"
+            >
+              Log In
+            </Link>
+          )}
         </nav>
       </div>
     </header>
