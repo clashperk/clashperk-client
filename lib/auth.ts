@@ -5,12 +5,13 @@ import NextAuth, { CredentialsSignin, User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { v4 as uuid } from "uuid";
+import { NO_GUILD_ID } from "./guild";
 
 const EXPIRES_IN_SECONDS = 60 * 60;
 const REFRESH_INTERVAL_SECONDS = 60;
 
 const defaultGuild = {
-  id: "---",
+  id: NO_GUILD_ID,
   name: "CLASHPERK",
   iconUrl: "/icons/icon-192x192.png",
 };

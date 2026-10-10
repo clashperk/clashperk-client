@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
 import { UserAvatar } from "../user-avatar";
+import { ServerSummary } from "./server-summary";
 import { ThemeSwitcher } from "./theme-switcher";
 import { NavUser } from "./user-nav";
 
@@ -90,9 +91,7 @@ export function AppSidebar() {
             <span className="truncate text-sm font-medium tracking-tight text-foreground">
               {session.user.guild.name}
             </span>
-            <span className="truncate text-xs text-muted-foreground">
-              Discord server
-            </span>
+            <ServerSummary guildId={session.user.guild.id} />
           </div>
         </div>
       </SidebarHeader>
