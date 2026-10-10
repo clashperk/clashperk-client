@@ -125,9 +125,7 @@ const plural = (n: number, word: string) =>
 function serverStats(server: ServerOption) {
   const parts: string[] = [];
   if (server.hasBot) {
-    parts.push(
-      server.clanCount ? plural(server.clanCount, "clan") : "No clans yet",
-    );
+    parts.push(plural(server.clanCount, "clan"));
   }
   if (server.memberCount !== null)
     parts.push(plural(server.memberCount, "member"));
@@ -412,16 +410,17 @@ export default function ServersPage() {
                           <span className="block truncate font-medium tracking-tight">
                             {server.name}
                           </span>
-                          {current ? (
-                            <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
-                              <Check className="size-3" />
-                              Current server
-                            </span>
-                          ) : (
-                            <span className="block truncate text-xs text-muted-foreground">
+                          <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                            {current && (
+                              <span className="flex shrink-0 items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                                <Check className="size-3" />
+                                Current ·
+                              </span>
+                            )}
+                            <span className="truncate">
                               {serverStats(server)}
                             </span>
-                          )}
+                          </span>
                         </span>
                         {busy ? (
                           <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
