@@ -170,11 +170,17 @@ function badgesFor(kind: Kind, reminder: AnyReminder) {
   return badges;
 }
 
+const UNRESTRICTED = new Set(["Any", "Any role", "All members"]);
+
+/** Only the filters that actually narrow who gets pinged. */
 function factsFor(kind: Kind, reminder: AnyReminder) {
-  if (kind === "clanWars") return warFacts(reminder as ClanWarReminderDto);
-  if (kind === "capitalRaids")
-    return raidFacts(reminder as CapitalRaidReminderDto);
-  return gamesFacts(reminder as ClanGamesReminderDto);
+  const facts =
+    kind === "clanWars"
+      ? warFacts(reminder as ClanWarReminderDto)
+      : kind === "capitalRaids"
+        ? raidFacts(reminder as CapitalRaidReminderDto)
+        : gamesFacts(reminder as ClanGamesReminderDto);
+  return facts.filter((fact) => !UNRESTRICTED.has(fact.value));
 }
 
 function ReminderCard({
@@ -193,7 +199,7 @@ function ReminderCard({
   return (
     <Card className={cn("gap-4 p-4 sm:p-5", disabled && "opacity-60")}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.07] px-2.5 py-1 text-xs font-medium text-foreground">
           <Clock className="size-3.5" />
           {formatDuration(reminder.duration)} before {event} ends
         </span>
@@ -203,7 +209,7 @@ function ReminderCard({
             className={cn(
               "rounded-full px-2.5 py-1 text-xs font-medium",
               badge.tone === "warn"
-                ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-300"
                 : "bg-muted text-muted-foreground",
             )}
           >
@@ -225,11 +231,14 @@ function ReminderCard({
       </p>
 
       {facts.length > 0 && (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-muted/50 p-3 sm:grid-cols-4">
+        <dl className="flex flex-wrap gap-1.5">
           {facts.map((fact) => (
-            <div key={fact.label} className="min-w-0">
-              <dt className="text-xs text-muted-foreground">{fact.label}</dt>
-              <dd className="truncate text-sm font-medium" title={fact.value}>
+            <div
+              key={fact.label}
+              className="flex max-w-full items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1 text-xs"
+            >
+              <dt className="text-muted-foreground">{fact.label}</dt>
+              <dd className="truncate font-medium" title={fact.value}>
                 {fact.value}
               </dd>
             </div>
@@ -293,7 +302,7 @@ const TONE_DOT: Record<Tone, string> = {
   ok: "bg-emerald-500",
   muted: "bg-muted-foreground/40",
   error: "bg-destructive",
-  pending: "bg-brand",
+  pending: "bg-sky-500",
 };
 
 const WAR_TYPE_SHORT: Record<string, string> = {
@@ -350,9 +359,16 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
 
   if (schedules.length === 0) {
     return (
-      <p className="border-t pt-3 text-xs text-muted-foreground">
-        No runs in the last 3 days and none scheduled.
-      </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarClock className="size-4" />
+          Nothing scheduled
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <History className="size-4" />
+          No runs in the last 3 days
+        </span>
+      </div>
     );
   }
 
@@ -369,7 +385,7 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
       >
         {next ? (
           <span className="inline-flex items-center gap-1.5">
-            <CalendarClock className="size-4 text-brand" />
+            <CalendarClock className="size-4 text-sky-600 dark:text-sky-400" />
             <span className="text-muted-foreground">Next</span>
             <span className="font-medium">
               {formatRelative(new Date(next.timestamp).getTime(), now)}
@@ -429,7 +445,8 @@ function ReminderRuns({ schedules }: { schedules: ReminderScheduleDto[] }) {
                     outcome.tone === "ok" &&
                       "text-emerald-600 dark:text-emerald-400",
                     outcome.tone === "error" && "text-destructive",
-                    outcome.tone === "pending" && "text-brand",
+                    outcome.tone === "pending" &&
+                      "text-sky-600 dark:text-sky-400",
                     outcome.tone === "muted" && "text-muted-foreground",
                   )}
                 >
@@ -536,18 +553,13 @@ export default function RemindersPage() {
         <p className="text-sm text-muted-foreground md:text-base">
           Pings ClashPerk sends before a war, raid weekend or clan games ends.
         </p>
-      </div>
-
-      <div className="flex items-start gap-2.5 rounded-xl bg-muted/60 p-3 text-sm text-muted-foreground">
-        <Info className="mt-0.5 size-4 shrink-0" />
-        <p>
-          This page is read-only for now. Create, edit or delete reminders from
-          Discord, then refresh here to see the changes. Run history covers the
-          last 3 days.
+        <p className="flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
+          <Info className="size-3.5 shrink-0" />
+          Read-only. Manage reminders in Discord.
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
         <div
           role="tablist"
           aria-label="Reminder type"
@@ -563,7 +575,7 @@ export default function RemindersPage() {
                 aria-selected={active}
                 onClick={() => setKind(id)}
                 className={cn(
-                  "flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:flex-none",
+                  "flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring xl:flex-none",
                   active && "bg-background text-foreground shadow-sm",
                 )}
               >
@@ -573,7 +585,7 @@ export default function RemindersPage() {
                   <span
                     className={cn(
                       "rounded-full px-1.5 text-xs tabular-nums",
-                      active ? "bg-brand-soft text-brand" : "bg-background/60",
+                      active ? "bg-foreground/10" : "bg-background/60",
                     )}
                   >
                     {data[id].length}
@@ -584,9 +596,9 @@ export default function RemindersPage() {
           })}
         </div>
 
-        <div className="flex flex-1 gap-2 lg:justify-end">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row xl:justify-end">
           <Select value={clanTag} onValueChange={setClanTag}>
-            <SelectTrigger className="w-full rounded-full sm:w-52">
+            <SelectTrigger className="w-full shrink-0 rounded-full sm:w-52">
               <SelectValue placeholder="All clans" />
             </SelectTrigger>
             <SelectContent>
@@ -598,7 +610,7 @@ export default function RemindersPage() {
               ))}
             </SelectContent>
           </Select>
-          <div className="relative w-full sm:w-64">
+          <div className="relative min-w-0 flex-1 xl:w-64 xl:flex-none">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search message, channel or ID"
@@ -623,7 +635,7 @@ export default function RemindersPage() {
           </Card>
         ) : reminders.length === 0 ? (
           <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
               <BellOff className="size-6" />
             </div>
             <div className="space-y-1">
