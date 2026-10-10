@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ClashPerk",
   description:
-    "Feature-Rich and Powerful Clash of Clans Discord bot with everything you will ever need.",
+    "The all-in-one Clash of Clans bot for Discord. War and CWL logs, legend tracking, reminders, rosters and clan stats, all inside your server.",
 };
 
 export default async function RootLayout({

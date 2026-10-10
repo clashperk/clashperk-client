@@ -321,7 +321,7 @@ export default function Home() {
                 ClashPerk
               </p>
               <p className="text-sm text-muted-foreground">
-                The Clash of Clans Discord bot for serious clans.
+                The all-in-one Clash of Clans bot for Discord.
               </p>
             </div>
 
