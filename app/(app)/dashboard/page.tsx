@@ -6,23 +6,17 @@ import { Card } from "@/components/ui/card";
 import { api } from "@/hooks/api/axios";
 import { CategoryDto, LinksDto, RostersEntity } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
+import { categoryTheme } from "@/lib/clan-categories";
 import { NO_GUILD_ID } from "@/lib/guild";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
   BadgeCheck,
-  CalendarDays,
-  Gamepad2,
-  GraduationCap,
   Link2,
   ListChecks,
-  LucideIcon,
   Settings2,
   Shield,
-  Swords,
-  Trophy,
   UserPlus,
-  Wheat,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -30,69 +24,6 @@ import { useEffect, useMemo, useState } from "react";
 const ROSTER_PREVIEW = 4;
 const INVITE_URL =
   "https://discord.com/oauth2/authorize?client_id=526971716711350273";
-
-type Theme = { Icon: LucideIcon; tile: string; dot: string };
-
-// Category names are free text set by each server, so match on keywords.
-const CATEGORY_THEMES: [RegExp, Theme][] = [
-  [
-    /cwl|league/i,
-    {
-      Icon: Trophy,
-      tile: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
-      dot: "bg-violet-500",
-    },
-  ],
-  [
-    /war/i,
-    {
-      Icon: Swords,
-      tile: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
-      dot: "bg-rose-500",
-    },
-  ],
-  [
-    /esport|competitive|tournament/i,
-    {
-      Icon: Gamepad2,
-      tile: "bg-sky-500/12 text-sky-600 dark:text-sky-300",
-      dot: "bg-sky-500",
-    },
-  ],
-  [
-    /event/i,
-    {
-      Icon: CalendarDays,
-      tile: "bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-300",
-      dot: "bg-fuchsia-500",
-    },
-  ],
-  [
-    /farm/i,
-    {
-      Icon: Wheat,
-      tile: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
-      dot: "bg-emerald-500",
-    },
-  ],
-  [
-    /feeder|academy|training/i,
-    {
-      Icon: GraduationCap,
-      tile: "bg-teal-500/12 text-teal-600 dark:text-teal-300",
-      dot: "bg-teal-500",
-    },
-  ],
-];
-
-const DEFAULT_THEME: Theme = {
-  Icon: Shield,
-  tile: "bg-foreground/[0.06] text-foreground/70",
-  dot: "bg-muted-foreground",
-};
-
-const categoryTheme = (name: string) =>
-  CATEGORY_THEMES.find(([pattern]) => pattern.test(name))?.[1] ?? DEFAULT_THEME;
 
 type Load<T> =
   | { status: "loading" }
