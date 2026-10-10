@@ -2,6 +2,7 @@
 
 ## 2026-10-11
 - Profile page: header with your Discord avatar and link counts, account cards with a Verified pill or Verify button, unlink moved into a "…" menu, and a "How to verify" guide.
+- Settings: theme options show a small light/dark preview, "No server selected" gets its own row with an Invite button, the account row links to Profile, and a new About section links to the guide, Support Discord, Terms and Privacy.
 - On mobile, the Link and Verify dialogs stack their submit and Cancel buttons together at the bottom.
 - Sidebar highlights the page you're on, and the mobile header shows that page's name instead of always "Dashboard".
 - Dashboard uses the brand orange for buttons, progress bars and selected states; buttons are pills and cards have softer corners and shadows.
