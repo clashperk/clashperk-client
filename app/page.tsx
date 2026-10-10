@@ -26,30 +26,30 @@ const SEARCH_FEATURES = [
   "Clan Capital Overview",
 ];
 
-const WAR_FEATURES = [
+const WAR_FEATURES: { title: string; text: React.ReactNode }[] = [
   {
-    title: "War & CWL Logs",
-    text: "Real-time attack logging with destruction % and star tracking.",
+    title: "Attack Logs",
+    text: "Every attack posted live with stars and destruction %, searchable across past wars.",
   },
   {
-    title: "Attack Reminders",
-    text: "Automated pings for missed attacks before war ends.",
+    title: "Reminders",
+    text: "Pings members before the war ends, plus a log of every missed attack.",
   },
   {
     title: "CWL Analytics",
-    text: "Round-by-round rankings, promotion forecasting, and star stats.",
+    text: "Round-by-round rankings and promotion forecasts.",
   },
   {
-    title: "Composition Analytics",
-    text: "Monitor Town Hall hit rates and composition trends via /compo.",
-  },
-  {
-    title: "Missed Attacks Log",
-    text: "Identify repeat offenders with automated logs for every missed attack.",
-  },
-  {
-    title: "War Log History",
-    text: "Maintain a searchable history of past wars to track performance trends.",
+    title: "Compositions",
+    text: (
+      <>
+        Town Hall hit rates and army trends with{" "}
+        <code className="rounded-md bg-surface-strong px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
+          /compo
+        </code>
+        .
+      </>
+    ),
   },
 ];
 
@@ -172,13 +172,13 @@ export default function Home() {
             Everything You Need
           </h2>
           <p className="text-lg text-muted-foreground">
-            Powering top clans worldwide
+            Every tool your clan needs, right inside Discord.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className={cn(CARD, "md:col-span-2")}>
-            <div className="flex h-full flex-col justify-between gap-8">
+            <div className="flex flex-col gap-6">
               <div className={ICON_TILE}>
                 <Search className="size-7" />
               </div>
@@ -186,9 +186,8 @@ export default function Home() {
                 <h3 className="mb-2 text-2xl font-medium tracking-tight">
                   Advanced Search
                 </h3>
-                <p className="mb-6 text-lg text-muted-foreground">
-                  Deep-dive into player and clan data with powerful analytical
-                  commands and real-time insights.
+                <p className="mb-6 text-muted-foreground">
+                  Look up any player or clan in seconds.
                 </p>
                 <ul className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                   {SEARCH_FEATURES.map((feature) => (
@@ -203,7 +202,7 @@ export default function Home() {
           </div>
 
           <div className={cn(CARD, "bg-surface md:row-span-2")}>
-            <div className="flex h-full flex-col gap-8">
+            <div className="flex flex-col gap-6">
               <div className={ICON_TILE}>
                 <Trophy className="size-7" />
               </div>
@@ -211,9 +210,9 @@ export default function Home() {
                 <h3 className="mb-2 text-2xl font-medium tracking-tight">
                   War & CWL Tracking
                 </h3>
-                <p className="mb-6 leading-relaxed text-muted-foreground">
-                  Professional-grade tracking for every War phase. From live War
-                  Embeds to deep-dive performance reports, we cover every star.
+                <p className="mb-6 text-muted-foreground">
+                  Follow every war from preparation to the final hit, with live
+                  embeds, reminders and season reports.
                 </p>
                 <ul className="space-y-4 text-sm text-muted-foreground">
                   {WAR_FEATURES.map(({ title, text }) => (
@@ -250,7 +249,7 @@ export default function Home() {
           <FeatureCard
             icon={<FileSpreadsheet className="size-6" />}
             title="Advanced Data Exports"
-            description="Export complete clan rosters, seasonal War stats, and member analytics key for external analysis."
+            description="Export rosters, season war stats and member data to Google Sheets."
           />
           <FeatureCard
             icon={<Crown className="size-6" />}
@@ -272,7 +271,7 @@ export default function Home() {
                 <h3 className="text-2xl font-medium tracking-tight">
                   Clan Rosters
                 </h3>
-                <p className="max-w-3xl text-lg text-muted-foreground">
+                <p className="max-w-3xl text-muted-foreground">
                   Coordinate large-scale events. Create custom Rosters for CWL,
                   manage signups with Town Hall requirements, and track
                   availability for every round.
@@ -343,7 +342,7 @@ function FeatureCard({
         <div className={ICON_TILE}>{icon}</div>
         <div>
           <h3 className="mb-2 text-xl font-medium tracking-tight">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground">{description}</p>
         </div>
       </div>
     </div>
