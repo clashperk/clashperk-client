@@ -33,24 +33,26 @@ export function NavUser({ user }: { user: Session["user"] }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="rounded-xl bg-sidebar-accent hover:bg-sidebar-accent/70 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:bg-transparent"
             >
               <UserAvatar
-                className="size-8 rounded-lg"
+                className="size-8 rounded-full"
                 src={user.avatarUrl}
                 alt={user.displayName}
               />
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
+              <div className="grid flex-1 text-left leading-tight">
+                <span className="truncate text-sm font-medium tracking-tight">
                   {user.displayName}
                 </span>
-                <span className="truncate text-xs">{user.username}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  @{user.username}
+                </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -58,16 +60,18 @@ export function NavUser({ user }: { user: Session["user"] }) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <UserAvatar
-                  className="size-8 rounded-lg"
+                  className="size-8 rounded-full"
                   src={user.avatarUrl}
                   alt={user.displayName}
                 />
 
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
+                <div className="grid flex-1 text-left leading-tight">
+                  <span className="truncate text-sm font-medium tracking-tight">
                     {user.displayName}
                   </span>
-                  <span className="truncate text-xs">{user.username}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    @{user.username}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
