@@ -401,7 +401,7 @@ function RosterManager() {
         </div>
       ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start">
-          <aside className="min-w-0 md:sticky md:top-6">
+          <aside className="min-w-0 md:sticky md:top-4">
             <Select value={activeRosterId} onValueChange={selectRoster}>
               <SelectTrigger className="w-full md:hidden">
                 <SelectValue placeholder="Select a roster" />
@@ -427,7 +427,7 @@ function RosterManager() {
             <main className="@container min-w-0 space-y-4">
               <RosterHeader roster={activeRoster} />
 
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 md:sticky md:top-0 md:z-10 md:-my-4 md:bg-background md:py-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="flex h-9 shrink-0 items-center gap-2 rounded-full border bg-card px-3.5 text-sm">
                     <Checkbox
