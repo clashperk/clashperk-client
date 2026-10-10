@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-10
+- Footer Patreon and Ko-fi tiles use the official full-color logos.
+
 ## 2026-10-11
 - Links, rosters and server picker: the search and filter bar stays pinned at the top while you scroll (tablet and desktop).
 - Reminders page: on wide screens a side panel with the summary card and a "Coming up" list of the next runs; a summary card with the next reminder, sent / skipped / failed runs in the last 3 days and a "Needs attention" row that jumps to reminders whose last run failed; reminders grouped by timing in smaller cards; type tabs plus a search, All / Scheduled / Idle / Failing filter and the searchable clan picker from the Links page.
