@@ -53,10 +53,13 @@ const WAR_FEATURES: { title: string; text: React.ReactNode }[] = [
   },
 ];
 
-const FOOTER_LINKS = [
+const EXPLORE_LINKS = [
   { href: "/invite", label: "Add to Discord" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "https://docs.clashperk.com", label: "Guide" },
+];
+
+const LEGAL_LINKS = [
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
 ];
@@ -341,23 +344,28 @@ export default function Home() {
               </p>
             </div>
 
-            <nav
-              aria-label="Footer"
-              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground md:pt-1"
-            >
-              {FOOTER_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  target={href.startsWith("http") ? "_blank" : undefined}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
-
             <div className="flex flex-wrap justify-center gap-8 md:gap-10">
+              <nav
+                aria-label="Explore"
+                className="space-y-3 text-center md:text-left"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Explore
+                </p>
+                <div className="flex h-8 items-center justify-center gap-5 text-sm font-medium text-foreground/80 md:justify-start">
+                  {EXPLORE_LINKS.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      target={href.startsWith("http") ? "_blank" : undefined}
+                      className="transition-colors hover:text-primary"
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </nav>
+
               {FOOTER_GROUPS.map(({ title, links }) => (
                 <div key={title} className="space-y-3 text-center md:text-left">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -385,7 +393,18 @@ export default function Home() {
           </div>
 
           <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground md:flex-row md:justify-between md:text-left">
-            <p>© 2019–{new Date().getFullYear()} ClashPerk</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 md:justify-start">
+              <p>© 2019–{new Date().getFullYear()} ClashPerk</p>
+              {LEGAL_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="transition-colors hover:text-foreground"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
             <p className="max-w-xl md:text-right">
               This material is unofficial and is not endorsed by Supercell. For
               more information see{" "}
