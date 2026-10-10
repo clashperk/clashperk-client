@@ -2,41 +2,55 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { SiDiscord, SiGithub, SiKofi, SiPatreon } from "react-icons/si";
+import { SiDiscord, SiGithub } from "react-icons/si";
 
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
 ];
 
+const TILE_ICON = "flex size-10 shrink-0 items-center justify-center rounded-xl";
+
 const COMMUNITY_TILES = [
   {
     href: "https://discord.gg/ppuppun",
     name: "Discord",
     blurb: "Get help and updates",
-    Icon: SiDiscord,
-    tint: "bg-[#5865f2]/10 text-[#5865f2]",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-[#5865f2]/10 text-[#5865f2]")}>
+        <SiDiscord className="size-5" />
+      </span>
+    ),
   },
   {
     href: "https://github.com/clashperk",
     name: "GitHub",
     blurb: "Browse the source",
-    Icon: SiGithub,
-    tint: "bg-foreground/[0.06] text-foreground",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-foreground/[0.06] text-foreground")}>
+        <SiGithub className="size-5" />
+      </span>
+    ),
   },
   {
     href: "https://www.patreon.com/clashperk",
     name: "Patreon",
     blurb: "Become a supporter",
-    Icon: SiPatreon,
-    tint: "bg-[#ff424d]/10 text-[#ff424d]",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-foreground/[0.06]")}>
+        <Image src="/icons/patreon.svg" alt="" width={20} height={20} unoptimized />
+      </span>
+    ),
   },
   {
     href: "https://ko-fi.com/clashperk",
     name: "Ko-fi",
     blurb: "Buy us a coffee",
-    Icon: SiKofi,
-    tint: "bg-[#72a4f2]/15 text-[#4f86d9]",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-[#ff5a16]/10")}>
+        <Image src="/icons/kofi.svg" alt="" width={26} height={21} unoptimized />
+      </span>
+    ),
   },
 ];
 
@@ -45,25 +59,18 @@ export function SiteFooter() {
     <footer className="w-full border-t border-border bg-surface">
       <div className="mx-auto max-w-7xl px-6 py-12">
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {COMMUNITY_TILES.map(({ href, name, blurb, Icon, tint }) => (
-            <li key={href}>
+          {COMMUNITY_TILES.map((tile) => (
+            <li key={tile.href}>
               <Link
-                href={href}
+                href={tile.href}
                 target="_blank"
                 className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-12px_rgba(13,15,13,.18)] md:flex-row md:items-center md:p-5"
               >
-                <span
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                    tint,
-                  )}
-                >
-                  <Icon className="size-5" />
-                </span>
+                {tile.icon}
                 <span className="min-w-0">
-                  <span className="block font-semibold">{name}</span>
+                  <span className="block font-semibold">{tile.name}</span>
                   <span className="block text-sm text-muted-foreground">
-                    {blurb}
+                    {tile.blurb}
                   </span>
                 </span>
                 <ArrowUpRight className="absolute right-3 top-3 size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:static md:ml-auto md:opacity-40" />

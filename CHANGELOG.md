@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-10
+- Footer Patreon and Ko-fi tiles use the official full-color logos.
+
 ## 2026-10-11
 - Login page: ClashPerk logo, "Continue with Discord" with a short note on what happens next, friendly messages when sign-in fails, and after sign-in you land on the page you were trying to open. Signed-in visitors see Continue and Sign out instead of a role chip.
 - Handoff links without a token show "This sign-in link doesn't work" with a way to sign in, instead of spinning forever.

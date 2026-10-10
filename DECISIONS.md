@@ -36,6 +36,9 @@ The backend only has `GET /guilds/:id/reminders`, so the page shows reminders an
 ## 2026-10-11 — Rosters filter row uses container queries
 The member column's width depends on the app sidebar and the roster list as much as the window, so the filter row breaks on the column's own width (`@container` on the roster `main`). Roster create, edit, delete, clone, add-members and refresh stay out of the UI: those backend endpoints are still stubs. CSV export runs in the browser on the members currently shown.
 
+## 2026-10-10 — Official Patreon and Ko-fi logos in the footer
+The footer uses the official brand marks (Patreon's symbol path from its CDN app icon, without the black app-icon square so it matches the other tiles' size; Ko-fi's symbol from its brand kit), not single-color Simple Icons. They live in `public/icons/` because the proxy matcher only skips `icons/` and `static/`; any other public folder redirects to `/login`.
+
 ## 2026-10-11 — Public /web pages share the landing chrome
 Pages opened from Discord links use `SiteHeader` (plus a theme toggle) and the footer's legal row, which carries Supercell's fan content notice required for pages showing game assets. The four community tiles stay on the landing page only. Stars keep their gold colour because players read them as the game's stars; everything else follows the neutral dashboard style. Town Hall images come from `assets.clashperk.com`.
 
