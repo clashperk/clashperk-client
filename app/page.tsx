@@ -61,23 +61,40 @@ const FOOTER_LINKS = [
   { href: "/privacy", label: "Privacy" },
 ];
 
-const COMMUNITY_LINKS = [
-  { href: "https://discord.gg/ppuppun", label: "Join the Discord server", Icon: SiDiscord },
-  { href: "https://github.com/clashperk", label: "ClashPerk on GitHub", Icon: SiGithub },
-];
-
-const SUPPORT_LINKS = [
+const FOOTER_GROUPS = [
   {
-    href: "https://www.patreon.com/clashperk",
-    name: "Patreon",
-    Icon: SiPatreon,
-    hover: "hover:border-[#ff424d]/40 hover:text-[#ff424d]",
+    title: "Community",
+    links: [
+      {
+        href: "https://discord.gg/ppuppun",
+        name: "Discord",
+        Icon: SiDiscord,
+        hover: "hover:border-[#5865f2]/40 hover:text-[#5865f2]",
+      },
+      {
+        href: "https://github.com/clashperk",
+        name: "GitHub",
+        Icon: SiGithub,
+        hover: "hover:border-foreground/30 hover:text-foreground",
+      },
+    ],
   },
   {
-    href: "https://ko-fi.com/clashperk",
-    name: "Ko-fi",
-    Icon: SiKofi,
-    hover: "hover:border-[#72a4f2]/50 hover:text-[#4f86d9]",
+    title: "Support ClashPerk",
+    links: [
+      {
+        href: "https://www.patreon.com/clashperk",
+        name: "Patreon",
+        Icon: SiPatreon,
+        hover: "hover:border-[#ff424d]/40 hover:text-[#ff424d]",
+      },
+      {
+        href: "https://ko-fi.com/clashperk",
+        name: "Ko-fi",
+        Icon: SiKofi,
+        hover: "hover:border-[#72a4f2]/50 hover:text-[#4f86d9]",
+      },
+    ],
   },
 ];
 
@@ -340,48 +357,30 @@ export default function Home() {
               ))}
             </nav>
 
-            <div className="flex gap-10">
-              <div className="space-y-3 text-center md:text-left">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Community
-                </p>
-                <div className="flex h-8 items-center justify-center gap-4 text-muted-foreground md:justify-start">
-                  {COMMUNITY_LINKS.map(({ href, label, Icon }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      target="_blank"
-                      aria-label={label}
-                      title={label}
-                      className="transition-all hover:-translate-y-0.5 hover:text-foreground"
-                    >
-                      <Icon className="size-5" />
-                    </Link>
-                  ))}
+            <div className="flex flex-wrap justify-center gap-8 md:gap-10">
+              {FOOTER_GROUPS.map(({ title, links }) => (
+                <div key={title} className="space-y-3 text-center md:text-left">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {title}
+                  </p>
+                  <div className="flex items-center justify-center gap-2 md:justify-start">
+                    {links.map(({ href, name, Icon, hover }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        target="_blank"
+                        className={cn(
+                          "inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm font-medium text-foreground/80 transition-all hover:-translate-y-0.5",
+                          hover,
+                        )}
+                      >
+                        <Icon className="size-3.5" />
+                        {name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-3 text-center md:text-left">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Support ClashPerk
-                </p>
-                <div className="flex items-center justify-center gap-2 md:justify-start">
-                  {SUPPORT_LINKS.map(({ href, name, Icon, hover }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      target="_blank"
-                      className={cn(
-                        "inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm font-medium text-foreground/80 transition-all hover:-translate-y-0.5",
-                        hover,
-                      )}
-                    >
-                      <Icon className="size-3.5" />
-                      {name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
