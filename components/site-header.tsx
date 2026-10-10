@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export function SiteHeader() {
+export function SiteHeader({ actions }: { actions?: React.ReactNode }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -9,10 +9,17 @@ export function SiteHeader() {
           href="/"
           className="flex items-center gap-2 text-xl font-semibold tracking-tight"
         >
-          <Image src="/icons/icon.svg" alt="" width={32} height={32} unoptimized />
+          <Image
+            src="/icons/icon.svg"
+            alt=""
+            width={32}
+            height={32}
+            unoptimized
+          />
           ClashPerk
         </Link>
         <nav className="flex items-center gap-2 text-sm font-medium md:gap-4">
+          {actions}
           <Link
             href="https://docs.clashperk.com"
             target="_blank"

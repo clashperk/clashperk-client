@@ -72,43 +72,58 @@ export function SiteFooter() {
           ))}
         </ul>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-start md:justify-between">
-          <div className="space-y-1.5">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground">
-              <Image src="/icons/icon.svg" alt="" width={20} height={20} unoptimized />
-              ClashPerk
-              <span className="w-full font-normal text-muted-foreground md:w-auto">
-                <span className="hidden md:inline">· </span>
-                The all-in-one Clash of Clans bot for Discord.
-              </span>
-            </p>
-            <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span>© 2019–{new Date().getFullYear()} ClashPerk</span>
-              {LEGAL_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="transition-colors hover:text-foreground"
-                >
-                  {label}
-                </Link>
-              ))}
-            </p>
-          </div>
-          <p className="max-w-md md:text-right">
-            This material is unofficial and is not endorsed by Supercell. For
-            more information see{" "}
-            <Link
-              href="https://supercell.com/en/fan-content-policy/"
-              target="_blank"
-              className="underline underline-offset-2 hover:text-foreground"
-            >
-              Supercell&apos;s Fan Content Policy
-            </Link>
-            .
-          </p>
+        <div className="mt-10 border-t border-border pt-6">
+          <SiteFooterLegal />
         </div>
       </div>
     </footer>
+  );
+}
+
+/** Copyright, legal links and the Supercell fan content notice. */
+export function SiteFooterLegal() {
+  return (
+    <div className="flex flex-col gap-4 text-xs text-muted-foreground md:flex-row md:items-start md:justify-between">
+      <div className="space-y-1.5">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-foreground">
+          <Image
+            src="/icons/icon.svg"
+            alt=""
+            width={20}
+            height={20}
+            unoptimized
+          />
+          ClashPerk
+          <span className="w-full font-normal text-muted-foreground md:w-auto">
+            <span className="hidden md:inline">· </span>
+            The all-in-one Clash of Clans bot for Discord.
+          </span>
+        </p>
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span>© 2019–{new Date().getFullYear()} ClashPerk</span>
+          {LEGAL_LINKS.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="transition-colors hover:text-foreground"
+            >
+              {label}
+            </Link>
+          ))}
+        </p>
+      </div>
+      <p className="max-w-md md:text-right">
+        This material is unofficial and is not endorsed by Supercell. For more
+        information see{" "}
+        <Link
+          href="https://supercell.com/en/fan-content-policy/"
+          target="_blank"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Supercell&apos;s Fan Content Policy
+        </Link>
+        .
+      </p>
+    </div>
   );
 }
