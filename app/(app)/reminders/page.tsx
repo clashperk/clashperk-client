@@ -548,9 +548,9 @@ function SummaryCard({
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
-      <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div className="grid divide-y @lg:grid-cols-3 @lg:divide-x @lg:divide-y-0">
         {cells.map(({ Icon, label, value, sub }) => (
-          <div key={label} className="flex items-start gap-3 p-4 sm:p-5">
+          <div key={label} className="flex items-start gap-3 p-4">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground/70">
               <Icon className="size-4" />
             </span>
@@ -563,7 +563,7 @@ function SummaryCard({
         ))}
       </div>
       {failing.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-t px-4 py-3 sm:px-5">
+        <div className="flex flex-wrap items-center gap-2 border-t p-4">
           <span className="inline-flex items-center gap-1.5 text-sm text-destructive">
             <AlertCircle className="size-4" />
             Needs attention
@@ -586,6 +586,68 @@ function SummaryCard({
             );
           })}
         </div>
+      )}
+    </Card>
+  );
+}
+
+function UpcomingCard({
+  data,
+  onFocus,
+}: {
+  data: GuildRemindersDto;
+  onFocus: (kind: Kind, id: string) => void;
+}) {
+  const now = Date.now();
+  const runs = KINDS.flatMap((kind) =>
+    (data[kind.id] as AnyReminder[]).flatMap((reminder) =>
+      runsOf(reminder).upcoming.map((schedule) => ({
+        kind,
+        reminder,
+        schedule,
+      })),
+    ),
+  )
+    .sort((a, b) => time(a.schedule) - time(b.schedule))
+    .slice(0, 6);
+
+  return (
+    <Card className="hidden gap-0 p-0 xl:flex">
+      <p className="px-4 pt-4 pb-2 text-sm font-medium">Coming up</p>
+      {runs.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-muted-foreground">
+          Nothing scheduled right now.
+        </p>
+      ) : (
+        <ul className="divide-y px-2 pb-2">
+          {runs.map(({ kind, reminder, schedule }) => (
+            <li key={schedule.id}>
+              <button
+                type="button"
+                onClick={() => onFocus(kind.id, reminder.id)}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.06] text-foreground/70">
+                  <kind.Icon className="size-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {schedule.clan.name}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {reminder.message || reminder.shortId}
+                  </span>
+                </span>
+                <span
+                  className="shrink-0 text-xs tabular-nums text-muted-foreground"
+                  title={new Date(schedule.timestamp).toLocaleString()}
+                >
+                  {formatRelative(time(schedule), now)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </Card>
   );
@@ -743,159 +805,167 @@ export default function RemindersPage() {
         </p>
       </div>
 
-      <div className="flex max-w-4xl flex-col gap-6">
-        {data && <SummaryCard data={data} onFocus={focus} />}
-
-        <div className="@container flex flex-col gap-4">
-          <div
-            role="tablist"
-            aria-label="Reminder type"
-            className="flex gap-4 overflow-x-auto border-b @md:gap-5"
-          >
-            {KINDS.map(({ id, label, Icon }) => {
-              const active = kind === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setKind(id)}
-                  className={cn(
-                    "-mb-px flex shrink-0 cursor-pointer items-center gap-1.5 border-b-2 pb-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    active
-                      ? "border-foreground font-medium text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Icon className="hidden size-4 @md:block" />
-                  {label}
-                  {data && (
-                    <span className="text-xs font-normal tabular-nums text-muted-foreground">
-                      {data[id].length}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col gap-2 @3xl:flex-row @3xl:items-center">
-            <div className="relative min-w-0 @3xl:flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search message, channel or ID"
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex min-w-0 flex-col gap-2 @xl:flex-row @xl:items-center">
-              <div
-                role="radiogroup"
-                aria-label="Reminder status"
-                className="flex h-10 shrink-0 items-center rounded-xl border bg-card p-1"
-              >
-                {STATUSES.map(({ id, label }) => {
-                  const active = status === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      onClick={() => setStatus(id)}
-                      className={cn(
-                        "flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        active
-                          ? "bg-foreground/[0.08] font-medium text-foreground"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {label}
-                      {data && (
-                        <span
-                          className={cn(
-                            "text-xs font-normal tabular-nums",
-                            id === "failing" && statusCounts.failing > 0
-                              ? "text-destructive"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {statusCounts[id]}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              {pickerCategories.length > 0 && (
-                <div className="min-w-0 @xl:w-56 [&>button]:w-full">
-                  <ClanPicker
-                    categories={pickerCategories}
-                    value={clanTag}
-                    onChange={setClanTag}
-                    allLabel="All clans"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <SkeletonCards />
-        ) : error ? (
-          <Card className="items-center gap-3 py-10 text-center shadow-none">
-            <p className="text-sm text-destructive">{error}</p>
-            <Button variant="outline" size="sm" onClick={load}>
-              <RotateCw />
-              Try again
-            </Button>
-          </Card>
-        ) : groups.length === 0 ? (
-          <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
-              <BellOff className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium">
-                {filtering
-                  ? "No reminders match these filters"
-                  : `No ${activeKind.label.toLowerCase()} reminders yet`}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {filtering
-                  ? "Try another status or clan, or clear the search."
-                  : `Set one up from Discord to ping members before the ${activeKind.event} ends.`}
-              </p>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {groups.map(([duration, reminders]) => (
-              <section key={duration} className="space-y-3">
-                <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Clock className="size-4" />
-                  {formatDuration(duration)} before the {activeKind.event} ends
-                  <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">
-                    {reminders.length}
-                  </span>
-                </h3>
-                <div className="grid gap-3">
-                  {reminders.map((reminder) => (
-                    <ReminderCard
-                      key={reminder.id}
-                      kind={kind}
-                      reminder={reminder}
-                      highlighted={focusId === reminder.id}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
+        {data && (
+          <aside className="@container space-y-4 xl:sticky xl:top-6 xl:order-2">
+            <SummaryCard data={data} onFocus={focus} />
+            <UpcomingCard data={data} onFocus={focus} />
+          </aside>
         )}
+
+        <div className="flex min-w-0 flex-col gap-6 xl:order-1">
+          <div className="@container flex flex-col gap-4">
+            <div
+              role="tablist"
+              aria-label="Reminder type"
+              className="flex gap-4 overflow-x-auto border-b @md:gap-5"
+            >
+              {KINDS.map(({ id, label, Icon }) => {
+                const active = kind === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setKind(id)}
+                    className={cn(
+                      "-mb-px flex shrink-0 cursor-pointer items-center gap-1.5 border-b-2 pb-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active
+                        ? "border-foreground font-medium text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="hidden size-4 @md:block" />
+                    {label}
+                    {data && (
+                      <span className="text-xs font-normal tabular-nums text-muted-foreground">
+                        {data[id].length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col gap-2 @3xl:flex-row @3xl:items-center">
+              <div className="relative min-w-0 @3xl:flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search message, channel or ID"
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex min-w-0 flex-col gap-2 @xl:flex-row @xl:items-center">
+                <div
+                  role="radiogroup"
+                  aria-label="Reminder status"
+                  className="flex h-10 shrink-0 items-center rounded-xl border bg-card p-1"
+                >
+                  {STATUSES.map(({ id, label }) => {
+                    const active = status === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setStatus(id)}
+                        className={cn(
+                          "flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          active
+                            ? "bg-foreground/[0.08] font-medium text-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {label}
+                        {data && (
+                          <span
+                            className={cn(
+                              "text-xs font-normal tabular-nums",
+                              id === "failing" && statusCounts.failing > 0
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {statusCounts[id]}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {pickerCategories.length > 0 && (
+                  <div className="min-w-0 @xl:w-56 [&>button]:w-full">
+                    <ClanPicker
+                      categories={pickerCategories}
+                      value={clanTag}
+                      onChange={setClanTag}
+                      allLabel="All clans"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <SkeletonCards />
+          ) : error ? (
+            <Card className="items-center gap-3 py-10 text-center shadow-none">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button variant="outline" size="sm" onClick={load}>
+                <RotateCw />
+                Try again
+              </Button>
+            </Card>
+          ) : groups.length === 0 ? (
+            <Card className="items-center gap-3 border-dashed py-12 text-center shadow-none">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
+                <BellOff className="size-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {filtering
+                    ? "No reminders match these filters"
+                    : `No ${activeKind.label.toLowerCase()} reminders yet`}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {filtering
+                    ? "Try another status or clan, or clear the search."
+                    : `Set one up from Discord to ping members before the ${activeKind.event} ends.`}
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {groups.map(([duration, reminders]) => (
+                <section key={duration} className="space-y-3">
+                  <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Clock className="size-4" />
+                    {formatDuration(duration)} before the {activeKind.event}{" "}
+                    ends
+                    <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">
+                      {reminders.length}
+                    </span>
+                  </h3>
+                  <div className="grid gap-3">
+                    {reminders.map((reminder) => (
+                      <ReminderCard
+                        key={reminder.id}
+                        kind={kind}
+                        reminder={reminder}
+                        highlighted={focusId === reminder.id}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
