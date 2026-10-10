@@ -40,6 +40,9 @@ import { useSearchParams } from "next/navigation";
 import * as React from "react";
 
 const DEFAULT_MAX_MEMBERS = 50;
+
+/** Rosters can be detached from a clan (`/roster edit detach_clan`); the bot calls those "All Clans". */
+const rosterClanName = (roster: RostersEntity) => roster.clan?.name ?? "All Clans";
 const NO_GROUP = "none";
 
 type TransferResult = TransferRosterMembersDto["result"];
@@ -381,7 +384,7 @@ function RosterSidebar({
                   <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
                     {roster.members.length}/{roster.maxMembers ?? DEFAULT_MAX_MEMBERS}
                   </Badge>
-                  <span className="truncate">{roster.clan.name}</span>
+                  <span className="truncate">{rosterClanName(roster)}</span>
                 </div>
               </div>
               {isActive && <ChevronRight className="size-4 text-primary opacity-50 shrink-0" />}
@@ -417,7 +420,7 @@ function RosterHeader({ roster }: { roster: RostersEntity }) {
           )}
         </h1>
         <p className="text-xs text-muted-foreground font-medium">
-          {roster.clan.name} ({roster.clan.tag})
+          {roster.clan ? `${roster.clan.name} (${roster.clan.tag})` : "All Clans"}
         </p>
       </div>
       <div className="flex gap-6">
@@ -577,7 +580,7 @@ function MoveMembersModal({
                 .filter((r) => r._id !== roster._id)
                 .map((r) => (
                   <SelectItem key={r._id} value={r._id}>
-                    {r.name} · {r.clan.name}
+                    {r.name} · {rosterClanName(r)}
                   </SelectItem>
                 ))}
             </SelectContent>
