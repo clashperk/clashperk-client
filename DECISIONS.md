@@ -32,3 +32,6 @@ Discord sign-in keeps the user's OAuth access token inside the encrypted session
 
 ## 2026-10-11 — Reminders stay read-only
 The backend only has `GET /guilds/:id/reminders`, so the page shows reminders and their runs but has no create, edit or toggle controls. "Failing" means the reminder's latest run failed (channel missing, missing permissions, bot not in server); the summary counts only the runs the API returns, which cover the last 3 days. The clan filter loads the server's categories just to group clans and falls back to a flat list if that request fails.
+
+## 2026-10-11 — Rosters filter row uses container queries
+The member column's width depends on the app sidebar and the roster list as much as the window, so the filter row breaks on the column's own width (`@container` on the roster `main`). Roster create, edit, delete, clone, add-members and refresh stay out of the UI: those backend endpoints are still stubs. CSV export runs in the browser on the members currently shown.
