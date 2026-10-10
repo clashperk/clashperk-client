@@ -1,100 +1,156 @@
 "use client";
 
-import { BadgeCheck, ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  BookOpen,
+  ChevronUp,
+  CircleHelp,
+  LogOut,
+  Settings,
+  UserPlus,
+} from "lucide-react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
+import { SiDiscord, SiKofi, SiPatreon } from "react-icons/si";
 import { UserAvatar } from "../user-avatar";
+import { ThemeSwitcher } from "./theme-switcher";
+
+const MENU_ITEM =
+  "flex h-9 w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 text-sm text-sidebar-foreground transition-colors hover:bg-background/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring [&>svg]:size-4 [&>svg]:text-muted-foreground";
+
+const RESOURCES = [
+  {
+    href: "https://docs.clashperk.com/overview/getting-set-up",
+    label: "Getting started",
+    Icon: BookOpen,
+  },
+  { href: "https://docs.clashperk.com/faq", label: "FAQ", Icon: CircleHelp },
+  {
+    href: "https://discord.gg/ppuppun",
+    label: "Support Discord",
+    Icon: SiDiscord,
+  },
+  {
+    href: "https://discord.com/oauth2/authorize?client_id=526971716711350273",
+    label: "Invite ClashPerk",
+    Icon: UserPlus,
+  },
+  {
+    href: "https://www.patreon.com/clashperk",
+    label: "Support on Patreon",
+    Icon: SiPatreon,
+  },
+  {
+    href: "https://ko-fi.com/clashperk",
+    label: "Support on Ko-fi",
+    Icon: SiKofi,
+  },
+] as const;
 
 export function NavUser({ user }: { user: Session["user"] }) {
-  const { isMobile } = useSidebar();
-  const router = useRouter();
+  const { state, setOpen } = useSidebar();
+  const [expanded, setExpanded] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const collapsed = state === "collapsed";
+
+  function toggle() {
+    if (collapsed) {
+      setOpen(true);
+      setExpanded(true);
+      return;
+    }
+    setExpanded((v) => !v);
+  }
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="rounded-xl bg-sidebar-accent hover:bg-sidebar-accent/70 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:bg-transparent"
-            >
-              <UserAvatar
-                className="size-8 rounded-full"
-                src={user.avatarUrl}
-                alt={user.displayName}
-              />
-              <div className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-medium tracking-tight">
-                  {user.displayName}
-                </span>
-                <span className="truncate text-xs text-muted-foreground">
-                  @{user.username}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
+    <div className="flex flex-col gap-1 rounded-2xl bg-sidebar-accent p-1.5 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
+      <AnimatePresence initial={false}>
+        {expanded && !collapsed && (
+          <motion.div
+            id="user-menu"
+            initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="overflow-hidden"
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <UserAvatar
-                  className="size-8 rounded-full"
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                />
-
-                <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-medium tracking-tight">
-                    {user.displayName}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    @{user.username}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
+            <nav className="flex flex-col gap-0.5 pb-1">
+              <Link href="/profile" className={MENU_ITEM}>
                 <BadgeCheck />
                 My Profile
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => router.push("/settings")}>
+              </Link>
+              <Link href="/settings" className={MENU_ITEM}>
                 <Settings />
                 Settings
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
-              <LogOut />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+              </Link>
+              <div className="px-1 py-1">
+                <ThemeSwitcher />
+              </div>
+              <div className="mx-2.5 my-1 h-px bg-border" />
+              {RESOURCES.map(({ href, label, Icon }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(MENU_ITEM, "group/link")}
+                >
+                  <Icon />
+                  {label}
+                  <ArrowUpRight className="ml-auto opacity-0 transition-opacity group-hover/link:opacity-100" />
+                </a>
+              ))}
+              <div className="mx-2.5 my-1 h-px bg-border" />
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className={cn(
+                  MENU_ITEM,
+                  "text-destructive hover:text-destructive [&>svg]:text-destructive",
+                )}
+              >
+                <LogOut />
+                Log out
+              </button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={expanded && !collapsed}
+        aria-controls="user-menu"
+        className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl p-1.5 text-left transition-colors hover:bg-background/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:p-0"
+      >
+        <UserAvatar
+          className="size-8 shrink-0 rounded-full"
+          src={user.avatarUrl}
+          alt={user.displayName}
+        />
+        <div className="grid flex-1 leading-tight group-data-[collapsible=icon]:hidden">
+          <span className="truncate text-sm font-medium tracking-tight">
+            {user.displayName}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            @{user.username}
+          </span>
+        </div>
+        <ChevronUp
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden",
+            !expanded && "rotate-180",
+          )}
+        />
+      </button>
+    </div>
   );
 }

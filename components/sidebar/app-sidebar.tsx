@@ -20,7 +20,6 @@ import Link from "next/link";
 
 import { UserAvatar } from "../user-avatar";
 import { ServerSummary } from "./server-summary";
-import { ThemeSwitcher } from "./theme-switcher";
 import { NavUser } from "./user-nav";
 
 const items = [
@@ -160,8 +159,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="gap-2">
-        <ThemeSwitcher />
+      <SidebarFooter>
         <NavUser user={session.user} />
       </SidebarFooter>
     </Sidebar>
