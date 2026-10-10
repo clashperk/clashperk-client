@@ -21,7 +21,7 @@ export function AppShell({ children, sidebar, header }: AppShellProps) {
   return (
     <SidebarProvider className="[--header-width:calc(--spacing(72))]">
       {sidebar}
-      <div className="flex flex-col flex-1 min-h-svh">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         {header}
         <main className="flex-1 w-full h-full">{children}</main>
       </div>
