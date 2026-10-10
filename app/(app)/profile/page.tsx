@@ -20,6 +20,16 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+// A password input makes browsers treat these dialogs as login forms and offer saved credentials.
+const NO_AUTOFILL = {
+  type: "text",
+  autoComplete: "off",
+  spellCheck: false,
+  "data-1p-ignore": true,
+  "data-lpignore": "true",
+  "data-form-type": "other",
+} as const;
+
 const API_TOKEN_HINT =
   "In Clash of Clans: Settings → More Settings → API Token.";
 
@@ -285,7 +295,7 @@ function LinkModal({
             id="link-tag"
             placeholder="#2PP"
             className="font-mono uppercase"
-            autoComplete="off"
+            {...NO_AUTOFILL}
             autoFocus
             value={tag}
             onChange={(e) => setTag(e.target.value)}
@@ -300,8 +310,7 @@ function LinkModal({
           </Label>
           <Input
             id="link-token"
-            type="password"
-            autoComplete="off"
+            {...NO_AUTOFILL}
             className="font-mono"
             value={token}
             onChange={(e) => setToken(e.target.value)}
@@ -373,8 +382,7 @@ function VerifyModal({
           <Label htmlFor="verify-token">API token</Label>
           <Input
             id="verify-token"
-            type="password"
-            autoComplete="off"
+            {...NO_AUTOFILL}
             autoFocus
             className="font-mono"
             value={token}
