@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>
@@ -324,7 +324,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] h-5 px-1.5 bg-brand/10 text-brand hover:bg-brand/20 border-0 gap-1"
+                        className="text-[10px] h-5 px-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border-0 gap-1"
                       >
                         <Check className="h-3 w-3" /> Bot Added
                       </Badge>

@@ -117,7 +117,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
             <Link
               href="/invite"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-linear-to-r from-brand-from to-brand-to px-8 font-semibold text-white shadow-[0_6px_16px_-4px_#29a3804d] transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-6px_#29a38066] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-linear-to-r from-brand-from to-brand-to px-8 font-semibold text-white shadow-[0_6px_16px_-4px_#d14c004d] transition-all hover:-translate-y-px hover:shadow-[0_10px_22px_-6px_#d14c0066] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Add to Discord
             </Link>
@@ -233,7 +233,7 @@ export default function Home() {
           <div
             className={cn(
               CARD,
-              "border-transparent md:col-span-3 [background:linear-gradient(var(--card),var(--card))_padding-box,linear-gradient(-8.5deg,#39d47a_4%,#16bfa6_50%,#009cd0_96%)_border-box]",
+              "border-transparent md:col-span-3 [background:linear-gradient(var(--card),var(--card))_padding-box,linear-gradient(-8.5deg,var(--brand-from),var(--brand-to))_border-box]",
             )}
           >
             <div className="flex flex-col items-start gap-8 md:flex-row md:items-center">

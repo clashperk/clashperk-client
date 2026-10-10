@@ -3,7 +3,7 @@
 ## 2026-10-10 — New design tokens
 Decided by: Suvajit. Visual style only — ClashPerk keeps its name, logo and copy.
 - Dashboard tokens live in `:root` / `.dark`; marketing tokens are scoped under `.landing`.
-- `--primary` is neutral (near-black/white); brand green is `--brand`, used for accents, focus rings and success states.
+- `--primary` is neutral (near-black/white); brand color is `--brand`, the logo orange (`#d14c00` to `#de8f28`), used for accents and focus rings. Success states stay green.
 - Google Sans Flex is self-hosted from `public/fonts` instead of Google Fonts.
 
 ## 2026-10-10 — Light-only marketing routes via next-themes `forcedTheme`
