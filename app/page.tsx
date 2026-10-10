@@ -109,9 +109,10 @@ export default function Home() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-            The ultimate Clash of Clans Discord bot.{" "}
+            The Clash of Clans Discord bot for serious clans.{" "}
             <br className="hidden md:block" />
-            Analyze wars, track legends, and manage your clan like a pro.
+            War logs, CWL stats, legend tracking and rosters — all in your
+            server.
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
