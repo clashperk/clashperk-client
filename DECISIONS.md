@@ -11,3 +11,9 @@ Decided by: Suvajit. Visual style only — ClashPerk keeps its name, logo and co
 
 ## 2026-10-10 — Game-meaning colors kept, shaded per theme
 Stars, losses, map position and Town Hall keep their hues; `-400` shades become `-600` in light mode (`dark:` keeps `-400`). Chart series palettes and the Discord login button are unchanged.
+
+## 2026-10-10 — Marketing routes split into a `(marketing)` route group
+`/`, `/terms`, `/privacy` live in `app/(marketing)` with no session fetch so they prerender; every other route sits in `app/(app)`, whose layout keeps `getSession`, `SessionProvider` and the app shell. Chosen over keeping one root layout, which forced every page to render per request. The proxy still decodes the auth cookie on all routes because it also handles `handoff_token` redirects.
+
+## 2026-10-10 — Hero embeds are illustrative HTML, not screenshots
+The hero's Discord messages are built in HTML with invented clan and player names, so they stay sharp, theme-consistent and free of real user data.
