@@ -17,12 +17,13 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { UserAvatar } from "../user-avatar";
 import { ServerSummary } from "./server-summary";
 import { NavUser } from "./user-nav";
 
-const items = [
+export const items = [
   {
     title: "Dashboard",
     url: "/dashboard",
@@ -55,7 +56,7 @@ const items = [
   },
 ];
 
-const userItems = [
+export const userItems = [
   {
     title: "Profile",
     url: "/profile",
@@ -73,6 +74,9 @@ const userItems = [
 export function AppSidebar() {
   const session = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
+  const pathname = usePathname();
+  const isActive = (url: string) =>
+    pathname === url || pathname.startsWith(`${url}/`);
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -107,6 +111,7 @@ export function AppSidebar() {
                     asChild={!item.disabled}
                     disabled={item.disabled}
                     tooltip={item.title}
+                    isActive={isActive(item.url)}
                     onClick={() => isMobile && setOpenMobile(false)}
                   >
                     {item.disabled ? (
@@ -138,6 +143,7 @@ export function AppSidebar() {
                     asChild={!item.disabled}
                     disabled={item.disabled}
                     tooltip={item.title}
+                    isActive={isActive(item.url)}
                     onClick={() => isMobile && setOpenMobile(false)}
                   >
                     {item.disabled ? (
