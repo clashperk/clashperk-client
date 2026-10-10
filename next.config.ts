@@ -34,37 +34,6 @@ const nextConfig: NextConfig = {
         destination: "https://docs.clashperk.com/overview/getting-set-up",
         permanent: true,
       },
-      // Links posted by the bot before the dashboard rewrite.
-      {
-        source: "/charts/:path*",
-        destination: "/web/charts/:path*",
-        permanent: true,
-      },
-      {
-        source: "/players/:tag/wars",
-        destination: "/web/players/:tag/wars",
-        permanent: true,
-      },
-      {
-        source: "/players/:tag",
-        destination: "/web/players/:tag/wars",
-        permanent: true,
-      },
-      {
-        source: "/web/players/:tag",
-        destination: "/web/players/:tag/wars",
-        permanent: true,
-      },
-      {
-        source: "/members/:tag",
-        destination: "/web/players/:tag/wars",
-        permanent: true,
-      },
-      {
-        source: "/capital/:tag",
-        destination: "/web/clans/:tag/capital-contribution",
-        permanent: true,
-      },
     ];
   },
 };
