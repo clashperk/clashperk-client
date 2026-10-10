@@ -74,59 +74,11 @@ function Section({
   );
 }
 
-/** A tiny window drawn in the theme's colors, independent of the current theme. */
-function ThemeSwatch({ mode }: { mode: "light" | "dark" }) {
-  const dark = mode === "dark";
-  return (
-    <div
-      className={cn(
-        "flex h-full w-full gap-1.5 p-2",
-        dark ? "bg-[#141414]" : "bg-[#f6f6f4]",
-      )}
-    >
-      <div
-        className={cn(
-          "w-1/4 space-y-1 rounded-md p-1",
-          dark ? "bg-[#1f1f1f]" : "bg-white",
-        )}
-      >
-        <div
-          className={cn(
-            "h-1 rounded-full",
-            dark ? "bg-white/25" : "bg-black/15",
-          )}
-        />
-        <div
-          className={cn(
-            "h-1 w-2/3 rounded-full",
-            dark ? "bg-white/15" : "bg-black/10",
-          )}
-        />
-        <div
-          className={cn(
-            "h-1 w-3/4 rounded-full",
-            dark ? "bg-white/15" : "bg-black/10",
-          )}
-        />
-      </div>
-      <div className="flex-1 space-y-1.5">
-        <div
-          className={cn(
-            "h-1.5 w-1/2 rounded-full",
-            dark ? "bg-white/40" : "bg-black/30",
-          )}
-        />
-        <div
-          className={cn(
-            "h-6 rounded-md border",
-            dark ? "border-white/10 bg-[#1f1f1f]" : "border-black/5 bg-white",
-          )}
-        />
-        <div className="h-2 w-8 rounded-full bg-[#c44800]" />
-      </div>
-    </div>
-  );
-}
+const SWATCH: Record<(typeof THEMES)[number]["value"], string> = {
+  light: "bg-[#f6f6f4]",
+  dark: "bg-[#141414]",
+  system: "bg-[linear-gradient(135deg,#f6f6f4_50%,#141414_50%)]",
+};
 
 function ThemePicker() {
   const { theme, setTheme } = useTheme();
@@ -136,7 +88,7 @@ function ThemePicker() {
     <div
       role="radiogroup"
       aria-label="Theme"
-      className="grid grid-cols-3 gap-3"
+      className="grid grid-cols-1 gap-2 sm:grid-cols-3"
     >
       {THEMES.map(({ value, label, hint }) => {
         const active = mounted && theme === value;
@@ -147,35 +99,23 @@ function ThemePicker() {
             role="radio"
             aria-checked={active}
             onClick={() => setTheme(value)}
-            className="group cursor-pointer text-left focus-visible:outline-none"
+            className={cn(
+              "flex cursor-pointer items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active &&
+                "border-foreground/40 bg-foreground/[0.06] hover:bg-foreground/[0.06]",
+            )}
           >
-            <div
+            <span
+              aria-hidden
               className={cn(
-                "aspect-[16/10] overflow-hidden rounded-xl border transition-shadow group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring",
-                active &&
-                  "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                "size-9 shrink-0 rounded-lg ring-1 ring-black/10 dark:ring-white/15",
+                SWATCH[value],
               )}
-            >
-              {value === "system" ? (
-                <div className="relative h-full">
-                  <ThemeSwatch mode="light" />
-                  <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
-                    <ThemeSwatch mode="dark" />
-                  </div>
-                </div>
-              ) : (
-                <ThemeSwatch mode={value} />
-              )}
+            />
+            <div className="leading-tight">
+              <p className="text-sm font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground">{hint}</p>
             </div>
-            <p
-              className={cn(
-                "mt-2 text-sm",
-                active ? "font-medium" : "text-foreground/80",
-              )}
-            >
-              {label}
-            </p>
-            <p className="text-xs text-muted-foreground">{hint}</p>
           </button>
         );
       })}
