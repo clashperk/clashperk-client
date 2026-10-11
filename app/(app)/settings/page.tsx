@@ -16,15 +16,11 @@ import {
   LogOut,
   Server,
   Shield,
-  UserPlus,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { SiDiscord } from "react-icons/si";
-
-const INVITE_URL =
-  "https://discord.com/oauth2/authorize?client_id=526971716711350273";
 
 const THEMES = [
   { value: "system", label: "System", hint: "Match your device" },
@@ -189,23 +185,14 @@ export default function SettingsPage() {
                     <Server className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1 leading-tight">
-                    <p className="font-medium tracking-tight">
-                      No server selected
-                    </p>
+                    <p className="font-medium tracking-tight">No server open</p>
                     <p className="text-sm text-muted-foreground">
-                      Add ClashPerk to a server you manage, then sign in from
-                      there.
+                      The dashboard works without one. Open a server to manage
+                      its clans, rosters and reminders.
                     </p>
                   </div>
                   <Button asChild variant="outline" size="sm">
-                    <a
-                      href={INVITE_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <UserPlus />
-                      Invite
-                    </a>
+                    <Link href="/servers">Choose a server</Link>
                   </Button>
                 </>
               )}

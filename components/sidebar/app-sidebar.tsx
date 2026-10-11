@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  Activity,
   Bell,
-  ChevronsUpDown,
   Clock,
   Home,
   Link2,
@@ -26,199 +24,86 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { UserRoles } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
+import { NO_GUILD_ID } from "@/lib/guild";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { UserAvatar } from "../user-avatar";
-import { ServerSummary } from "./server-summary";
+import { AdminSidebar } from "./admin-sidebar";
+import { ServerSwitcher } from "./server-switcher";
 import { NavUser } from "./user-nav";
 
-export const items = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    disabled: false,
-    icon: <Home />,
-  },
-  {
-    title: "Clans",
-    url: "/clans",
-    disabled: false,
-    icon: <Swords />,
-  },
-  {
-    title: "Activity",
-    url: "/activity",
-    disabled: false,
-    icon: <Clock />,
-  },
-  {
-    title: "Rosters",
-    url: "/rosters",
-    disabled: false,
-    icon: <Users />,
-  },
-  {
-    title: "Links",
-    url: "/links",
-    disabled: false,
-    icon: <Link2 />,
-  },
-  {
-    title: "Reminders",
-    url: "/reminders",
-    disabled: false,
-    icon: <Bell />,
-  },
+type NavItem = { title: string; url: string; icon: React.ReactNode };
+
+/** Shown only while a server is open. */
+export const serverItems: NavItem[] = [
+  { title: "Clans", url: "/clans", icon: <Swords /> },
+  { title: "Rosters", url: "/rosters", icon: <Users /> },
+  { title: "Links", url: "/links", icon: <Link2 /> },
+  { title: "Reminders", url: "/reminders", icon: <Bell /> },
 ];
 
-export const userItems = [
-  {
-    title: "Profile",
-    url: "/profile",
-    disabled: false,
-    icon: <User />,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    disabled: false,
-    icon: <Settings />,
-  },
+export const items: NavItem[] = [
+  { title: "Home", url: "/dashboard", icon: <Home /> },
+  { title: "Activity", url: "/activity", icon: <Clock /> },
 ];
 
-export const adminItems = [
-  {
-    title: "Usage",
-    url: "/admin/usage",
-    disabled: false,
-    icon: <Activity />,
-  },
+export const userItems: NavItem[] = [
+  { title: "Profile", url: "/profile", icon: <User /> },
+  { title: "Settings", url: "/settings", icon: <Settings /> },
 ];
 
-export function AppSidebar() {
-  const session = useAuth();
+function NavGroup({ label, items }: { label: string; items: NavItem[] }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const isAdmin = session.user.roles?.includes(UserRoles.ADMIN);
   const isActive = (url: string) =>
     pathname === url || pathname.startsWith(`${url}/`);
 
   return (
+    <SidebarGroup>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={isActive(item.url)}
+                onClick={() => isMobile && setOpenMobile(false)}
+              >
+                <Link href={item.url}>
+                  {item.icon}
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+export function AppSidebar() {
+  const session = useAuth();
+  const pathname = usePathname();
+  const serverOpen = session.user.guild.id !== NO_GUILD_ID;
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return <AdminSidebar />;
+  }
+
+  return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
-        <Link
-          href="/servers"
-          title="Switch server"
-          onClick={() => isMobile && setOpenMobile(false)}
-          className="group/server flex items-center gap-3 rounded-xl bg-sidebar-accent p-2 transition-colors hover:bg-sidebar-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
-        >
-          <UserAvatar
-            src={session.user.guild.iconUrl || ""}
-            alt={session.user.guild.name.charAt(0)}
-            className="size-8 shrink-0 rounded-[10px]"
-          />
-          <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-sm font-medium tracking-tight text-foreground">
-              {session.user.guild.name}
-            </span>
-            <ServerSummary guildId={session.user.guild.id} />
-          </div>
-          <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
-        </Link>
+        <ServerSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
-        {/* CLAN MANAGEMENT */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Clan</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild={!item.disabled}
-                    disabled={item.disabled}
-                    tooltip={item.title}
-                    isActive={isActive(item.url)}
-                    onClick={() => isMobile && setOpenMobile(false)}
-                  >
-                    {item.disabled ? (
-                      <>
-                        {item.icon}
-                        <span>{item.title}</span>
-                      </>
-                    ) : (
-                      <Link href={item.url}>
-                        {item.icon}
-                        <span>{item.title}</span>
-                      </Link>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* USER MANAGEMENT */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {userItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild={!item.disabled}
-                    disabled={item.disabled}
-                    tooltip={item.title}
-                    isActive={isActive(item.url)}
-                    onClick={() => isMobile && setOpenMobile(false)}
-                  >
-                    {item.disabled ? (
-                      <>
-                        {item.icon}
-                        <span>{item.title}</span>
-                      </>
-                    ) : (
-                      <Link href={item.url}>
-                        {item.icon}
-                        <span>{item.title}</span>
-                      </Link>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={isActive(item.url)}
-                      onClick={() => isMobile && setOpenMobile(false)}
-                    >
-                      <Link href={item.url}>
-                        {item.icon}
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        {serverOpen && <NavGroup label="Server" items={serverItems} />}
+        <NavGroup label="You" items={items} />
+        <NavGroup label="Account" items={userItems} />
       </SidebarContent>
 
       <SidebarFooter>

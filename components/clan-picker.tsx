@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { categoryTheme } from "@/lib/clan-categories";
+import { normalizeTag } from "@/lib/tags";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 
 export type PickerCategory = {
@@ -24,12 +25,15 @@ export function ClanPicker({
   value,
   onChange,
   allLabel,
+  onAddTag,
 }: {
   categories: PickerCategory[];
   value: string;
   onChange: (tag: string) => void;
   /** Adds an entry for every clan; selecting it sets the value to "". */
   allLabel?: string;
+  /** Lets the search box open any clan by tag; called with the normalized tag. */
+  onAddTag?: (tag: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -37,6 +41,13 @@ export function ClanPicker({
     .flatMap((c) => c.clans.map((clan) => ({ clan, category: c })))
     .find(({ clan }) => clan.tag === value);
   const SelectedIcon = categoryTheme(selected?.category.displayName ?? "").Icon;
+  // Clan tags use only these characters; anything else in the box is a name search.
+  const typedTag = /^#?[0289PYLQGRJCUVO]{4,12}$/i.test(query.trim())
+    ? normalizeTag(query.trim())
+    : null;
+  const tagListed =
+    typedTag !== null &&
+    categories.some((c) => c.clans.some((clan) => clan.tag === typedTag));
 
   return (
     <DropdownMenu onOpenChange={(open) => !open && setQuery("")}>
@@ -47,7 +58,9 @@ export function ClanPicker({
         >
           <SelectedIcon className="size-4 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate">
-            {selected ? selected.clan.name : (allLabel ?? "Select a clan")}
+            {selected
+              ? selected.clan.name
+              : value || (allLabel ?? "Select a clan")}
           </span>
           {selected && (
             <span className="font-mono text-xs text-muted-foreground">
@@ -63,7 +76,9 @@ export function ClanPicker({
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
-              placeholder="Search clans"
+              placeholder={
+                onAddTag ? "Search or paste a clan tag" : "Search clans"
+              }
               className="h-9 pl-9"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -125,18 +140,36 @@ export function ClanPicker({
               </div>
             );
           })}
-          {categories.every((c) =>
-            c.clans.every(
-              (clan) =>
-                q &&
-                !clan.name.toLowerCase().includes(q) &&
-                !clan.tag.toLowerCase().includes(q),
-            ),
-          ) && (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-              No clans match.
-            </p>
+          {onAddTag && typedTag && !tagListed && (
+            <DropdownMenuItem
+              onSelect={() => onAddTag(typedTag)}
+              className="mb-1 gap-2 rounded-lg"
+            >
+              <span className="flex-1">
+                Open clan <span className="font-mono text-xs">{typedTag}</span>
+              </span>
+              <ArrowRight className="size-3.5" />
+            </DropdownMenuItem>
           )}
+          {!(onAddTag && typedTag && !tagListed) &&
+            (categories.length === 0 ? (
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                {onAddTag ? "Paste a clan tag to open it." : "No clans yet."}
+              </p>
+            ) : (
+              q &&
+              categories.every((c) =>
+                c.clans.every(
+                  (clan) =>
+                    !clan.name.toLowerCase().includes(q) &&
+                    !clan.tag.toLowerCase().includes(q),
+                ),
+              ) && (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  No clans match.
+                </p>
+              )
+            ))}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

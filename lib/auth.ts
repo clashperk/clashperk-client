@@ -78,6 +78,14 @@ const selectGuild = async (token: JWT, guildId: string) => {
   await issueApiToken(token);
 };
 
+/** "Use without a server": the dashboard keeps working on the user's own accounts and clans. */
+const clearGuild = async (token: JWT) => {
+  token.guild = defaultGuild;
+  token.guildId = NO_GUILD_ID;
+  token.applicationId = null;
+  await issueApiToken(token);
+};
+
 const getUserRoles = async (userId: string) => {
   try {
     const { data } = await serverApi.auth.getAuthUser({ userId });
@@ -142,8 +150,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     authorized: ({ auth }) => !!auth,
     jwt: async ({ token, user, account, trigger, session }) => {
+      // Sessions without a guild (e.g. written by older code as null) mean "no server".
+      if (token.userId && !token.guild) {
+        token.guild = defaultGuild;
+        token.guildId = NO_GUILD_ID;
+      }
+
       if (trigger === "update" && typeof session?.guildId === "string") {
-        await selectGuild(token, session.guildId);
+        if (session.guildId === NO_GUILD_ID) await clearGuild(token);
+        else await selectGuild(token, session.guildId);
         return token;
       }
 
@@ -183,7 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.roles = token.roles as string[];
         session.user.avatarUrl = token.picture as string;
         session.user.username = token.username as string;
-        session.user.guild = token.guild as User["guild"];
+        session.user.guild = (token.guild as User["guild"]) ?? defaultGuild;
         session.accessToken = token.accessToken as string;
 
         delete session.user.image;

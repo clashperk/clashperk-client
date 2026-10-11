@@ -17,6 +17,7 @@ import { LinksDto } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
 import { encodeTag, normalizeTag } from "@/lib/tags";
 import { AccountStats } from "./account-stats";
+import { useMyClans } from "@/components/my-clans-provider";
 import {
   BadgeCheck,
   Loader2,
@@ -24,6 +25,7 @@ import {
   Plus,
   RotateCw,
   ShieldCheck,
+  Star,
   Unlink,
   UserRound,
 } from "lucide-react";
@@ -50,11 +52,18 @@ const VERIFY_STEPS = [
 
 function AccountCard({
   player,
+  isDefault,
+  showDefaultLabel,
   onVerify,
+  onMakeDefault,
   onUnlink,
 }: {
   player: LinksDto;
+  isDefault: boolean;
+  /** The label only means something when there's more than one account. */
+  showDefaultLabel: boolean;
   onVerify: () => void;
+  onMakeDefault: () => void;
   onUnlink: () => void;
 }) {
   return (
@@ -63,7 +72,17 @@ function AccountCard({
         {player.name.charAt(0).toUpperCase()}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium tracking-tight">{player.name}</p>
+        <p className="flex items-center gap-2 font-medium tracking-tight">
+          <span className="truncate">{player.name}</span>
+          {isDefault && showDefaultLabel && (
+            <span
+              title="Shown in the sidebar and used by the bot when no account is named"
+              className="shrink-0 rounded-full bg-foreground/[0.07] px-2 py-0.5 text-xs font-normal text-muted-foreground"
+            >
+              Default
+            </span>
+          )}
+        </p>
         <p className="font-mono text-xs text-muted-foreground">{player.tag}</p>
       </div>
 
@@ -91,6 +110,12 @@ function AccountCard({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="rounded-xl">
+          {!isDefault && (
+            <DropdownMenuItem onClick={onMakeDefault}>
+              <Star />
+              Make default
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={onUnlink}
             className="text-destructive focus:text-destructive [&_svg]:text-destructive"
@@ -146,6 +171,7 @@ export default function ProfilePage() {
   const [isLinkOpen, setIsLinkOpen] = useState(false);
   const [verifyTarget, setVerifyTarget] = useState<LinksDto | null>(null);
   const [unlinkTarget, setUnlinkTarget] = useState<LinksDto | null>(null);
+  const [defaultError, setDefaultError] = useState<string | null>(null);
 
   const loadLinks = useCallback(async () => {
     setLoading(true);
@@ -165,6 +191,28 @@ export default function ProfilePage() {
   }, [loadLinks]);
 
   const verifiedCount = players.filter((p) => p.verified).length;
+  // The sidebar and Home read linked accounts from the shared provider.
+  const myClans = useMyClans();
+  // The API lists links default-first, so the new default moves to the top right away.
+  const makeDefault = async (player: LinksDto) => {
+    const previous = players;
+    setDefaultError(null);
+    setPlayers([player, ...players.filter((p) => p.tag !== player.tag)]);
+    try {
+      await api.links.setDefaultLink({ playerTag: encodeTag(player.tag) });
+      myClans.reload();
+    } catch (err) {
+      setPlayers(previous);
+      setDefaultError(
+        `Couldn't make ${player.name} your default: ${(err as Error).message}`,
+      );
+    }
+  };
+
+  const onLinksChanged = () => {
+    loadLinks();
+    myClans.reload();
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
@@ -239,16 +287,26 @@ export default function ProfilePage() {
               </Button>
             </Card>
           ) : (
-            <ul className="space-y-2.5">
-              {players.map((player) => (
-                <AccountCard
-                  key={player.tag}
-                  player={player}
-                  onVerify={() => setVerifyTarget(player)}
-                  onUnlink={() => setUnlinkTarget(player)}
-                />
-              ))}
-            </ul>
+            <div className="space-y-2.5">
+              {defaultError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {defaultError}
+                </p>
+              )}
+              <ul className="space-y-2.5">
+                {players.map((player, i) => (
+                  <AccountCard
+                    key={player.tag}
+                    player={player}
+                    isDefault={i === 0}
+                    showDefaultLabel={players.length > 1}
+                    onVerify={() => setVerifyTarget(player)}
+                    onMakeDefault={() => makeDefault(player)}
+                    onUnlink={() => setUnlinkTarget(player)}
+                  />
+                ))}
+              </ul>
+            </div>
           )}
         </section>
 
@@ -265,18 +323,18 @@ export default function ProfilePage() {
         open={isLinkOpen}
         userId={userId}
         onClose={() => setIsLinkOpen(false)}
-        onDone={loadLinks}
+        onDone={onLinksChanged}
       />
       <VerifyModal
         player={verifyTarget}
         userId={userId}
         onClose={() => setVerifyTarget(null)}
-        onDone={loadLinks}
+        onDone={onLinksChanged}
       />
       <UnlinkModal
         player={unlinkTarget}
         onClose={() => setUnlinkTarget(null)}
-        onDone={loadLinks}
+        onDone={onLinksChanged}
       />
     </div>
   );

@@ -9,13 +9,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { categoryTheme } from "@/lib/clan-categories";
 import { NO_GUILD_ID } from "@/lib/guild";
 import { cn } from "@/lib/utils";
+import { PersonalHome, YourClansPanel } from "./personal-home";
 import {
   ArrowRight,
   BadgeCheck,
   Link2,
   ListChecks,
   Settings2,
-  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -50,7 +50,7 @@ function useLoad<T>(fetcher: () => Promise<T>, key: string) {
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  if (user.guild.id === NO_GUILD_ID) return <NoServer />;
+  if (user.guild.id === NO_GUILD_ID) return <PersonalHome />;
   return <Overview guildId={user.guild.id} />;
 }
 
@@ -80,6 +80,7 @@ function Overview({ guildId }: { guildId: string }) {
         <RostersPanel rosters={rosters} />
         <ClansPanel clans={clans} />
       </div>
+      <YourClansPanel />
     </div>
   );
 }
@@ -515,33 +516,5 @@ function RostersPanel({ rosters }: { rosters: Load<RostersEntity[]> }) {
         <ArrowRight className="size-3.5" />
       </Link>
     </Panel>
-  );
-}
-
-function NoServer() {
-  const { user } = useAuth();
-
-  return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <Card className="max-w-md items-center gap-4 px-6 py-10 text-center">
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
-          <Shield className="size-6" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-xl font-medium tracking-tight">
-            Hi, {user.displayName}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            No Discord server is selected. Pick one of the servers you manage.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/servers">
-            Choose a server
-            <ArrowRight />
-          </Link>
-        </Button>
-      </Card>
-    </div>
   );
 }

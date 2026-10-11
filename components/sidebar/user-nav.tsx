@@ -8,15 +8,18 @@ import {
   CircleHelp,
   LogOut,
   Settings,
+  ShieldCheck,
   UserPlus,
 } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
+import { UserRoles } from "@/hooks/api/generated";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { SiDiscord, SiKofi, SiPatreon } from "react-icons/si";
 import { UserAvatar } from "../user-avatar";
@@ -59,6 +62,8 @@ export function NavUser({ user }: { user: Session["user"] }) {
   const [expanded, setExpanded] = useState(false);
   const reduceMotion = useReducedMotion();
   const collapsed = state === "collapsed";
+  const isAdmin = user.roles?.includes(UserRoles.ADMIN);
+  const inAdmin = usePathname().startsWith("/admin");
 
   function toggle() {
     if (collapsed) {
@@ -90,6 +95,18 @@ export function NavUser({ user }: { user: Session["user"] }) {
                 <Settings />
                 Settings
               </Link>
+              {isAdmin &&
+                (inAdmin ? (
+                  <Link href="/dashboard" className={MENU_ITEM}>
+                    <ShieldCheck />
+                    Back to dashboard
+                  </Link>
+                ) : (
+                  <Link href="/admin" className={MENU_ITEM}>
+                    <ShieldCheck />
+                    Admin
+                  </Link>
+                ))}
               <div className="px-1 py-1">
                 <ThemeSwitcher />
               </div>

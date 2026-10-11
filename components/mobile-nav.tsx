@@ -4,7 +4,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { HomeIcon, SearchIcon, SettingsIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { items, userItems } from "./sidebar/app-sidebar";
+import { adminItems } from "./sidebar/admin-sidebar";
+import { items, serverItems, userItems } from "./sidebar/app-sidebar";
 
 export function MobileBottomNav() {
   return (
@@ -47,7 +48,7 @@ export function MobileBottomNav() {
 
 export function MobileHeader() {
   const pathname = usePathname();
-  const current = [...items, ...userItems].find(
+  const current = [...serverItems, ...items, ...userItems, ...adminItems].find(
     (item) => pathname === item.url || pathname.startsWith(`${item.url}/`),
   );
 
