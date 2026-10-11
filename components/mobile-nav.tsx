@@ -51,12 +51,16 @@ export function MobileHeader() {
     (item) => pathname === item.url || pathname.startsWith(`${item.url}/`),
   );
 
+  // Fixed, not sticky: sticky moves with the page when phones bounce or pull to refresh.
   return (
-    <header className="sticky top-0 z-50 flex items-center gap-4 border-b bg-background p-4 md:hidden">
-      <SidebarTrigger />
-      <div className="font-medium tracking-tight">
-        {current?.title ?? "ClashPerk"}
-      </div>
-    </header>
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 flex h-15 items-center gap-4 border-b bg-background px-4 md:hidden">
+        <SidebarTrigger />
+        <div className="font-medium tracking-tight">
+          {current?.title ?? "ClashPerk"}
+        </div>
+      </header>
+      <div aria-hidden className="h-15 shrink-0 md:hidden" />
+    </>
   );
 }

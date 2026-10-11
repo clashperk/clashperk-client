@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} ${geistMono.variable} antialiased overscroll-none`}
+        className={`${poppins.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider
           defaultTheme="system"

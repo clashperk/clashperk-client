@@ -61,7 +61,8 @@ export default function Home() {
       <SiteHeader />
 
       <main className="relative flex flex-col items-center overflow-hidden px-4 pb-16 pt-16 text-center md:pt-24">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,var(--brand-soft),transparent)]" />
+        {/* Fades in from the top so overscroll under the fixed header shows no hard edge. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,var(--brand-soft),transparent)] mask-[linear-gradient(to_bottom,transparent,black_96px)]" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
