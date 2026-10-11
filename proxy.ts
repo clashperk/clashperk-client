@@ -34,7 +34,13 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/servers", req.url));
   }
 
-  return NextResponse.next();
+  // Set the API cookie here too: the page's first API calls run before LoginProvider's effect.
+  const response = NextResponse.next();
+  const accessToken = req.auth?.accessToken;
+  if (accessToken && req.cookies.get("x-access-token")?.value !== accessToken) {
+    response.cookies.set("x-access-token", accessToken, { path: "/" });
+  }
+  return response;
 });
 
 export const config = {
