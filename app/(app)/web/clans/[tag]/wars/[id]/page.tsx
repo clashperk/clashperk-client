@@ -181,7 +181,7 @@ export default async function ClanWarPage({ params, searchParams }: Props) {
               return (
                 <li
                   key={member.tag}
-                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                  className="flex items-center gap-3 px-4 py-3 sm:gap-4"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="w-5 shrink-0 text-right text-sm tabular-nums text-muted-foreground">
@@ -200,19 +200,19 @@ export default async function ClanWarPage({ params, searchParams }: Props) {
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1 pl-8 text-sm sm:items-end sm:pl-0">
+                  <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
                     {attacks.map((attack) => {
                       const defender = enemies.get(attack.defenderTag);
                       return (
                         <div
                           key={attack.order}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1.5 sm:gap-2"
                         >
                           <Stars stars={attack.stars} />
                           <span className="w-10 text-right tabular-nums">
                             {attack.destructionPercentage.toFixed(0)}%
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="hidden text-xs text-muted-foreground sm:inline">
                             on
                           </span>
                           <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">

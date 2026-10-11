@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-10
+- War history and war pages keep each attack's stars on the same line as the war or player name on phones.
 - Logging in from the landing page without a server selected opens the server picker instead of a blank page.
 - Footer copyright shows only the current year.
 - Footer Patreon and Ko-fi tiles use the official full-color logos.
