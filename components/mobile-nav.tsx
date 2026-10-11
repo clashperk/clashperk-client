@@ -1,7 +1,6 @@
 "use client";
 
 import { useMyClans } from "@/components/my-clans-provider";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -173,27 +172,30 @@ export function MobileNav() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 flex h-15 items-center justify-between gap-3 border-b bg-background px-4 md:hidden">
-        <div className="flex min-w-0 items-center gap-2">
-          {/* Admin pages keep their own sidebar instead of the menu sheet. */}
-          {inAdmin ? (
+        {/* Admin pages keep their own sidebar instead of the menu sheet. */}
+        {inAdmin ? (
+          <div className="flex min-w-0 items-center gap-2">
             <SidebarTrigger />
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="-ml-1.5 size-8"
-              aria-label="Open menu"
-              aria-haspopup="dialog"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(true)}
-            >
-              <Menu />
-            </Button>
-          )}
-          <span className="truncate font-medium tracking-tight">
-            {current?.title ?? "ClashPerk"}
-          </span>
-        </div>
+            <span className="truncate font-medium tracking-tight">
+              {current?.title ?? "ClashPerk"}
+            </span>
+          </div>
+        ) : (
+          // The icon and the page title together are one tap target for the menu.
+          <button
+            type="button"
+            aria-label={`${current?.title ?? "ClashPerk"}. Open menu`}
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(true)}
+            className="-ml-2 flex min-w-0 cursor-pointer items-center gap-2 rounded-full py-1.5 pr-3 pl-2 transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-foreground/15 focus-visible:outline-none dark:hover:bg-accent/50"
+          >
+            <Menu className="size-4 shrink-0" />
+            <span className="truncate font-medium tracking-tight">
+              {current?.title ?? "ClashPerk"}
+            </span>
+          </button>
+        )}
         {!inAdmin && <ContextChip onClick={() => setMenuOpen(true)} />}
       </header>
       <div aria-hidden className="h-15 shrink-0 md:hidden" />
