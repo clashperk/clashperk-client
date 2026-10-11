@@ -161,7 +161,7 @@ export default function SettingsPage() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-3 border-t p-4">
+            <div className="flex flex-wrap items-center gap-3 border-t p-4">
               {hasServer ? (
                 <>
                   <UserAvatar
@@ -184,7 +184,7 @@ export default function SettingsPage() {
                   <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
                     <Server className="size-5" />
                   </div>
-                  <div className="min-w-0 flex-1 leading-tight">
+                  <div className="min-w-0 flex-1 basis-48 leading-tight">
                     <p className="font-medium tracking-tight">No server open</p>
                     <p className="text-sm text-muted-foreground">
                       The dashboard works without one. Open a server to manage

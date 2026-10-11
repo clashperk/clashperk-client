@@ -85,3 +85,6 @@ Links stays server-only: linking a member to a Discord user searches the server'
 ## 2026-10-11 — Default account
 The default account is the user's link with the lowest `order`, the rule the bot already uses (`/link create` with "default" sets the order below the user's other links). `PUT /links/:playerTag/default` (backend) applies the same rule for the owner only, so the bot and the dashboard always agree. The links API returns links sorted by `order`, so the dashboard treats the first link as the default instead of reading `order` itself. A web link now goes after the user's other links (highest `order` + 1, as the bot's `/verify` does) instead of `order: 0`, which could tie with or beat the current default; re-linking an account the user already owns keeps its order.
 
+
+## 2026-10-11 — Phone tab bar
+On phones the sidebar drawer is replaced by a floating tab bar plus a More sheet, so the main pages are one tap away. The bar holds at most five tabs; pages that don't fit (Links, Reminders, Settings, and Profile when a server is open) go in More, which also reuses the sidebar's server switcher and account menu instead of repeating them. Admin pages keep the sidebar trigger: they have their own nav and are rarely used on a phone. `main` gets bottom padding below `md` so the bar never covers the last card.
