@@ -1,5 +1,8 @@
 # Decisions
 
+## 2026-10-11 — No overscroll lock on the page
+`html` and `body` keep the browser's default `overscroll-behavior`, so phone browsers offer pull-to-refresh and the bounce shows `bg-background`. Data reloads from the server on every load, so a page reload is the refresh; no custom pull-to-refresh.
+
 ## 2026-10-10 — New design tokens
 Decided by: Suvajit. Visual style only — ClashPerk keeps its name, logo and copy.
 - Dashboard tokens live in `:root` / `.dark`; marketing tokens are scoped under `.landing`.
