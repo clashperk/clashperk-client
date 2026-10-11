@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 
 /**
  * Server-only API client authenticated with the service API key.
- * Used by public pages (`/web/*`) that have no user session. Never import from client components.
+ * Used by public pages (`/web/*`) and the auth callbacks. Never import from client components.
  */
 export const serverApi = new Api(
   new HttpClient({

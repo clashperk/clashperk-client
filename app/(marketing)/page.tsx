@@ -82,7 +82,7 @@ export default function Home() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-            The Clash of Clans Discord bot for serious clans.{" "}
+            The Clash of Clans Discord bot for every clan.{" "}
             <br className="hidden md:block" />
             War logs, CWL stats, legend tracking and rosters — all in your
             server.
