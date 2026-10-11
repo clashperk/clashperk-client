@@ -395,7 +395,7 @@ export default function AdminUsagePage() {
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
       <div className="space-y-1">
         <h2 className="text-2xl font-medium tracking-tight md:text-4xl">
-          Command usage
+          Usage
         </h2>
         <p className="text-sm text-muted-foreground md:text-base">
           Every command run across all servers, newest first.

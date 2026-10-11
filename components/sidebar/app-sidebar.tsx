@@ -84,7 +84,7 @@ export const userItems = [
 
 export const adminItems = [
   {
-    title: "Command usage",
+    title: "Usage",
     url: "/admin/usage",
     disabled: false,
     icon: <Activity />,
