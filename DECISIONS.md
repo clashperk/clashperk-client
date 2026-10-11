@@ -59,3 +59,6 @@ Server-only pages (`/dashboard`, `/clans`, `/rosters`, `/links`, `/reminders`) s
 
 ## 2026-10-11 — Vercel Web Analytics
 Default `<Analytics />` from `@vercel/analytics/next` in the root layout, no custom events. The proxy matcher skips `_vercel` so the analytics script and page-view beacons are not redirected to `/login` for signed-out visitors.
+
+## 2026-10-11 — Discord component embeds use linked JSON
+Discord reads a component embed only from `<head>`. Next has no metadata field for an inline `<script>`, and React keeps inline scripts where they render, so the war pages render a `<link rel="discord:component-embed">` (React hoists `<link>` into `<head>`) pointing at an `embed.json` route next to the page. Open Graph tags stay on every `/web` page as the fallback. The card's accent bar uses the brand orange: it is Discord chrome, not dashboard UI.

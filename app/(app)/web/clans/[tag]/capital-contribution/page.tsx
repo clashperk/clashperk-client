@@ -2,6 +2,8 @@ import { dataOrNull, serverApi } from "@/lib/server-api";
 import { encodeTag, normalizeTag } from "@/lib/tags";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import { previewMetadata } from "../../../components/link-preview";
 import {
   StatGrid,
   WebCard,
@@ -11,9 +13,32 @@ import {
 
 type Props = { params: Promise<{ tag: string }> };
 
-export const metadata: Metadata = {
-  title: "Capital Contribution Logs | ClashPerk",
-};
+const TITLE = "Capital Contribution Logs | ClashPerk";
+
+const getContributions = cache(async (tag: string) => {
+  const result = await dataOrNull(
+    serverApi.clans.getCapitalContribution({ clanTag: encodeTag(tag) }),
+  );
+  return (result?.items ?? []).map((log) => ({
+    ...log,
+    amount: log.current - log.initial,
+  }));
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const tag = normalizeTag((await params).tag);
+  const logs = tag ? await getContributions(tag) : [];
+  if (!logs.length) return { title: TITLE };
+
+  const total = logs.reduce((sum, log) => sum + log.amount, 0);
+  const contributors = new Set(logs.map((log) => log.tag)).size;
+  const clan = logs[0].clan;
+  return previewMetadata({
+    title: TITLE,
+    previewTitle: `${clan.name} (${clan.tag}) · Capital contributions`,
+    description: `${total.toLocaleString("en-US")} capital gold from ${contributors} ${contributors === 1 ? "member" : "members"} in the last 10 days.`,
+  });
+}
 
 const relativeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
@@ -29,13 +54,7 @@ export default async function CapitalContributionPage({ params }: Props) {
   const tag = normalizeTag((await params).tag);
   if (!tag) notFound();
 
-  const result = await dataOrNull(
-    serverApi.clans.getCapitalContribution({ clanTag: encodeTag(tag) }),
-  );
-  const logs = (result?.items ?? []).map((log) => ({
-    ...log,
-    amount: log.current - log.initial,
-  }));
+  const logs = await getContributions(tag);
   if (!logs.length) {
     return (
       <WebEmpty
