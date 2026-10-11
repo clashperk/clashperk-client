@@ -19,7 +19,7 @@ export function ThemeSwitcher() {
     <div
       role="radiogroup"
       aria-label="Theme"
-      className="flex rounded-xl bg-sidebar p-0.5 group-data-[collapsible=icon]:hidden"
+      className="flex rounded-full bg-sidebar p-0.5 group-data-[collapsible=icon]:hidden"
     >
       {OPTIONS.map(({ value, label, Icon }) => {
         const active = mounted && theme === value;
@@ -33,7 +33,7 @@ export function ThemeSwitcher() {
             title={label}
             onClick={() => setTheme(value)}
             className={cn(
-              "flex h-7 flex-1 cursor-pointer items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              "flex h-7 flex-1 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
               active && "bg-foreground/[0.08] text-foreground",
             )}
           >
