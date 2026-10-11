@@ -4,6 +4,7 @@ import {
   Activity,
   Bell,
   ChevronsUpDown,
+  Clock,
   Home,
   Link2,
   Settings,
@@ -46,6 +47,12 @@ export const items = [
     url: "/clans",
     disabled: false,
     icon: <Swords />,
+  },
+  {
+    title: "Activity",
+    url: "/activity",
+    disabled: false,
+    icon: <Clock />,
   },
   {
     title: "Rosters",

@@ -23,6 +23,7 @@ export const isLightOnlyRoute = (pathname: string) =>
 const serverRoutes = [
   "/dashboard",
   "/clans",
+  "/activity",
   "/rosters",
   "/links",
   "/reminders",
