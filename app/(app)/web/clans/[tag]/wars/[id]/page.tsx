@@ -1,10 +1,12 @@
 import { WarClanDto } from "@/hooks/api/generated";
-import { dataOrNull, serverApi } from "@/lib/server-api";
-import { encodeTag, normalizeTag } from "@/lib/tags";
+import { encodeTag } from "@/lib/tags";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import {
+  ComponentEmbedLink,
+  previewMetadata,
+} from "../../../../components/link-preview";
 import {
   Chip,
   Stars,
@@ -14,35 +16,26 @@ import {
   WebShell,
   formatDate,
 } from "../../../../components/web-page";
+import { RESULTS, getWar, warSummary } from "./data";
 
 type Props = {
   params: Promise<{ tag: string; id: string }>;
   searchParams: Promise<{ side?: string }>;
 };
 
-const RESULTS: Record<string, string> = {
-  win: "Won",
-  lose: "Lost",
-  tie: "Tie",
-};
-
-const getWar = async (params: Props["params"]) => {
-  const { tag: rawTag, id } = await params;
-  const tag = normalizeTag(rawTag);
-  if (!tag || !/^\d+$/.test(id)) notFound();
-
-  return dataOrNull(
-    serverApi.wars.getClanWar({ clanTag: encodeTag(tag), warId: id }),
-  );
-};
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const war = await getWar(params);
-  return {
-    title: war
-      ? `${war.clan.name} vs ${war.opponent.name} | ClashPerk`
-      : "War Log | ClashPerk",
-  };
+  const { tag, id } = await params;
+  const war = await getWar(tag, id);
+  if (!war) return { title: "War Log | ClashPerk" };
+
+  const title = `${war.clan.name} vs ${war.opponent.name}`;
+  const summary = warSummary(war);
+  return previewMetadata({
+    title: `${title} | ClashPerk`,
+    previewTitle: title,
+    description: `${summary.score} · ${summary.details} · ${summary.meta} ${formatDate(war.endTime)}`,
+    image: { url: war.clan.badgeUrls.medium, width: 200, height: 200 },
+  });
 }
 
 function Team({ team, align }: { team: WarClanDto; align: "left" | "right" }) {
@@ -68,7 +61,8 @@ function Team({ team, align }: { team: WarClanDto; align: "left" | "right" }) {
 }
 
 export default async function ClanWarPage({ params, searchParams }: Props) {
-  const war = await getWar(params);
+  const { tag, id } = await params;
+  const war = await getWar(tag, id);
   if (!war) {
     return (
       <WebEmpty
@@ -101,6 +95,9 @@ export default async function ClanWarPage({ params, searchParams }: Props) {
 
   return (
     <WebShell>
+      <ComponentEmbedLink
+        path={`/web/clans/${encodeTag(war.clan.tag)}/wars/${id}/embed.json`}
+      />
       <WebCard>
         <div className="flex items-center gap-3 p-4 sm:gap-6 sm:p-6">
           <Team team={war.clan} align="left" />

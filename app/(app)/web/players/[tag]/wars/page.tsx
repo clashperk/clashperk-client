@@ -1,9 +1,11 @@
-import { AttackHistoryDto, WarTypes } from "@/hooks/api/generated";
-import { dataOrNull, serverApi } from "@/lib/server-api";
 import { encodeTag, normalizeTag } from "@/lib/tags";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ComponentEmbedLink,
+  previewMetadata,
+} from "../../../components/link-preview";
 import {
   Chip,
   StatGrid,
@@ -15,27 +17,32 @@ import {
   formatDate,
   townHallImage,
 } from "../../../components/web-page";
+import {
+  HISTORY_MONTHS,
+  WAR_TYPE_LABELS,
+  ended,
+  getPlayerWars,
+  missedAttacks,
+} from "./data";
 
 type Props = { params: Promise<{ tag: string }> };
 
-const HISTORY_MONTHS = 6;
-
-const WAR_TYPE_LABELS: Record<WarTypes, string> = {
-  [WarTypes.REGULAR]: "War",
-  [WarTypes.FRIENDLY]: "Friendly",
-  [WarTypes.CWL]: "CWL",
-};
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tag = normalizeTag((await params).tag);
-  return { title: `War Attack History ${tag ?? ""} | ClashPerk` };
+  const title = `War Attack History ${tag ?? ""} | ClashPerk`;
+  if (!tag) return { title };
+
+  const { wars, stats } = await getPlayerWars(tag);
+  if (!wars.length) return { title };
+
+  const attacker = wars[0].attacker;
+  return previewMetadata({
+    title,
+    previewTitle: `${attacker.name} (${attacker.tag}) · War attacks`,
+    description: `${stats.wars} wars · ${stats.attacks} attacks · ${stats.threeStars} three stars · ${stats.missed} missed in the last ${HISTORY_MONTHS} months.`,
+    image: { url: townHallImage(attacker.townHallLevel) },
+  });
 }
-
-const ended = (war: AttackHistoryDto) =>
-  new Date(war.endTime).getTime() < Date.now();
-
-const missedAttacks = (war: AttackHistoryDto) =>
-  ended(war) ? Math.max(0, war.attacksPerMember - war.attacks.length) : 0;
 
 const formatSeason = (season: string) =>
   new Date(season).toLocaleDateString("en-GB", {
@@ -48,19 +55,7 @@ export default async function PlayerWarsPage({ params }: Props) {
   const tag = normalizeTag((await params).tag);
   if (!tag) notFound();
 
-  const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - HISTORY_MONTHS);
-
-  const query = {
-    playerTag: encodeTag(tag),
-    startDate: startDate.toISOString(),
-  };
-  const [history, cwl] = await Promise.all([
-    dataOrNull(serverApi.players.getAttackHistory(query)),
-    dataOrNull(serverApi.players.aggregateClanWarLeagueHistory(query)),
-  ]);
-
-  const wars = history?.items ?? [];
+  const { wars, seasons: items, stats } = await getPlayerWars(tag);
   if (!wars.length) {
     return (
       <WebEmpty
@@ -71,12 +66,8 @@ export default async function PlayerWarsPage({ params }: Props) {
   }
 
   const attacker = wars[0].attacker;
-  const attacks = wars.flatMap((war) => war.attacks);
-  const triples = attacks.filter((attack) => attack.stars === 3).length;
-  const missed = wars.reduce((sum, war) => sum + missedAttacks(war), 0);
 
   // Supercell can run more than one CWL in a month, so a season may repeat.
-  const items = cwl?.items ?? [];
   const seasons = items.map((season, i) => {
     const total = items.filter((s) => s.season === season.season).length;
     const index = items
@@ -102,17 +93,15 @@ export default async function PlayerWarsPage({ params }: Props) {
         alt: `Town Hall ${attacker.townHallLevel}`,
       }}
     >
+      <ComponentEmbedLink
+        path={`/web/players/${encodeTag(tag)}/wars/embed.json`}
+      />
       <StatGrid
         stats={[
-          { label: "Wars", value: wars.length },
-          { label: "Attacks", value: attacks.length },
-          {
-            label: "Three stars",
-            value: attacks.length
-              ? `${Math.round((triples / attacks.length) * 100)}%`
-              : "–",
-          },
-          { label: "Missed", value: missed },
+          { label: "Wars", value: stats.wars },
+          { label: "Attacks", value: stats.attacks },
+          { label: "Three stars", value: stats.threeStars },
+          { label: "Missed", value: stats.missed },
         ]}
       />
 
