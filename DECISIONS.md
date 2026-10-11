@@ -56,3 +56,6 @@ Every branch push deployed twice (the preview workflow and Vercel's Git integrat
 
 ## 2026-10-10 — No-server redirect lives in the proxy
 Server-only pages (`/dashboard`, `/clans`, `/rosters`, `/links`, `/reminders`) send sessions without a selected server to `/servers` from `proxy.ts`. Calling `redirect()` from the `(app)` layout did the same on a full page load, but during client navigation (landing page "Log In" → `/dashboard`) the router refetched `/servers` in an endless loop and rendered a blank page.
+
+## 2026-10-11 — Vercel Web Analytics
+Default `<Analytics />` from `@vercel/analytics/next` in the root layout, no custom events. The proxy matcher skips `_vercel` so the analytics script and page-view beacons are not redirected to `/login` for signed-out visitors.
