@@ -16,6 +16,7 @@ import { api } from "@/hooks/api/axios";
 import { LinksDto } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
 import { encodeTag, normalizeTag } from "@/lib/tags";
+import { AccountStats } from "./account-stats";
 import {
   BadgeCheck,
   Loader2,
@@ -255,6 +256,10 @@ export default function ProfilePage() {
           <VerifyGuide />
         </aside>
       </div>
+
+      {!loading && !loadError && players.length > 0 && (
+        <AccountStats players={players} />
+      )}
 
       <LinkModal
         open={isLinkOpen}
