@@ -66,3 +66,7 @@ Server-only pages (`/dashboard`, `/clans`, `/rosters`, `/links`, `/reminders`) s
 
 ## 2026-10-11 — Vercel Web Analytics
 Default `<Analytics />` from `@vercel/analytics/next` in the root layout, no custom events. The proxy matcher skips `_vercel` so the analytics script and page-view beacons are not redirected to `/login` for signed-out visitors.
+
+## 2026-10-11 — Admin pages gated on the server, inputs cleaned for the metrics API
+`/admin/*` checks the session's `admin` role in `app/(app)/admin/layout.tsx` and returns a 404 otherwise; the sidebar only hides the link. The API also requires the role, so this keeps non-admins from seeing an empty page shell.
+`GET /metrics/commands-usage-logs` is excluded from the generated client, so the page calls it through `httpClient.request` with a local `CommandLog` type matching the bot's `bot_command_logs` columns. The endpoint pastes `query`, `userId` and `guildId` straight into its SQL, so the page strips `' \ % _` from the search and only sends numeric IDs. The real fix is parameterising that query in the backend.

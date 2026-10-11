@@ -60,3 +60,4 @@
 - Terms and Privacy pages share the landing header and footer.
 - Landing, Terms and Privacy are prerendered as static pages and no longer wait on the session lookup.
 - Page no longer bounces when scrolled past the top or bottom.
+- Admin section in the sidebar, visible only to ClashPerk admins: a Command usage page lists every bot command run across all servers, newest first, with its arguments, user and server. Filter by command, Discord user ID and server ID together, with the last 24h / 7 days / 30 days switch at the right; clicking a user or server in a row fills its field. Each row opens to the full log record as JSON (locale, interaction type, application ID and the parsed arguments included) with a copy button; "Expand all JSON" opens every row at once, including rows loaded later. Loads 100 at a time. Non-admins get a 404 at `/admin`.

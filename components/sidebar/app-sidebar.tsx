@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   Bell,
   ChevronsUpDown,
   Home,
@@ -24,6 +25,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { UserRoles } from "@/hooks/api/generated";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -80,10 +82,20 @@ export const userItems = [
   },
 ];
 
+export const adminItems = [
+  {
+    title: "Command usage",
+    url: "/admin/usage",
+    disabled: false,
+    icon: <Activity />,
+  },
+];
+
 export function AppSidebar() {
   const session = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const isAdmin = session.user.roles?.includes(UserRoles.ADMIN);
   const isActive = (url: string) =>
     pathname === url || pathname.startsWith(`${url}/`);
 
@@ -175,6 +187,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={isActive(item.url)}
+                      onClick={() => isMobile && setOpenMobile(false)}
+                    >
+                      <Link href={item.url}>
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
