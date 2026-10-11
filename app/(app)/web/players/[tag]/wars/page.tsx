@@ -121,7 +121,7 @@ export default async function PlayerWarsPage({ params }: Props) {
           {wars.map((war) => (
             <li
               key={war.id}
-              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+              className="flex items-center gap-3 px-4 py-3 sm:gap-4"
             >
               <div className="min-w-0 flex-1">
                 <Link
@@ -137,14 +137,16 @@ export default async function PlayerWarsPage({ params }: Props) {
                   {formatDate(war.startTime)}
                 </div>
               </div>
-              <div className="flex flex-col gap-1 text-sm sm:items-end">
+              <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
                 {war.attacks.map((attack, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i} className="flex items-center gap-1.5 sm:gap-2">
                     <Stars stars={attack.stars} newStars={attack.trueStars} />
                     <span className="w-10 text-right tabular-nums">
                       {attack.destruction.toFixed(0)}%
                     </span>
-                    <span className="text-xs text-muted-foreground">on</span>
+                    <span className="hidden text-xs text-muted-foreground sm:inline">
+                      on
+                    </span>
                     <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">
                       #{attack.defender.mapPosition}
                     </span>
