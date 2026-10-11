@@ -126,11 +126,15 @@ export default async function PlayerWarsPage({ params }: Props) {
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/web/clans/${encodeTag(war.clan.tag)}/wars/${war.id}`}
-                  className="block truncate text-sm font-medium hover:underline"
+                  className="block text-sm font-medium hover:underline sm:truncate"
                 >
-                  {war.clan.name}{" "}
-                  <span className="text-muted-foreground">vs</span>{" "}
-                  {war.opponent.name}
+                  <span className="block truncate sm:inline">
+                    {war.clan.name}
+                  </span>{" "}
+                  <span className="block truncate sm:inline">
+                    <span className="text-muted-foreground">vs</span>{" "}
+                    {war.opponent.name}
+                  </span>
                 </Link>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   <Chip>{WAR_TYPE_LABELS[war.warType]}</Chip>
