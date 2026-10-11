@@ -47,7 +47,11 @@ const issueApiToken = async (token: JWT) => {
     userId: token.userId as string,
     jti: token.jti as string,
     roles: token.roles as string[],
-    guildIds: token.guildId ? [token.guildId as string] : [],
+    // "No server yet" sessions carry the NO_GUILD_ID placeholder, which isn't a server to grant.
+    guildIds:
+      token.guildId && token.guildId !== NO_GUILD_ID
+        ? [token.guildId as string]
+        : [],
     username: token.username as string,
     version: "1",
     applicationId: token.applicationId as string,
