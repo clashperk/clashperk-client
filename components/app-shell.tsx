@@ -2,9 +2,7 @@
 
 import { MyClansProvider } from "@/components/my-clans-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { isAdminPath } from "@/components/mobile-nav";
 import { isUnauthenticatedRoute } from "@/lib/routelist";
-import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
 interface AppShellProps {
@@ -28,16 +26,7 @@ export function AppShell({ children, sidebar, header }: AppShellProps) {
         {sidebar}
         <div className="flex min-h-svh min-w-0 flex-1 flex-col">
           {header}
-          <main
-            className={cn(
-              "flex-1 w-full h-full",
-              // Room for the floating tab bar so the last card isn't hidden behind it.
-              !isAdminPath(pathname) &&
-                "pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0",
-            )}
-          >
-            {children}
-          </main>
+          <main className="flex-1 w-full h-full">{children}</main>
         </div>
       </SidebarProvider>
     </MyClansProvider>
