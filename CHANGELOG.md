@@ -8,6 +8,8 @@
 - Site font is now Poppins, matching the docs.
 
 ## 2026-10-11
+- Server picker: when Discord isn't connected, a full-width prompt explains why the list is missing and shows your current server with a link back to its dashboard.
+- Theme switcher in the account menu: the selected option is a pill that fits the track's rounded corners.
 - Dashboard no longer shows "Unauthorized" right after logging in until you refresh, and stays signed in to the API past an hour without a reload.
 - Landing page subtitle now reads "The Clash of Clans Discord bot for every clan."
 - Landing page: the orange glow at the top is back to full strength under the header.

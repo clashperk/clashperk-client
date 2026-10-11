@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import type { ServerOption } from "@/lib/discord-servers";
+import { NO_GUILD_ID } from "@/lib/guild";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -25,6 +26,7 @@ import {
   Server,
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiDiscord } from "react-icons/si";
@@ -142,7 +144,7 @@ function ServerIcon({
   server,
   className,
 }: {
-  server: ServerOption;
+  server: Pick<ServerOption, "name" | "iconUrl">;
   className?: string;
 }) {
   return (
@@ -256,7 +258,7 @@ export default function ServersPage() {
           Choose a server
         </h2>
         <p className="text-sm text-muted-foreground md:text-base">
-          Servers where you have Manage Server on Discord.
+          Pick the Discord server you want to manage.
         </p>
       </div>
 
@@ -287,23 +289,48 @@ export default function ServersPage() {
           </Button>
         </Card>
       ) : load.status === "needsDiscord" ? (
-        <Card className="max-w-lg items-center gap-4 px-6 py-10 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-[#5865f2]/10 text-[#5865f2]">
-            <SiDiscord className="size-6" />
-          </div>
-          <div className="space-y-1">
-            <p className="font-medium">
-              Sign in with Discord to see your servers
-            </p>
-            <p className="text-sm text-muted-foreground">
-              We need Discord to tell us which servers you manage.
-            </p>
-          </div>
-          <Button onClick={() => signIn("discord", { redirectTo: "/servers" })}>
-            <SiDiscord />
-            Continue with Discord
-          </Button>
-        </Card>
+        <div className="space-y-6">
+          <Card className="flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
+              <SiDiscord className="size-6" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="font-medium">Connect Discord to see your servers</p>
+              <p className="text-sm text-muted-foreground">
+                Your sign-in doesn&apos;t include your Discord server list.
+                Continue with Discord and we&apos;ll show every server you
+                manage.
+              </p>
+            </div>
+            <Button
+              className="shrink-0 self-start sm:self-auto"
+              onClick={() => signIn("discord", { redirectTo: "/servers" })}
+            >
+              <SiDiscord />
+              Continue with Discord
+            </Button>
+          </Card>
+
+          {user.guild.id !== NO_GUILD_ID && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Current server
+              </h3>
+              <Card className="flex-row items-center gap-4 p-4">
+                <ServerIcon server={user.guild} />
+                <p className="min-w-0 flex-1 truncate font-medium">
+                  {user.guild.name}
+                </p>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/dashboard">
+                    Open dashboard
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </Card>
+            </section>
+          )}
+        </div>
       ) : all.length === 0 ? (
         <Card className="max-w-lg items-center gap-3 border-dashed px-6 py-12 text-center shadow-none">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground/70">
