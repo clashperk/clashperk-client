@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { adminItems } from "./sidebar/admin-sidebar";
 import { items, serverItems, userItems } from "./sidebar/app-sidebar";
@@ -90,6 +90,24 @@ function MenuSheet({
   const { user } = useAuth();
   const pathname = usePathname();
   const serverOpen = user.guild.id !== NO_GUILD_ID;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // The account menu opens and closes upward at the bottom of the sheet. Keep the sheet
+  // scrolled to the bottom while it animates, so the menu comes into view on open and
+  // the account row stays put on close instead of jumping off screen.
+  const followAccountMenu = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    let lastHeight = node.offsetHeight;
+    const observer = new ResizeObserver(() => {
+      const scroller = scrollerRef.current;
+      if (scroller && node.offsetHeight !== lastHeight) {
+        scroller.scrollTop = scroller.scrollHeight;
+      }
+      lastHeight = node.offsetHeight;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const group = (label: string, links: NavItem[]) =>
     links.length > 0 && (
@@ -121,12 +139,15 @@ function MenuSheet({
         <DrawerDescription className="sr-only">
           Switch server and open a page
         </DrawerDescription>
-        <div className="flex flex-col gap-2 overflow-y-auto px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div
+          ref={scrollerRef}
+          className="flex flex-col gap-2 overflow-y-auto px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        >
           <ServerSwitcher />
           {group("You", items)}
           {serverOpen && group("Server", serverItems)}
           {group("Account", userItems)}
-          <div className="pt-2">
+          <div ref={followAccountMenu} className="pt-2">
             <NavUser user={user} />
           </div>
         </div>
