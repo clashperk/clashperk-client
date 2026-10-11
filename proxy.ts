@@ -39,6 +39,6 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|robots.txt|icons|static|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|robots.txt|icons|static|api|_vercel).*)",
   ],
 };
