@@ -9,6 +9,7 @@
 
 ## 2026-10-11
 - Pull down at the top of any page on a phone to reload it (Safari and Chrome's own pull-to-refresh, which the site had switched off).
+- Headers stay put when you pull down or overscroll; only the page under them moves.
 - War history on phones shows the opponent's name on its own line instead of cutting it off.
 - Dashboard: Clans and Rosters sit in matching cards with same-height headers, so both columns line up; category filters and clan rows live inside the Clans card, and rosters are rows in one card. Phone width no longer scrolls sideways by a few pixels.
 - Pinned filter bars on links, rosters, reminders and the server picker get a bottom edge and soft shadow once content scrolls under them, so table headers no longer look like part of the bar.
