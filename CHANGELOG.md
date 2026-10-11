@@ -8,7 +8,7 @@
 - Site font is now Poppins, matching the docs.
 
 ## 2026-10-11
-- Dashboard no longer shows "Unauthorized" right after logging in until you refresh.
+- Dashboard no longer shows "Unauthorized" right after logging in until you refresh, and stays signed in to the API past an hour without a reload.
 - Landing page subtitle now reads "The Clash of Clans Discord bot for every clan."
 - Landing page: the orange glow at the top is back to full strength under the header.
 - Pull down at the top of any page on a phone to reload it (Safari and Chrome's own pull-to-refresh, which the site had switched off).

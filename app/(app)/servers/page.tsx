@@ -15,7 +15,6 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import type { ServerOption } from "@/lib/discord-servers";
 import { cn } from "@/lib/utils";
-import { setCookie } from "cookies-next";
 import {
   ArrowRight,
   Check,
@@ -218,8 +217,7 @@ export default function ServersPage() {
     setSelectError(null);
     const session = await update({ guildId: server.id });
     if (session?.user.guild.id === server.id) {
-      // Full load so every server-rendered part picks up the new server and API token.
-      setCookie("x-access-token", session.accessToken);
+      // Full load so every server-rendered part and the API token pick up the new server.
       window.location.assign("/dashboard");
       return;
     }

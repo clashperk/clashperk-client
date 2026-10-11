@@ -1,5 +1,5 @@
-import { api } from "@/hooks/api/axios";
 import { HandoffUserDto, JwtUserInput, UserRoles } from "@/hooks/api/generated";
+import { isAxiosError } from "axios";
 import { JWTPayload, SignJWT } from "jose";
 import NextAuth, { CredentialsSignin, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -8,9 +8,11 @@ import Discord from "next-auth/providers/discord";
 import { v4 as uuid } from "uuid";
 import { listManageableServers } from "./discord-servers";
 import { NO_GUILD_ID } from "./guild";
+import { serverApi } from "./server-api";
 
 const EXPIRES_IN_SECONDS = 60 * 60;
-const REFRESH_INTERVAL_SECONDS = 60;
+// Reissued this long before expiry; the client refetches the session more often than this.
+const REFRESH_BEFORE_EXPIRY_SECONDS = 10 * 60;
 
 const defaultGuild = {
   id: NO_GUILD_ID,
@@ -19,7 +21,6 @@ const defaultGuild = {
 };
 
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
-const authHeaders = { "x-api-key": process.env.SERVICE_API_KEY };
 
 class LoginError extends CredentialsSignin {
   constructor(message: string) {
@@ -37,10 +38,7 @@ const generateToken = async (payload: JWTPayload) => {
 
   return {
     token,
-    expiresIn:
-      Math.floor(Date.now() / 1000) +
-      REFRESH_INTERVAL_SECONDS +
-      EXPIRES_IN_SECONDS,
+    expiresIn: Math.floor(Date.now() / 1000) + EXPIRES_IN_SECONDS,
   };
 };
 
@@ -78,10 +76,7 @@ const selectGuild = async (token: JWT, guildId: string) => {
 
 const getUserRoles = async (userId: string) => {
   try {
-    const { data } = await api.auth.getAuthUser(
-      { userId },
-      { headers: authHeaders },
-    );
+    const { data } = await serverApi.auth.getAuthUser({ userId });
 
     return data.roles.includes(UserRoles.ADMIN)
       ? [UserRoles.ADMIN]
@@ -93,13 +88,12 @@ const getUserRoles = async (userId: string) => {
 
 const decodeHandoffToken = async (token: string): Promise<HandoffUserDto> => {
   try {
-    const { data } = await api.auth.decodeHandoffToken(
-      { token },
-      { headers: authHeaders },
-    );
+    const { data } = await serverApi.auth.decodeHandoffToken({ token });
     return data;
   } catch (error) {
-    throw new LoginError(error.message);
+    throw new LoginError(
+      (isAxiosError(error) && error.response?.data?.message) || error.message,
+    );
   }
 };
 
@@ -170,7 +164,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (
         token &&
-        Math.floor(Date.now() / 1000) + REFRESH_INTERVAL_SECONDS >
+        Math.floor(Date.now() / 1000) + REFRESH_BEFORE_EXPIRY_SECONDS >
           (token.expiresIn as number)
       ) {
         await issueApiToken(token);

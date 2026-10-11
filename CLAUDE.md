@@ -19,7 +19,7 @@ The production API only allows `clashperk.com` origins. For local dev set `API_P
 
 - `app/(marketing)`: `/`, `/terms`, `/privacy`. Static, no session fetch, always light (`isLightOnlyRoute` in `lib/routelist.ts`).
 - `app/(app)`: everything behind login. Its layout holds `getSession`, `SessionProvider` and the sidebar shell.
-- `hooks/api/axios.ts`: the shared `api` client. The token comes from the request cookie; never store per-user state on it.
+- `hooks/api/axios.ts`: the browser-only `api` client. Its token comes from the session via `ApiTokenProvider`; server code uses `serverApi` from `lib/server-api.ts`.
 - `lib/clan-categories.ts`: icon and color per clan category (matched by keyword on the category name).
 
 ## Dashboard style
