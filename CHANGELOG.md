@@ -8,6 +8,7 @@
 - Site font is now Poppins, matching the docs.
 
 ## 2026-10-11
+- Landing page: the orange glow at the top is back to full strength under the header.
 - Pull down at the top of any page on a phone to reload it (Safari and Chrome's own pull-to-refresh, which the site had switched off).
 - Headers stay put when you pull down or overscroll; only the page under them moves.
 - War history on phones shows the opponent's name on its own line instead of cutting it off.
