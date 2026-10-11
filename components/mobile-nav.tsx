@@ -1,6 +1,7 @@
 "use client";
 
 import { useMyClans } from "@/components/my-clans-provider";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -11,10 +12,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { NO_GUILD_ID } from "@/lib/guild";
 import { cn } from "@/lib/utils";
-import { Ellipsis } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { adminItems } from "./sidebar/admin-sidebar";
 import { items, serverItems, userItems } from "./sidebar/app-sidebar";
@@ -24,22 +25,11 @@ import { UserAvatar } from "./user-avatar";
 
 type NavItem = (typeof items)[number];
 
-const byUrl = (url: string) =>
-  [...serverItems, ...items, ...userItems].find((i) => i.url === url)!;
-
-// The bar holds at most five tabs; everything else lives in the More sheet.
-const TABS_NO_SERVER = ["/dashboard", "/activity", "/profile"].map(byUrl);
-const TABS_SERVER = ["/dashboard", "/clans", "/rosters", "/activity"].map(byUrl);
-
-export const isAdminPath = (pathname: string) =>
+const isAdminPath = (pathname: string) =>
   pathname === "/admin" || pathname.startsWith("/admin/");
 
 const matches = (pathname: string, url: string) =>
   pathname === url || pathname.startsWith(`${url}/`);
-
-const TAB_CLASS =
-  "flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0.5 rounded-full px-1 pt-1.5 pb-1 text-xs text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-5 [&_svg]:shrink-0";
-const TAB_ACTIVE = "bg-foreground/[0.07] text-foreground";
 
 /** The open server, or the default player, as a small chip in the header. */
 function ContextChip({ onClick }: { onClick: () => void }) {
@@ -90,19 +80,34 @@ function ContextChip({ onClick }: { onClick: () => void }) {
   );
 }
 
-function MoreSheet({
+function MenuSheet({
   open,
   onOpenChange,
-  serverLinks,
-  accountLinks,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  serverLinks: NavItem[];
-  accountLinks: NavItem[];
 }) {
   const { user } = useAuth();
   const pathname = usePathname();
+  const serverOpen = user.guild.id !== NO_GUILD_ID;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // The account menu opens and closes upward at the bottom of the sheet. Keep the sheet
+  // scrolled to the bottom while it animates, so the menu comes into view on open and
+  // the account row stays put on close instead of jumping off screen.
+  const followAccountMenu = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    let lastHeight = node.offsetHeight;
+    const observer = new ResizeObserver(() => {
+      const scroller = scrollerRef.current;
+      if (scroller && node.offsetHeight !== lastHeight) {
+        scroller.scrollTop = scroller.scrollHeight;
+      }
+      lastHeight = node.offsetHeight;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const group = (label: string, links: NavItem[]) =>
     links.length > 0 && (
@@ -130,15 +135,19 @@ function MoreSheet({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="rounded-t-3xl md:hidden">
-        <DrawerTitle className="sr-only">More</DrawerTitle>
+        <DrawerTitle className="sr-only">Menu</DrawerTitle>
         <DrawerDescription className="sr-only">
-          Switch server and open other pages
+          Switch server and open a page
         </DrawerDescription>
-        <div className="flex flex-col gap-2 overflow-y-auto px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div
+          ref={scrollerRef}
+          className="flex flex-col gap-2 overflow-y-auto px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        >
           <ServerSwitcher />
-          {group("Server", serverLinks)}
-          {group("Account", accountLinks)}
-          <div className="pt-2">
+          {group("You", items)}
+          {serverOpen && group("Server", serverItems)}
+          {group("Account", userItems)}
+          <div ref={followAccountMenu} className="pt-2">
             <NavUser user={user} />
           </div>
         </div>
@@ -147,25 +156,14 @@ function MoreSheet({
   );
 }
 
-/** Phone navigation: a title bar at the top and a floating tab bar at the bottom. */
+/** Phone navigation: a title bar whose menu button and chip open one sheet with every page. */
 export function MobileNav() {
-  const { user } = useAuth();
   const pathname = usePathname();
-  const [moreOpen, setMoreOpen] = useState(false);
-  const serverOpen = user.guild.id !== NO_GUILD_ID;
+  const [menuOpen, setMenuOpen] = useState(false);
   const inAdmin = isAdminPath(pathname);
 
   // Any link in the sheet (including the account menu) closes it on arrival.
-  useEffect(() => setMoreOpen(false), [pathname]);
-
-  const tabs = serverOpen ? TABS_SERVER : TABS_NO_SERVER;
-  const serverLinks = serverOpen
-    ? serverItems.filter((i) => !tabs.includes(i))
-    : [];
-  const accountLinks = userItems.filter((i) => !tabs.includes(i));
-  const inMore = [...serverLinks, ...accountLinks].some((i) =>
-    matches(pathname, i.url),
-  );
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   const current = [...serverItems, ...items, ...userItems, ...adminItems].find(
     (item) => matches(pathname, item.url),
@@ -175,56 +173,31 @@ export function MobileNav() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 flex h-15 items-center justify-between gap-3 border-b bg-background px-4 md:hidden">
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Admin pages keep their own sidebar instead of the tab bar. */}
-          {inAdmin && <SidebarTrigger />}
+        <div className="flex min-w-0 items-center gap-2">
+          {/* Admin pages keep their own sidebar instead of the menu sheet. */}
+          {inAdmin ? (
+            <SidebarTrigger />
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-ml-1.5 size-8"
+              aria-label="Open menu"
+              aria-haspopup="dialog"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+            >
+              <Menu />
+            </Button>
+          )}
           <span className="truncate font-medium tracking-tight">
             {current?.title ?? "ClashPerk"}
           </span>
         </div>
-        {!inAdmin && <ContextChip onClick={() => setMoreOpen(true)} />}
+        {!inAdmin && <ContextChip onClick={() => setMenuOpen(true)} />}
       </header>
       <div aria-hidden className="h-15 shrink-0 md:hidden" />
-
-      {!inAdmin && (
-        <>
-          <nav
-            aria-label="Main"
-            className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md gap-0.5 rounded-full border bg-background/80 p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl md:hidden"
-          >
-            {tabs.map((item) => {
-              const active = matches(pathname, item.url);
-              return (
-                <Link
-                  key={item.url}
-                  href={item.url}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(TAB_CLASS, active && TAB_ACTIVE)}
-                >
-                  {item.icon}
-                  <span className="truncate">{item.title}</span>
-                </Link>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => setMoreOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={moreOpen}
-              className={cn(TAB_CLASS, (inMore || moreOpen) && TAB_ACTIVE)}
-            >
-              <Ellipsis />
-              <span>More</span>
-            </button>
-          </nav>
-          <MoreSheet
-            open={moreOpen}
-            onOpenChange={setMoreOpen}
-            serverLinks={serverLinks}
-            accountLinks={accountLinks}
-          />
-        </>
-      )}
+      {!inAdmin && <MenuSheet open={menuOpen} onOpenChange={setMenuOpen} />}
     </>
   );
 }
