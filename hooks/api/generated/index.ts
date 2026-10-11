@@ -123,6 +123,25 @@ export interface HandoffTokenDto {
   token: string;
 }
 
+export interface BotGuildsInputDto {
+  /**
+   * @maxItems 200
+   * @minItems 1
+   */
+  guildIds: string[];
+}
+
+export interface BotGuildDto {
+  id: string;
+  name: string;
+  iconUrl: string | null;
+  clanCount: number;
+}
+
+export interface BotGuildsDto {
+  guilds: BotGuildDto[];
+}
+
 export interface CreateLinkInputDto {
   playerTag: string;
   userId: string;
@@ -197,6 +216,36 @@ export interface CapitalContributionItemDto {
 
 export interface CapitalContributionDto {
   items: CapitalContributionItemDto[];
+}
+
+export interface CapitalRaidMemberDto {
+  name: string;
+  tag: string;
+  attacks: number;
+  attackLimit: number;
+  bonusAttackLimit: number;
+  capitalResourcesLooted: number;
+}
+
+export interface CapitalRaidSeasonDto {
+  name: string;
+  tag: string;
+  state: string;
+  members: CapitalRaidMemberDto[];
+  /** @format date-time */
+  startDate: string;
+  /** @format date-time */
+  endDate: string;
+  offensiveReward: number;
+  defensiveReward: number;
+  capitalTotalLoot: number;
+  totalAttacks: number;
+  enemyDistrictsDestroyed: number;
+  raidsCompleted: number;
+}
+
+export interface CapitalRaidsDto {
+  items: CapitalRaidSeasonDto[];
 }
 
 export interface ClanLinkedMemberDto {
@@ -783,6 +832,10 @@ export type CreateHandoffTokenData = HandoffTokenDto;
 
 export type CreateHandoffTokenError = ErrorResponseDto;
 
+export type GetBotGuildsData = BotGuildsDto;
+
+export type GetBotGuildsError = ErrorResponseDto;
+
 export type LinkData = ResultOkDto;
 
 export type LinkError = ErrorResponseDto;
@@ -794,6 +847,14 @@ export interface UnlinkParams {
 export type UnlinkData = ResultOkDto;
 
 export type UnlinkError = ErrorResponseDto;
+
+export interface SetDefaultLinkParams {
+  playerTag: string;
+}
+
+export type SetDefaultLinkData = ResultOkDto;
+
+export type SetDefaultLinkError = ErrorResponseDto;
 
 export type GetLinksData = LinksDto[];
 
@@ -819,6 +880,20 @@ export interface GetCapitalContributionParams {
 export type GetCapitalContributionData = CapitalContributionDto;
 
 export type GetCapitalContributionError = ErrorResponseDto;
+
+export interface GetCapitalRaidsParams {
+  /**
+   * @min 1
+   * @max 60
+   * @default 5
+   */
+  limit?: number;
+  clanTag: string;
+}
+
+export type GetCapitalRaidsData = CapitalRaidsDto;
+
+export type GetCapitalRaidsError = ErrorResponseDto;
 
 export interface GetClanLinksParams {
   clanTag: string;
@@ -1176,6 +1251,23 @@ export namespace Auth {
     export type RequestHeaders = {};
     export type ResponseBody = CreateHandoffTokenData;
   }
+
+  /**
+   * No description
+   * @tags Auth
+   * @name GetBotGuilds
+   * @request POST:/auth/bot-guilds
+   * @secure
+   * @response `200` `GetBotGuildsData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetBotGuilds {
+    export type RequestParams = {};
+    export type RequestQuery = {};
+    export type RequestBody = BotGuildsInputDto;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetBotGuildsData;
+  }
 }
 
 export namespace Links {
@@ -1213,6 +1305,26 @@ export namespace Links {
     export type RequestBody = never;
     export type RequestHeaders = {};
     export type ResponseBody = UnlinkData;
+  }
+
+  /**
+   * No description
+   * @tags Links
+   * @name SetDefaultLink
+   * @summary Make one of your own linked accounts your default
+   * @request PUT:/links/{playerTag}/default
+   * @secure
+   * @response `200` `SetDefaultLinkData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace SetDefaultLink {
+    export type RequestParams = {
+      playerTag: string;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = SetDefaultLinkData;
   }
 
   /**
@@ -1277,6 +1389,32 @@ export namespace Clans {
     export type RequestBody = never;
     export type RequestHeaders = {};
     export type ResponseBody = GetCapitalContributionData;
+  }
+
+  /**
+   * No description
+   * @tags Clans
+   * @name GetCapitalRaids
+   * @request GET:/clans/{clanTag}/capital-raids
+   * @secure
+   * @response `200` `GetCapitalRaidsData`
+   * @response `500` `ErrorResponseDto`
+   */
+  export namespace GetCapitalRaids {
+    export type RequestParams = {
+      clanTag: string;
+    };
+    export type RequestQuery = {
+      /**
+       * @min 1
+       * @max 60
+       * @default 5
+       */
+      limit?: number;
+    };
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = GetCapitalRaidsData;
   }
 
   /**
@@ -2099,7 +2237,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title ClashPerk Discord Bot API
- * @version v2.0.30
+ * @version v2.0.35
  * @baseUrl /v1
  * @contact
  *
@@ -2227,6 +2365,27 @@ export class Api<SecurityDataType extends unknown> {
         format: "json",
         ...params,
       }),
+
+    /**
+     * No description
+     *
+     * @tags Auth
+     * @name GetBotGuilds
+     * @request POST:/auth/bot-guilds
+     * @secure
+     * @response `200` `GetBotGuildsData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getBotGuilds: (data: BotGuildsInputDto, params: RequestParams = {}) =>
+      this.http.request<GetBotGuildsData, GetBotGuildsError>({
+        path: `/auth/bot-guilds`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
   };
   links = {
     /**
@@ -2267,6 +2426,29 @@ export class Api<SecurityDataType extends unknown> {
       this.http.request<UnlinkData, UnlinkError>({
         path: `/links/${playerTag}`,
         method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Links
+     * @name SetDefaultLink
+     * @summary Make one of your own linked accounts your default
+     * @request PUT:/links/{playerTag}/default
+     * @secure
+     * @response `200` `SetDefaultLinkData`
+     * @response `500` `ErrorResponseDto`
+     */
+    setDefaultLink: (
+      { playerTag, ...query }: SetDefaultLinkParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<SetDefaultLinkData, SetDefaultLinkError>({
+        path: `/links/${playerTag}/default`,
+        method: "PUT",
         secure: true,
         format: "json",
         ...params,
@@ -2336,6 +2518,29 @@ export class Api<SecurityDataType extends unknown> {
         GetCapitalContributionError
       >({
         path: `/clans/${clanTag}/capital-contribution`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Clans
+     * @name GetCapitalRaids
+     * @request GET:/clans/{clanTag}/capital-raids
+     * @secure
+     * @response `200` `GetCapitalRaidsData`
+     * @response `500` `ErrorResponseDto`
+     */
+    getCapitalRaids: (
+      { clanTag, ...query }: GetCapitalRaidsParams,
+      params: RequestParams = {},
+    ) =>
+      this.http.request<GetCapitalRaidsData, GetCapitalRaidsError>({
+        path: `/clans/${clanTag}/capital-raids`,
         method: "GET",
         query: query,
         secure: true,

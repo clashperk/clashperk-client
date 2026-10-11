@@ -68,7 +68,7 @@ Server-only pages (`/dashboard`, `/clans`, `/rosters`, `/links`, `/reminders`) s
 Default `<Analytics />` from `@vercel/analytics/next` in the root layout, no custom events. The proxy matcher skips `_vercel` so the analytics script and page-view beacons are not redirected to `/login` for signed-out visitors.
 
 ## 2026-10-11 — Admin pages gated on the server, inputs cleaned for the metrics API
-`/admin/*` checks the session's `admin` role in `app/(app)/admin/layout.tsx` and returns a 404 otherwise; the sidebar only hides the link. The API also requires the role, so this keeps non-admins from seeing an empty page shell.
+`/admin/*` checks the session's `admin` role twice: the proxy rewrites non-admin requests to a 404 before anything renders, and `app/(app)/admin/layout.tsx` calls `notFound()` again in case the proxy matcher ever skips a path. Admin pages swap in their own sidebar (`AdminSidebar`); the only way in from the dashboard is "Admin" in the account menu, shown to admins only. The API also requires the role, so this keeps non-admins from seeing an empty page shell.
 `GET /metrics/commands-usage-logs` is excluded from the generated client, so the page calls it through `httpClient.request` with a local `CommandLog` type matching the bot's `bot_command_logs` columns. The endpoint pastes `query`, `userId` and `guildId` straight into its SQL, so the page strips `' \ % _` from the search and only sends numeric IDs. The real fix is parameterising that query in the backend.
 
 ## 2026-10-11 — Activity page buckets and data
@@ -76,4 +76,12 @@ Members are grouped by last seen: under 24 hours, 1–7 days, and 7+ days ("inac
 
 ## 2026-10-11 — Profile account stats
 Uses `GET /players/:tag/wars/aggregate`, `/clan-war-leagues/aggregate` (both from 6 months back, the same window as the public war page) and `/history`. The wars summary covers regular, friendly and CWL wars together, so it's labelled "All wars". Its `totalStars` counts only new stars (stars that improved on earlier hits on that base), so the page shows 3-star rate and missed attacks instead of a star total. CWL shows rounds played out of the group's rounds, not attacks, because sitting out a round isn't a missed attack. Clan history shows month ranges only: `lastSeen` isn't refreshed often enough to call a clan "current". The tag `#00000` is the tracker's "no clan" and shows as "Not in a clan".
+
+## 2026-10-11 — Using the dashboard without a server
+A server is optional. `NO_GUILD_ID` stays the session's "no server" value; the proxy only sends `/clans`, `/rosters`, `/links` and `/reminders` to `/servers` without one. "Use without a server" is a session `update({ guildId: NO_GUILD_ID })`, which resets the guild and reissues the API token with no `guildIds`.
+`MyClansProvider` (signed-in shell only) loads the user's links once and looks up each account through `/api/players/:tag` for its current clan, role and Town Hall; the sidebar, Home and Activity share it. Clans added by tag are checked through `/api/clans/:tag` and kept in this browser's `localStorage` (`clashperk.savedClans`) until the API can store them per user. The clan picker lists your clans and saved clans first, then the open server's categories prefixed with the server name.
+Links stays server-only: linking a member to a Discord user searches the server's members (`/guilds/:guildId/members/list`), and people without a server don't need it.
+
+## 2026-10-11 — Default account
+The default account is the user's link with the lowest `order`, the rule the bot already uses (`/link create` with "default" sets the order below the user's other links). `PUT /links/:playerTag/default` (backend) applies the same rule for the owner only, so the bot and the dashboard always agree. The links API returns links sorted by `order`, so the dashboard treats the first link as the default instead of reading `order` itself. A web link now goes after the user's other links (highest `order` + 1, as the bot's `/verify` does) instead of `order: 0`, which could tie with or beat the current default; re-linking an account the user already owns keeps its order.
 

@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import type { ServerOption } from "@/lib/discord-servers";
 import { NO_GUILD_ID } from "@/lib/guild";
+import { inviteUrl } from "@/lib/invite";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -31,12 +32,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiDiscord } from "react-icons/si";
 
-const CLIENT_ID = "526971716711350273";
 const USAGE_KEY = "clashperk.serverUsage";
 const SORT_KEY = "clashperk.serverSort";
-
-const inviteUrl = (guildId: string) =>
-  `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&guild_id=${guildId}&disable_guild_select=true`;
 
 const SORTS = {
   recommended: "Recommended",
@@ -258,7 +255,8 @@ export default function ServersPage() {
           Choose a server
         </h2>
         <p className="text-sm text-muted-foreground md:text-base">
-          Pick the Discord server you want to manage.
+          Pick a Discord server to manage its clans, rosters and reminders.
+          Everything else works without one.
         </p>
       </div>
 

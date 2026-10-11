@@ -13,12 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/hooks/api/axios";
-import { CategoryDto, LastSeenMemberDto } from "@/hooks/api/generated";
-import { useAuth } from "@/hooks/use-auth";
-import { encodeTag, normalizeTag } from "@/lib/tags";
+import { LastSeenMemberDto } from "@/hooks/api/generated";
+import { useClanOptions, useClanSelection } from "@/hooks/use-clan-options";
+import { encodeTag } from "@/lib/tags";
 import { cn } from "@/lib/utils";
 import { Info, RotateCw, Search, UserRoundX } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Bucket = "all" | "today" | "week" | "inactive";
@@ -163,14 +162,12 @@ function SkeletonRows() {
 }
 
 export default function ActivityPage() {
-  const session = useAuth();
-  const guildId = session.user.guild.id;
-  const searchParams = useSearchParams();
-
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
-  const [clansLoaded, setClansLoaded] = useState(false);
-  const [clansError, setClansError] = useState<string | null>(null);
-  const [clanTag, setClanTag] = useState("");
+  const options = useClanOptions();
+  const { clanTag, setClanTag, openTag, opening, openError } = useClanSelection(
+    options.categories,
+    options.status === "ready",
+    options.saveClan,
+  );
 
   const [members, setMembers] = useState<LastSeenMemberDto[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -180,28 +177,6 @@ export default function ActivityPage() {
   const [bucket, setBucket] = useState<Bucket>("all");
   const [sort, setSort] = useState<Sort>("oldest");
   const [search, setSearch] = useState("");
-
-  const loadClans = useCallback(async () => {
-    setClansError(null);
-    try {
-      const { data } = await api.guilds.getGuildClans({ guildId });
-      const withClans = data.categories.filter((c) => c.clans.length > 0);
-      setCategories(withClans);
-
-      const all = withClans.flatMap((category) => category.clans);
-      const requested = normalizeTag(searchParams.get("tag") ?? "");
-      const initial = all.find((c) => c.tag === requested) ?? all[0];
-      if (initial) setClanTag(initial.tag);
-    } catch (err) {
-      setClansError((err as Error).message);
-    } finally {
-      setClansLoaded(true);
-    }
-  }, [guildId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    loadClans();
-  }, [loadClans]);
 
   const loadMembers = useCallback(async () => {
     if (!clanTag) return;
@@ -277,30 +252,45 @@ export default function ActivityPage() {
             war and raid hits, achievements. Refreshes every 10 minutes.
           </p>
         </div>
-        {categories.length > 0 && (
-          <ClanPicker
-            categories={categories}
-            value={clanTag}
-            onChange={selectClan}
-          />
+        {options.status === "ready" && (
+          <div className="flex flex-col gap-1.5 xl:items-end">
+            <ClanPicker
+              categories={options.categories}
+              value={clanTag}
+              onChange={selectClan}
+              onAddTag={openTag}
+            />
+            {(opening || openError) && (
+              <p
+                role={openError ? "alert" : undefined}
+                className={cn(
+                  "text-xs",
+                  openError ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                {openError ?? "Looking up clan…"}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
-      {!clansLoaded ? (
+      {options.status === "loading" ? (
         <SkeletonRows />
-      ) : clansError ? (
+      ) : options.status === "error" ? (
         <Card className="items-center gap-3 py-10 text-center shadow-none">
-          <p className="text-sm text-destructive">{clansError}</p>
-          <Button variant="outline" size="sm" onClick={loadClans}>
+          <p className="text-sm text-destructive">{options.error}</p>
+          <Button variant="outline" size="sm" onClick={options.reload}>
             <RotateCw />
             Try again
           </Button>
         </Card>
-      ) : categories.length === 0 ? (
+      ) : !clanTag ? (
         <Card className="items-center gap-1 border-dashed py-12 text-center shadow-none">
-          <p className="font-medium">No clans in this server yet</p>
+          <p className="font-medium">Pick a clan to see its activity</p>
           <p className="text-sm text-muted-foreground">
-            Link a clan in Discord to see its members&apos; activity here.
+            Paste any clan tag into the picker, or link your account on Profile
+            to see your own clan here.
           </p>
         </Card>
       ) : (
