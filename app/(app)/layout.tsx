@@ -2,7 +2,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { ApiTokenProvider } from "@/components/api-token-provider";
 import { AppShell } from "@/components/app-shell";
-import { MobileHeader } from "@/components/mobile-nav";
+import { MobileNav } from "@/components/mobile-nav";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { getSession } from "@/lib/auth";
 
@@ -22,7 +22,7 @@ export default async function AppLayout({
       refetchInterval={SESSION_REFETCH_SECONDS}
     >
       <ApiTokenProvider>
-        <AppShell sidebar={<AppSidebar />} header={<MobileHeader />}>
+        <AppShell sidebar={<AppSidebar />} header={<MobileNav />}>
           {children}
         </AppShell>
       </ApiTokenProvider>
