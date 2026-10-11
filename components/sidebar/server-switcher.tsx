@@ -197,7 +197,9 @@ export function ServerSwitcher() {
       <DropdownMenuContent
         align="start"
         side={isMobile ? "bottom" : "right"}
-        className="w-72 rounded-xl p-1"
+        // Only the server list scrolls, so the actions below it stay on screen
+        // when the menu has little room (e.g. opened from the phone sheet).
+        className="flex w-72 flex-col overflow-y-hidden rounded-xl p-1"
       >
         <DropdownMenuLabel className="px-2 py-1.5 text-xs font-normal text-muted-foreground">
           Your servers with ClashPerk
@@ -235,7 +237,7 @@ export function ServerSwitcher() {
             None of the servers you manage have ClashPerk yet.
           </p>
         ) : (
-          <div className="max-h-72 overflow-y-auto">
+          <div className="max-h-72 min-h-14 shrink overflow-y-auto">
             {load.servers.map((server) => {
               const current = server.id === guild?.id;
               return (
