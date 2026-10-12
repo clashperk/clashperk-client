@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2026-10-12
-- Footer and account menu link to Buy Me a Coffee instead of Ko-fi.
+- Footer and account menu link to Buy Me a Coffee instead of Ko-fi, listed before Patreon; the footer tile has a "Recommended" badge.
 
 ## 2026-10-10
 - War history and war pages keep each attack's stars on the same line as the war or player name on phones.

@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
@@ -33,22 +34,23 @@ const COMMUNITY_TILES = [
     ),
   },
   {
+    href: "https://buymeacoffee.com/clashperk",
+    name: "Buy Me a Coffee",
+    recommended: true,
+    blurb: "Become a lifetime supporter",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
+        <SiBuymeacoffee className="size-5" />
+      </span>
+    ),
+  },
+  {
     href: "https://www.patreon.com/clashperk",
     name: "Patreon",
     blurb: "Become a supporter",
     icon: (
       <span className={cn(TILE_ICON, "bg-foreground/[0.06]")}>
         <Image src="/icons/patreon.svg" alt="" width={20} height={20} unoptimized />
-      </span>
-    ),
-  },
-  {
-    href: "https://buymeacoffee.com/clashperk",
-    name: "Buy Me a Coffee",
-    blurb: "Become a lifetime supporter",
-    icon: (
-      <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
-        <SiBuymeacoffee className="size-5" />
       </span>
     ),
   },
@@ -66,6 +68,11 @@ export function SiteFooter() {
                 target="_blank"
                 className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-12px_rgba(13,15,13,.18)] md:flex-row md:items-center md:p-5"
               >
+                {"recommended" in tile && (
+                  <Badge className="absolute -top-2.5 left-4 bg-[#ffdd00] font-semibold text-black md:left-5">
+                    Recommended
+                  </Badge>
+                )}
                 {tile.icon}
                 <span className="min-w-0">
                   <span className="block font-semibold">{tile.name}</span>
