@@ -1,8 +1,9 @@
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { SiDiscord, SiGithub } from "react-icons/si";
+import { SiBuymeacoffee, SiDiscord, SiGithub } from "react-icons/si";
 
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms" },
@@ -25,7 +26,7 @@ const COMMUNITY_TILES = [
   {
     href: "https://github.com/clashperk",
     name: "GitHub",
-    blurb: "Browse the source",
+    blurb: "Browse the source code",
     icon: (
       <span className={cn(TILE_ICON, "bg-foreground/[0.06] text-foreground")}>
         <SiGithub className="size-5" />
@@ -43,12 +44,13 @@ const COMMUNITY_TILES = [
     ),
   },
   {
-    href: "https://ko-fi.com/clashperk",
-    name: "Ko-fi",
-    blurb: "Buy us a coffee",
+    href: "https://buymeacoffee.com/clashperk",
+    name: "Buy Me a Coffee",
+    recommended: true,
+    blurb: "Become a supporter",
     icon: (
-      <span className={cn(TILE_ICON, "bg-[#ff5a16]/10")}>
-        <Image src="/icons/kofi.svg" alt="" width={26} height={21} unoptimized />
+      <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
+        <SiBuymeacoffee className="size-5" />
       </span>
     ),
   },
@@ -66,6 +68,11 @@ export function SiteFooter() {
                 target="_blank"
                 className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-12px_rgba(13,15,13,.18)] md:flex-row md:items-center md:p-5"
               >
+                {"recommended" in tile && (
+                  <Badge className="absolute -top-2.5 left-4 bg-[#ffdd00] font-semibold text-black md:left-5">
+                    Recommended
+                  </Badge>
+                )}
                 {tile.icon}
                 <span className="min-w-0">
                   <span className="block font-semibold">{tile.name}</span>
