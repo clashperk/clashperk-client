@@ -26,7 +26,7 @@ const COMMUNITY_TILES = [
   {
     href: "https://github.com/clashperk",
     name: "GitHub",
-    blurb: "Browse the source",
+    blurb: "Browse the source code",
     icon: (
       <span className={cn(TILE_ICON, "bg-foreground/[0.06] text-foreground")}>
         <SiGithub className="size-5" />
