@@ -21,7 +21,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { SiDiscord, SiKofi, SiPatreon } from "react-icons/si";
+import { SiBuymeacoffee, SiDiscord, SiPatreon } from "react-icons/si";
 import { UserAvatar } from "../user-avatar";
 import { ThemeSwitcher } from "./theme-switcher";
 
@@ -51,9 +51,9 @@ const RESOURCES = [
     Icon: SiPatreon,
   },
   {
-    href: "https://ko-fi.com/clashperk",
-    label: "Support on Ko-fi",
-    Icon: SiKofi,
+    href: "https://buymeacoffee.com/clashperk",
+    label: "Buy Me a Coffee",
+    Icon: SiBuymeacoffee,
   },
 ] as const;
 

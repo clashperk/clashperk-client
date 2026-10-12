@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { SiDiscord, SiGithub } from "react-icons/si";
+import { SiBuymeacoffee, SiDiscord, SiGithub } from "react-icons/si";
 
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms" },
@@ -43,12 +43,12 @@ const COMMUNITY_TILES = [
     ),
   },
   {
-    href: "https://ko-fi.com/clashperk",
-    name: "Ko-fi",
+    href: "https://buymeacoffee.com/clashperk",
+    name: "Buy Me a Coffee",
     blurb: "Buy us a coffee",
     icon: (
-      <span className={cn(TILE_ICON, "bg-[#ff5a16]/10")}>
-        <Image src="/icons/kofi.svg" alt="" width={26} height={21} unoptimized />
+      <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
+        <SiBuymeacoffee className="size-5" />
       </span>
     ),
   },
