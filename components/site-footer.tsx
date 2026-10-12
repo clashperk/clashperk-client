@@ -37,7 +37,7 @@ const COMMUNITY_TILES = [
     href: "https://buymeacoffee.com/clashperk",
     name: "Buy Me a Coffee",
     recommended: true,
-    blurb: "Become a lifetime supporter",
+    blurb: "Become a supporter",
     icon: (
       <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
         <SiBuymeacoffee className="size-5" />
