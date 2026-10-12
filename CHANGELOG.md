@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2026-10-12
-- Footer and account menu link to Buy Me a Coffee instead of Ko-fi; the footer tile offers lifetime plans.
+- Footer and account menu link to Buy Me a Coffee instead of Ko-fi.
 
 ## 2026-10-10
 - War history and war pages keep each attack's stars on the same line as the war or player name on phones.
