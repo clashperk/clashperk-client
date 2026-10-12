@@ -34,6 +34,16 @@ const COMMUNITY_TILES = [
     ),
   },
   {
+    href: "https://www.patreon.com/clashperk",
+    name: "Patreon",
+    blurb: "Become a supporter",
+    icon: (
+      <span className={cn(TILE_ICON, "bg-foreground/[0.06]")}>
+        <Image src="/icons/patreon.svg" alt="" width={20} height={20} unoptimized />
+      </span>
+    ),
+  },
+  {
     href: "https://buymeacoffee.com/clashperk",
     name: "Buy Me a Coffee",
     recommended: true,
@@ -41,16 +51,6 @@ const COMMUNITY_TILES = [
     icon: (
       <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
         <SiBuymeacoffee className="size-5" />
-      </span>
-    ),
-  },
-  {
-    href: "https://www.patreon.com/clashperk",
-    name: "Patreon",
-    blurb: "Become a supporter",
-    icon: (
-      <span className={cn(TILE_ICON, "bg-foreground/[0.06]")}>
-        <Image src="/icons/patreon.svg" alt="" width={20} height={20} unoptimized />
       </span>
     ),
   },

@@ -46,14 +46,14 @@ const RESOURCES = [
     Icon: UserPlus,
   },
   {
-    href: "https://buymeacoffee.com/clashperk",
-    label: "Buy Me a Coffee",
-    Icon: SiBuymeacoffee,
-  },
-  {
     href: "https://www.patreon.com/clashperk",
     label: "Support on Patreon",
     Icon: SiPatreon,
+  },
+  {
+    href: "https://buymeacoffee.com/clashperk",
+    label: "Buy Me a Coffee",
+    Icon: SiBuymeacoffee,
   },
 ] as const;
 
