@@ -45,6 +45,7 @@ const COMMUNITY_TILES = [
   {
     href: "https://buymeacoffee.com/clashperk",
     name: "Buy Me a Coffee",
+    blurb: "Become a lifetime supporter",
     icon: (
       <span className={cn(TILE_ICON, "bg-[#ffdd00] text-black")}>
         <SiBuymeacoffee className="size-5" />
@@ -68,11 +69,9 @@ export function SiteFooter() {
                 {tile.icon}
                 <span className="min-w-0">
                   <span className="block font-semibold">{tile.name}</span>
-                  {"blurb" in tile && (
-                    <span className="block text-sm text-muted-foreground">
-                      {tile.blurb}
-                    </span>
-                  )}
+                  <span className="block text-sm text-muted-foreground">
+                    {tile.blurb}
+                  </span>
                 </span>
                 <ArrowUpRight className="absolute right-3 top-3 size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:static md:ml-auto md:opacity-40" />
               </Link>
