@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "generate:api": "swagger-typescript-api generate -p http://localhost:8080/docs/json?x-typings-ignored=1 -o ./hooks/api/generated --name index.ts --axios --route-types --extract-request-params --extract-response-body --extract-response-error --single-http-client --responses"
   },
   "dependencies": {
